@@ -7,7 +7,7 @@
   ![Vite](https://img.shields.io/badge/Vite-7.x-646CFF?style=flat-square&logo=vite&logoColor=white)
   ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-  ![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square&logo=vercel&logoColor=white)
+  ![Vercel](https://img.shields.io/badge/Live-loop--feel.vercel.app-black?style=flat-square&logo=vercel&logoColor=white)
 </div>
 
 ---
@@ -87,7 +87,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 Loop is deployed on Vercel. Every push to `main` triggers an automatic production deployment.
 
-**Live:** [loop-music.vercel.app](https://loop-music.vercel.app)
+**Live:** [loop-feel.vercel.app](https://loop-feel.vercel.app)
 
 ---
 
