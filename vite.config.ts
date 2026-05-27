@@ -12,6 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  // Disable Nitro SSR — plain SPA build is sufficient (all data via Supabase client-side)
-  nitro: false,
+  // Nitro with vercel preset — outputs to .vercel/output which Vercel auto-detects
+  nitro: {
+    preset: "vercel",
+  },
 });
