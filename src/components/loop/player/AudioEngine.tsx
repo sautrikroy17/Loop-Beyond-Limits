@@ -91,6 +91,13 @@ export function AudioEngine() {
               // This prevents the restored track from auto-playing on page load.
               if (usePlayback.getState().isPlaying) {
                 playerRef.current?.playVideo?.();
+              } else if (event.data === YTState.CUED) {
+                // Track successfully cued and waiting to be played.
+                // End the transition and loading state.
+                isTransitioningRef.current = false;
+                setLoadingTrack(false);
+                const dur = playerRef.current?.getDuration?.() ?? 0;
+                if (dur > 0) setDuration(dur);
               }
             }
           },
