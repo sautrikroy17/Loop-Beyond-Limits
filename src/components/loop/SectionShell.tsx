@@ -75,7 +75,7 @@ export function SectionShell({
           transition={{ duration: 1.1, ease }}
           style={{
             background:
-              "radial-gradient(120% 160% at 50% 0%, oklch(0.12 0.03 270 / 0) 0%, oklch(0.18 0.04 270 / 0.9) 45%, transparent 70%)",
+              "radial-gradient(120% 160% at 50% 0%, oklch(0.12 0.03 270 / 0) 0%, oklch(0.18 0.04 270 / 0.12) 45%, transparent 70%)",
           }}
         />
       )}
@@ -91,7 +91,7 @@ export function SectionShell({
           transition={{ duration: 1.2, ease }}
           style={{
             background:
-              "radial-gradient(120% 160% at 50% 100%, transparent 15%, oklch(0.08 0.02 270 / 0.85) 55%, transparent 80%)",
+              "radial-gradient(120% 160% at 50% 100%, transparent 15%, oklch(0.08 0.02 270 / 0.12) 55%, transparent 80%)",
           }}
         />
       )}

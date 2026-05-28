@@ -158,33 +158,34 @@
 
   html {
     scroll-behavior: smooth;
+    min-height: 100%;
     /*
-     * GRADIENT: put directly on html so it's always visible — no z-index dependency.
-     * Three vivid orbs layered over a deep navy base.
-     * The body is transparent so this shows through everything.
+     * Portfolio-match gradient (ref: sautrikroy.me)
+     * - Deep navy base (clearly blue, not black)
+     * - Big teal-cyan glow at bottom-right (most prominent)
+     * - Subtle blue glow at top-left
+     * NO background-attachment:fixed — breaks with overflow:hidden sections
      */
-    background:
-      radial-gradient(ellipse 85% 70% at 18% 12%,
-        oklch(0.42 0.20 262 / 0.75) 0%,
-        oklch(0.22 0.10 265 / 0.35) 45%,
-        transparent 68%),
-      radial-gradient(ellipse 75% 65% at 84% 22%,
-        oklch(0.34 0.18 288 / 0.65) 0%,
-        oklch(0.18 0.08 285 / 0.28) 42%,
-        transparent 64%),
-      radial-gradient(ellipse 60% 55% at 50% 88%,
-        oklch(0.28 0.14 268 / 0.55) 0%,
-        transparent 60%),
-      oklch(0.11 0.05 268);
-    background-attachment: fixed;
+    background-color: oklch(0.09 0.048 258);
+    background-image:
+      radial-gradient(ellipse 80% 65% at 95% 105%,
+        oklch(0.40 0.24 210 / 0.95) 0%,
+        oklch(0.28 0.18 218 / 0.50) 35%,
+        transparent 62%),
+      radial-gradient(ellipse 55% 50% at -5% 85%,
+        oklch(0.28 0.16 252 / 0.70) 0%,
+        transparent 58%),
+      radial-gradient(ellipse 60% 55% at 50% 0%,
+        oklch(0.22 0.12 262 / 0.45) 0%,
+        transparent 55%);
   }
 
   body {
+    min-height: 100vh;
     color: var(--color-foreground);
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    /* Transparent — let html gradient show through */
     background: transparent;
   }
 }
