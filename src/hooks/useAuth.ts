@@ -38,6 +38,9 @@ export const initAuthListener = () => {
           session.user.user_metadata?.avatar_url,
         );
       });
+      import('@/functions/profile').then(({ loadProfileFn }) => {
+        loadProfileFn();
+      });
     }
   });
 
@@ -54,6 +57,9 @@ export const initAuthListener = () => {
           session.user.id,
           session.user.user_metadata?.avatar_url,
         );
+      });
+      import('@/functions/profile').then(({ loadProfileFn }) => {
+        loadProfileFn();
       });
     }
 
