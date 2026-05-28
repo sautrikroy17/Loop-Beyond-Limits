@@ -32,15 +32,18 @@ export const initAuthListener = () => {
     setLoading(false);
 
     if (session?.user) {
+      // Load profile (avatar, display name)
       import('./useUserProfile').then(({ useUserProfile }) => {
         useUserProfile.getState().loadFromCloud(
           session.user.id,
           session.user.user_metadata?.avatar_url,
         );
       });
+      // Load listening intelligence
       import('@/functions/profile').then(({ loadProfileFn }) => {
         loadProfileFn();
       });
+      // Restore last played track from cloud (runs once, idempotent)
       import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
         initPlaybackSync(session.user.id);
       });
@@ -54,7 +57,7 @@ export const initAuthListener = () => {
     setUser(session?.user ?? null);
     setLoading(false);
 
-    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+    if (event === 'SIGNED_IN' && session?.user) {
       import('./useUserProfile').then(({ useUserProfile }) => {
         useUserProfile.getState().loadFromCloud(
           session.user.id,
@@ -79,26 +82,6 @@ export const initAuthListener = () => {
       });
     }
   });
-
-  // Auto-sync when the app comes back to the foreground (mobile resume / tab switch)
-  if (typeof document !== 'undefined') {
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        const { session } = useAuth.getState();
-        if (session?.user) {
-          import('./useUserProfile').then(({ useUserProfile }) => {
-            useUserProfile.getState().loadFromCloud(
-              session.user.id,
-              session.user.user_metadata?.avatar_url,
-            );
-          });
-          import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
-            initPlaybackSync(session.user.id);
-          });
-        }
-      }
-    });
-  }
 
   return () => {
     subscription.unsubscribe();
