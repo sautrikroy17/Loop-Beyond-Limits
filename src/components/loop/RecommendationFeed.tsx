@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Plus, Music2 } from 'lucide-react';
+import { Play, Plus, Music2, Activity, TrendingUp } from 'lucide-react';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
 import { useDiscovery, type DiscoverySection } from '@/hooks/useDiscovery';
 import { LikeButton } from './LikeButton';
@@ -105,6 +105,15 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
           </div>
           <div className="mt-0.5 truncate text-[11px] text-white/35">{track.artist}</div>
         </button>
+        {/* Micro-Label / Sonic Reasoning */}
+        {track.microLabel && (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <Activity className="h-3 w-3 text-white/30" />
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-white/40 mix-blend-screen">
+              {track.microLabel}
+            </span>
+          </div>
+        )}
         <div className="mt-1.5">
           <LikeButton track={track} size="sm" />
         </div>
