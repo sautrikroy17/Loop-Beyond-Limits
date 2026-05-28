@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Sliders, Zap, Lightbulb, Moon, Volume2, Infinity, Mic2, Eye, Sparkles, MonitorPlay, Activity, Clock
+  X, Sliders, Zap, Lightbulb, Moon, Volume2, Infinity, Mic2, Eye, Sparkles, MonitorPlay, Activity, Clock, RefreshCw
 } from 'lucide-react';
 import { useSettings, PremiumMode } from '@/hooks/useSettings';
 import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
@@ -236,6 +236,24 @@ export function SettingsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   checked={s.reducedMotion}
                   onToggle={() => s.toggle('reducedMotion')}
                 />
+              </div>
+
+              {/* System / Troubleshooting */}
+              <div className="mb-6 rounded-2xl bg-white/[0.02] p-5 border border-white/[0.04]">
+                <SectionHeader icon={<RefreshCw className="h-4 w-4" />} title="System" />
+                
+                <div className="flex items-center justify-between py-1">
+                  <div>
+                    <div className="text-[13px] font-medium text-white/90">Reload Application</div>
+                    <div className="mt-0.5 text-[10px] text-white/40">Force refresh if the UI gets stuck</div>
+                  </div>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="flex h-8 items-center gap-2 rounded-full bg-white/5 px-4 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-white/10"
+                  >
+                    Reload
+                  </button>
+                </div>
               </div>
 
             </div>
