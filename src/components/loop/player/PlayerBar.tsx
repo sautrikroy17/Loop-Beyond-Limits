@@ -11,7 +11,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
-  Loader2, Mic2, Shuffle, Repeat, Repeat1, Infinity, ListPlus, FolderPlus, Check,
+  Loader2, Mic2, Shuffle, Repeat, Repeat1, Infinity, ListPlus, FolderPlus, Check, Heart, Plus
 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePlayback } from '@/hooks/usePlayback';
@@ -208,9 +208,10 @@ function WhiteSlider({
 // ── Playlist Picker Popup ────────────────────────────────────────
 
 function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
-  const { playlists, addTrackToPlaylist } = useUserProfile();
+  const { playlists, addTrackToPlaylist, createPlaylist } = useUserProfile();
   const { currentTrack } = usePlayback();
   const [added, setAdded] = useState<string | null>(null);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -228,6 +229,16 @@ function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
     setTimeout(() => onClose(), 800);
   };
 
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPlaylistName.trim() || !currentTrack) return;
+    const newPl = createPlaylist(newPlaylistName.trim());
+    addTrackToPlaylist(newPl.id, currentTrack);
+    setAdded(newPl.id);
+    setNewPlaylistName('');
+    setTimeout(() => onClose(), 800);
+  };
+
   return (
     <motion.div
       ref={ref}
@@ -241,9 +252,28 @@ function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
       <div className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.3em] text-white/30 border-b border-white/[0.06]">
         Add to Playlist
       </div>
+      
+      {/* Create New Playlist */}
+      <form onSubmit={handleCreate} className="border-b border-white/[0.06] p-2 flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="New Playlist..."
+          value={newPlaylistName}
+          onChange={e => setNewPlaylistName(e.target.value)}
+          className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded px-2 py-1.5 text-[11px] text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors"
+        />
+        <button
+          type="submit"
+          disabled={!newPlaylistName.trim()}
+          className="h-7 w-7 flex items-center justify-center shrink-0 rounded bg-white/[0.06] text-white/60 hover:bg-white/[0.1] hover:text-white disabled:opacity-30 transition-all"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </form>
+
       {playlists.length === 0 ? (
         <div className="px-3 py-5 text-center text-[11px] text-white/30">
-          No playlists yet — create one in the Library
+          No playlists yet — create one above
         </div>
       ) : (
         <div className="max-h-56 overflow-y-auto py-1" style={{ scrollbarWidth: 'none' }}>
@@ -286,6 +316,8 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
   const [seekVal,  setSeekVal]          = useState(0);
   const [showPlaylistPicker, setPicker] = useState(false);
   const [queueAdded, setQueueAdded]     = useState(false);
+
+  const { isLiked, likeTrack, unlikeTrack } = useUserProfile();
 
   const pct         = duration > 0 ? (progress / duration) * 100 : 0;
   const displayTime = seekDrag ? seekVal : progress;
@@ -359,6 +391,24 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
                   }`}
                 >
                   {queueAdded ? <Check className="h-4 w-4" /> : <ListPlus className="h-4 w-4" />}
+                </button>
+
+                {/* Like Button */}
+                <button
+                  onClick={() => {
+                    if (!currentTrack) return;
+                    if (isLiked(currentTrack.id)) {
+                      unlikeTrack(currentTrack.id);
+                    } else {
+                      likeTrack(currentTrack);
+                    }
+                  }}
+                  title="Like"
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
+                    isLiked(currentTrack?.id || '') ? 'text-red-500 hover:text-red-400' : 'text-white/30 hover:text-white/70'
+                  }`}
+                >
+                  <Heart className="h-4 w-4" fill={isLiked(currentTrack?.id || '') ? 'currentColor' : 'none'} />
                 </button>
 
                 {/* Add to Playlist */}

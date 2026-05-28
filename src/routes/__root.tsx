@@ -76,10 +76,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Loop — Feel Music Beyond Sound" },
+      { title: "Loop — Beyond Limits" },
       { name: "description", content: "Loop is an immersive music universe. Lossless spatial audio, AI discovery, and a cinematic listening experience built for a new generation." },
       { name: "author", content: "Loop" },
-      { property: "og:title", content: "Loop — Feel Music Beyond Sound" },
+      { property: "og:title", content: "Loop — Beyond Limits" },
       { property: "og:description", content: "An immersive, cinematic music platform. Feel sound, don't just hear it." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

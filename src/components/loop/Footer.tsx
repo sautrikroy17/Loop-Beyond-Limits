@@ -37,27 +37,29 @@ export function Footer() {
           </div>
 
           <p className="max-w-xs text-sm leading-relaxed text-white/28">
-            Feel music beyond sound.
+            LOOP - Beyond Limits
             <br />
             Built for the next generation of listeners.
           </p>
 
           {/* Social links */}
           <div className="flex items-center gap-3">
-            {['X', 'IG', 'TT', 'SC'].map((s) => (
+            {[{name: 'X', url: '#'}, {name: 'IG', url: 'https://www.instagram.com/__krishh17__/'}, {name: 'TT', url: '#'}, {name: 'SC', url: '#'}].map((s) => (
               <a
-                key={s}
-                href="#"
+                key={s.name}
+                href={s.url}
+                target={s.url !== '#' ? '_blank' : undefined}
+                rel={s.url !== '#' ? 'noopener noreferrer' : undefined}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-[11px] font-medium tracking-wide text-white/35 transition-all hover:border-white/14 hover:bg-white/[0.07] hover:text-white/70"
               >
-                {s}
+                {s.name}
               </a>
             ))}
           </div>
 
           {/* Legal */}
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] text-white/22">
-            <span>© 2026 Loop</span>
+            <span>Created by Sautrik Roy ©</span>
             <a href="#" className="transition-colors hover:text-white/50">Privacy</a>
             <a href="#" className="transition-colors hover:text-white/50">Terms</a>
           </div>

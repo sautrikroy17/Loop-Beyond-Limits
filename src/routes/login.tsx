@@ -48,7 +48,7 @@ function LoginPage() {
             <LoopLogo size={50} />
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-white">Loop</h1>
-              <p className="mt-2 text-sm text-gray-400">Feel Music Beyond Sound</p>
+              <p className="mt-2 text-sm text-gray-400">LOOP - Beyond Limits</p>
             </div>
           </div>
 

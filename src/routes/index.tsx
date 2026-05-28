@@ -24,7 +24,7 @@ import { PlaylistQuickAccess } from '@/components/loop/PlaylistQuickAccess';
 export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
-      { title: 'Loop — Feel Music Beyond Sound' },
+      { title: 'Loop — Beyond Limits' },
       {
         name: 'description',
         content: 'Search and stream any song. Synced lyrics, real playback, and algorithmic discovery.',
