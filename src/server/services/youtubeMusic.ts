@@ -237,6 +237,47 @@ export async function searchYouTubeMusic(query: string, limit = 20): Promise<YTM
 }
 
 /**
+ * Search for a playlist by name and return its tracks.
+ * This satisfies the "Editorial Charts" requirement without hardcoding browseIds.
+ */
+export async function searchPlaylist(query: string, limit = 20): Promise<YTMTrack[]> {
+  try {
+    const data = await post('search', {
+      query,
+      params: 'EgWKAQIQAWoKEAoQAxAEEAkQBQ==' // Playlists filter
+    });
+
+    let browseId: string | null = null;
+    
+    // Quick and dirty regex extraction of the first playlist browseId (VL...)
+    // This is safer than walking the deeply nested and volatile YTM JSON tree
+    const jsonStr = JSON.stringify(data);
+    const match = jsonStr.match(/"browseId":"(VL[^"]+)"/);
+    if (match && match[1]) {
+      browseId = match[1];
+    } else {
+      // Fallback broad search
+      const broadData = await post('search', { query });
+      const broadStr = JSON.stringify(broadData);
+      const broadMatch = broadStr.match(/"browseId":"(VL[^"]+)"/);
+      if (broadMatch && broadMatch[1]) browseId = broadMatch[1];
+    }
+
+    if (browseId) {
+      // Strip 'VL' prefix for getPlaylistDetails
+      const pid = browseId.replace(/^VL/, '');
+      return await getPlaylistDetails(pid, limit);
+    }
+    
+    // If no playlist found, fallback to song search
+    return await searchYouTubeMusic(query, limit);
+  } catch (err) {
+    console.error('[YTMusic] searchPlaylist failed:', err);
+    return [];
+  }
+}
+
+/**
  * Get related tracks for a given YouTube video ID.
  * Uses the /next endpoint which returns YouTube's own "Up Next" queue.
  */

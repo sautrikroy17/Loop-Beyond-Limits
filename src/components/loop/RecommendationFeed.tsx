@@ -15,6 +15,7 @@ import { Reveal } from './Reveal';
 import { DailyMix } from './DailyMix';
 import { AlbumModal } from './AlbumModal';
 import { AIHeroMix } from './AIHeroMix';
+import { TrendingNowHero } from './TrendingNowHero';
 
 // ─── Section icon map ─────────────────────────────────────────────
 
@@ -241,7 +242,8 @@ export function RecommendationFeed() {
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
 
   const aiMixSection = sections.find(s => s.id === 'ai-mix');
-  const otherSections = sections.filter(s => s.id !== 'ai-mix');
+  const trendingSection = sections.find(s => s.id === 'chart-0');
+  const otherSections = sections.filter(s => s.id !== 'ai-mix' && s.id !== 'chart-0');
 
   return (
     <section id="discover" className="relative px-6 py-28">
@@ -267,6 +269,8 @@ export function RecommendationFeed() {
         </Reveal>
 
         {aiMixSection && <AIHeroMix section={aiMixSection as any} />}
+        
+        {trendingSection && <TrendingNowHero section={trendingSection as any} />}
 
         <DailyMix />
 
