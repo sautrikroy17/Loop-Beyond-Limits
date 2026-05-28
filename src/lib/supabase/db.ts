@@ -256,5 +256,9 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
   const { data } = supabase.storage.from('avatars').getPublicUrl(path);
   const url = data.publicUrl + `?t=${Date.now()}`; // cache-bust
   await upsertUserProfile(userId, { avatar_url: url });
+  
+  // Guarantee the avatar survives reload by saving to core auth session metadata
+  await supabase.auth.updateUser({ data: { avatar_url: url } });
+  
   return url;
 }

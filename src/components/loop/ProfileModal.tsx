@@ -604,6 +604,7 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
   const { recentlyPlayed, customAvatarUrl, setCustomAvatarUrl } = useUserProfile();
   const { playTrack } = usePlayback();
+  const { getTopGenres, getTasteIdentity } = useListeningIntelligence();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -620,27 +621,9 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
 
   // Top Tracks: most recently played (deduplicated, LIFO order)
   const topTracks = recentlyPlayed.slice(0, 5);
-
-  // Top Genre: count by genre field if available, else 'Unknown'
-  const genreCounts = recentlyPlayed.reduce((acc, t) => {
-    const g = (t as any).genre || (t as any).tags?.[0];
-    if (g) acc[g] = (acc[g] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
-
-  // Vibe: simple heuristic from artist/genre mix
-  const vibe = (() => {
-    if (recentlyPlayed.length === 0) return '🎵 Balanced';
-    const recent5 = recentlyPlayed.slice(0, 5);
-    const hasNight = recent5.some(t => /night|dark|slow|sad|cry/i.test(t.title + t.artist));
-    const hasChill = recent5.some(t => /chill|lo.fi|jazz|sleep|calm|acoustic/i.test(t.title + t.artist));
-    const hasParty = recent5.some(t => /party|dance|club|bass|hype|edm/i.test(t.title + t.artist));
-    if (hasNight) return '🌙 Night Drive';
-    if (hasChill) return '🌊 Chill Vibes';
-    if (hasParty) return '🔥 Party Mode';
-    return '🎵 Balanced';
-  })();
+  // Use the advanced AI intelligence engine for real taste profiling
+  const topGenre = getTopGenres(1)[0] || 'Unknown';
+  const vibe = getTasteIdentity() || '🎵 Balanced';
 
   // ── Avatar ────────────────────────────────────────────────────────
   // Priority: Supabase-stored custom avatar → Google OAuth avatar
@@ -659,6 +642,10 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
       // Save to user_profiles table (syncs across all browsers)
       const { upsertUserProfile } = await import('@/lib/supabase/db');
       await upsertUserProfile(user.id, { avatar_url: compressed });
+      
+      // Crucial: Update the auth session itself so it survives page reloads
+      const { supabase } = await import('@/lib/supabase/client');
+      await supabase.auth.updateUser({ data: { avatar_url: compressed } });
 
       // Update local state immediately (no page reload needed)
       setCustomAvatarUrl(compressed);
