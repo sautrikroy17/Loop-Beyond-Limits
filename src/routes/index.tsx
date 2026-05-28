@@ -17,7 +17,7 @@ import { ProfileModal } from '@/components/loop/ProfileModal';
 import { usePlayback } from '@/hooks/usePlayback';
 import { useAudioEngine } from '@/hooks/useAudioData';
 import { initProfileSync } from '@/hooks/useUserProfile';
-import { initSettings } from '@/hooks/useSettings';
+import { initSettings, useSettings } from '@/hooks/useSettings';
 import { initListeningIntelligence } from '@/hooks/useListeningIntelligence';
 import { PlaylistQuickAccess } from '@/components/loop/PlaylistQuickAccess';
 
