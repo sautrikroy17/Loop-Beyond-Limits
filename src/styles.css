@@ -166,18 +166,18 @@
      * - Subtle blue glow at top-left
      * NO background-attachment:fixed — breaks with overflow:hidden sections
      */
-    background-color: oklch(0.04 0.030 258);
+    background-color: var(--color-background);
     background-image:
       radial-gradient(ellipse 80% 65% at 95% 105%,
-        oklch(0.40 0.24 210 / 0.75) 0%,
-        oklch(0.28 0.18 218 / 0.40) 35%,
+        var(--orb-a-color) 0%,
         transparent 62%),
       radial-gradient(ellipse 55% 50% at -5% 85%,
-        oklch(0.28 0.16 252 / 0.50) 0%,
+        var(--orb-b-color) 0%,
         transparent 58%),
       radial-gradient(ellipse 60% 55% at 50% 0%,
-        oklch(0.22 0.12 262 / 0.30) 0%,
+        var(--orb-c-color) 0%,
         transparent 55%);
+    transition: background-color 1.5s ease-in-out;
   }
 
   body {

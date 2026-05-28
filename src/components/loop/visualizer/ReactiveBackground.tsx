@@ -36,7 +36,7 @@ export function ReactiveBackground() {
     window.addEventListener('resize', resize, { passive: true });
 
     // Smoothed values — prevent jitter from individual frames
-    let sBass = 0, sMid = 0, sTreble = 0, sBeat = 0, sLoud = 0;
+    let sBass = 0, sMid = 0, sTreble = 0, sBeat = 0, sLoud = 0, sIntensity = effectIntensity;
 
     const unsub = subscribeToAudio((d) => {
       if (!canvas || !ctx) return;
@@ -47,13 +47,14 @@ export function ReactiveBackground() {
       sTreble += (d.treble  - sTreble) * 0.14;
       sBeat   += (d.beat    - sBeat)   * 0.20;
       sLoud   += (d.loudness - sLoud)  * 0.08;
+      sIntensity += (effectIntensity - sIntensity) * 0.04; // Smooth mode switching
 
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      if (!immersiveEffects || premiumMode === 'focus' || effectIntensity === 0) return;
+      if (!immersiveEffects || premiumMode === 'focus' || sIntensity < 0.01) return;
 
-      const scale = effectIntensity;
+      const scale = sIntensity;
 
       // ── 1. Violet bass bloom — upper left ────────────────────────
       {

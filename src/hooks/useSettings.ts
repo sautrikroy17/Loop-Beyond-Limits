@@ -11,11 +11,11 @@ import { persist } from 'zustand/middleware';
 
 // ── Premium Modes ──────────────────────────────────────────────────
 
-export type PremiumMode = 'none' | 'aura' | 'midnight' | 'focus' | 'party';
+export type PremiumMode = 'none' | 'aura' | 'midnight' | 'focus' | 'party' | 'night-drive' | 'club-neon' | 'dreamscape' | 'cinema-atmos';
 
 // ── Themes ─────────────────────────────────────────────────────────
 
-export type ThemeName = 'midnight' | 'neon' | 'minimal' | 'deep-space' | 'aurora';
+export type ThemeName = 'midnight' | 'neon' | 'minimal' | 'deep-space' | 'aurora' | 'night-drive' | 'club-neon' | 'dreamscape' | 'cinema-atmos';
 
 interface ThemeTokens {
   bg: string;
@@ -72,6 +72,42 @@ export const THEMES: Record<ThemeName, ThemeTokens> = {
     orbA: 'oklch(0.50 0.22 162 / 0.32)',
     orbB: 'oklch(0.48 0.20 290 / 0.24)',
     orbC: 'oklch(0.52 0.24 120 / 0.18)',
+  },
+  'night-drive': {
+    bg: 'oklch(0.035 0.04 290)',
+    surface: 'oklch(0.06 0.05 292)',
+    accent: 'oklch(0.60 0.28 285)',
+    accentGlow: 'oklch(0.60 0.28 285 / 0.6)',
+    orbA: 'oklch(0.45 0.25 290 / 0.40)',
+    orbB: 'oklch(0.35 0.15 310 / 0.30)',
+    orbC: 'oklch(0.25 0.10 260 / 0.20)',
+  },
+  'club-neon': {
+    bg: 'oklch(0.03 0.05 320)',
+    surface: 'oklch(0.05 0.06 325)',
+    accent: 'oklch(0.85 0.35 320)',
+    accentGlow: 'oklch(0.85 0.35 320 / 0.8)',
+    orbA: 'oklch(0.65 0.35 320 / 0.50)',
+    orbB: 'oklch(0.60 0.30 200 / 0.40)',
+    orbC: 'oklch(0.70 0.35 280 / 0.30)',
+  },
+  dreamscape: {
+    bg: 'oklch(0.05 0.01 220)',
+    surface: 'oklch(0.08 0.015 225)',
+    accent: 'oklch(0.80 0.12 300)',
+    accentGlow: 'oklch(0.80 0.12 300 / 0.4)',
+    orbA: 'oklch(0.65 0.12 300 / 0.25)',
+    orbB: 'oklch(0.60 0.15 220 / 0.20)',
+    orbC: 'oklch(0.75 0.10 180 / 0.15)',
+  },
+  'cinema-atmos': {
+    bg: 'oklch(0.02 0.005 260)',
+    surface: 'oklch(0.04 0.01 260)',
+    accent: 'oklch(0.85 0.05 260)',
+    accentGlow: 'oklch(0.85 0.05 260 / 0.5)',
+    orbA: 'oklch(0.20 0.02 260 / 0.15)',
+    orbB: 'oklch(0.18 0.02 240 / 0.10)',
+    orbC: 'oklch(0.22 0.03 280 / 0.08)',
   },
 };
 
@@ -148,6 +184,18 @@ export const useSettings = create<SettingsState>()(
         } else if (premiumMode === 'party') {
           get().setTheme('neon');
           set({ effectIntensity: 1.0 });
+        } else if (premiumMode === 'night-drive') {
+          get().setTheme('night-drive');
+          set({ effectIntensity: 0.6 });
+        } else if (premiumMode === 'club-neon') {
+          get().setTheme('club-neon');
+          set({ effectIntensity: 1.0 });
+        } else if (premiumMode === 'dreamscape') {
+          get().setTheme('dreamscape');
+          set({ effectIntensity: 0.4 });
+        } else if (premiumMode === 'cinema-atmos') {
+          get().setTheme('cinema-atmos');
+          set({ effectIntensity: 0.8 });
         }
       },
 

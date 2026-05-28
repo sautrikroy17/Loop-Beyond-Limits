@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Reveal } from "./Reveal";
 import { Waveform } from "./Waveform";
 import { SectionShell } from "./SectionShell";
@@ -166,24 +166,32 @@ export function PlayerSection() {
                       background: "conic-gradient(from 0deg, oklch(0.7 0.22 290), oklch(0.72 0.2 240), oklch(0.82 0.15 200), oklch(0.7 0.22 290))",
                     }}
                   />
-                  <div
-                    className="relative h-full w-full rounded-[2rem] ring-1 ring-white/15"
-                    style={{
-                      background: currentTrack?.albumArt
-                        ? `url(${currentTrack.albumArt}) center/cover`
-                        : "radial-gradient(circle at 30% 30%, oklch(0.55 0.22 290), oklch(0.18 0.05 280) 70%)",
-                    }}
-                  >
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="font-display text-xl font-semibold truncate">
-                        {currentTrack?.title || "Peaches"}
+                  <AnimatePresence mode="popLayout">
+                    <motion.div
+                      key={currentTrack?.id || "empty"}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.05 }}
+                      transition={{ duration: 1.2, ease: "easeInOut" }}
+                      className="absolute inset-0 h-full w-full rounded-[2rem] ring-1 ring-white/15 overflow-hidden"
+                      style={{
+                        background: currentTrack?.albumArt
+                          ? `url(${currentTrack.albumArt}) center/cover`
+                          : "radial-gradient(circle at 30% 30%, oklch(0.55 0.22 290), oklch(0.18 0.05 280) 70%)",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-6 left-6 right-6">
+                        <div className="font-display text-xl font-semibold truncate text-white">
+                          {currentTrack?.title || "Peaches"}
+                        </div>
+                        <div className="text-sm text-white/70 truncate">
+                          {currentTrack?.artist || "Justin Bieber"}
+                        </div>
                       </div>
-                      <div className="text-sm text-white/70 truncate">
-                        {currentTrack?.artist || "Justin Bieber"}
-                      </div>
-                    </div>
-                    <div className="absolute right-6 top-6 h-3 w-3 rounded-full bg-white/80 shadow-[0_0_18px_white]" />
-                  </div>
+                      <div className="absolute right-6 top-6 h-3 w-3 rounded-full bg-white/80 shadow-[0_0_18px_white]" />
+                    </motion.div>
+                  </AnimatePresence>
                 </motion.div>
 
                 <div className="mt-8">

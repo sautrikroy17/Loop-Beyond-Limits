@@ -137,8 +137,26 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
     
     // AI Mix Generation
     const qAIMix = `${tasteIdentity} ${primaryArtist}`;
-    const aiMixTitle = `Your ${tasteIdentity} Mix`;
-
+    // Elite AI Mix Titling
+    let aiMixTitle = `Your ${tasteIdentity} Mix`;
+    const tiLower = tasteIdentity.toLowerCase();
+    
+    if (tiLower.includes('dark r&b') || tiLower.includes('after hours')) {
+      const darkTitles = ['Late Night Chaos', 'Your Midnight Obsession', 'After Hours Energy'];
+      aiMixTitle = darkTitles[Math.floor(Math.random() * darkTitles.length)];
+    } else if (tiLower.includes('bollywood') || tiLower.includes('punjabi')) {
+      const desiTitles = ['Desi Main Character', 'Your Heartbreak Era', 'Late Night Romance'];
+      aiMixTitle = desiTitles[Math.floor(Math.random() * desiTitles.length)];
+    } else if (tiLower.includes('pop')) {
+      const popTitles = ['Your Toxic Pop Era', 'Main Character Energy', 'Neon Pop Syndrome'];
+      aiMixTitle = popTitles[Math.floor(Math.random() * popTitles.length)];
+    } else if (tiLower.includes('indie') || tiLower.includes('sad')) {
+      const sadTitles = ['Melancholy Luxury', 'Soft Chaos', 'Floating Through Midnight'];
+      aiMixTitle = sadTitles[Math.floor(Math.random() * sadTitles.length)];
+    } else if (tiLower.includes('trap') || tiLower.includes('hyper')) {
+      const hypeTitles = ['Hyperpop Spiral', 'Underground Pulse', 'Festival Energy'];
+      aiMixTitle = hypeTitles[Math.floor(Math.random() * hypeTitles.length)];
+    }
     // 2. Real Music Culture Charts & Playlists
     const CHART_POOL: Record<string, { title: string; query: string; icon: string }[]> = {
       'Bollywood Romance': [

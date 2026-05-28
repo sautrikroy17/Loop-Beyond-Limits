@@ -9,6 +9,10 @@ import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
 const PREMIUM_MODES: { id: PremiumMode; label: string; sub: string; icon: React.ReactNode; color: string }[] = [
   { id: 'none', label: 'Classic', sub: 'Standard Loop UI', icon: <MonitorPlay />, color: 'oklch(0.5 0 0)' },
   { id: 'aura', label: 'Aura Mode', sub: 'UI adapts to album art', icon: <Sparkles />, color: 'oklch(0.7 0.2 150)' },
+  { id: 'night-drive', label: 'Night Drive', sub: 'Deep indigo & slow sweeping motion', icon: <Moon />, color: 'oklch(0.60 0.28 285)' },
+  { id: 'club-neon', label: 'Club Neon', sub: 'High contrast fast physics', icon: <Zap />, color: 'oklch(0.85 0.35 320)' },
+  { id: 'dreamscape', label: 'Dreamscape', sub: 'Soft pastel washes & high blur', icon: <Sparkles />, color: 'oklch(0.80 0.12 300)' },
+  { id: 'cinema-atmos', label: 'Cinema Atmos', sub: 'Ultra-dark minimal breath', icon: <Eye />, color: 'oklch(0.85 0.05 260)' },
   { id: 'midnight', label: 'Midnight', sub: 'Cinematic deep dark', icon: <Moon />, color: 'oklch(0.3 0.1 260)' },
   { id: 'focus', label: 'Focus Mode', sub: 'Zero distractions', icon: <Eye />, color: 'oklch(0.8 0.05 200)' },
   { id: 'party', label: 'Party Mode', sub: 'Max neon visuals', icon: <Zap />, color: 'oklch(0.85 0.34 290)' },
