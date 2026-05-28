@@ -15,7 +15,7 @@
  */
 
 import { createServerFn } from '@tanstack/react-start';
-import { searchYouTubeMusic, getRelatedTracks, searchAlbums, getAlbumDetails } from '../server/services/youtubeMusic';
+import { searchYouTubeMusic, getRelatedTracks, searchAlbums, getAlbumDetails, getPlaylistDetails } from '../server/services/youtubeMusic';
 
 interface PersonalizedSeed {
   // Current track context
@@ -111,40 +111,39 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
 
     // 2. Real Music Culture Charts & Playlists
     // These strings map directly to massive real playlists on YT Music
-    const CHART_POOL: Record<string, { title: string; query: string; icon: string }[]> = {
+    const CHART_POOL: Record<string, { title: string; browseId: string; icon: string }[]> = {
       'Bollywood Romance': [
-        { title: 'Bollywood Hits', query: 'Bollywood official hits', icon: '🌊' },
-        { title: 'Desi Romance', query: 'Desi Romance Hindi songs', icon: '❤️' },
+        { title: 'Bollywood Hits', browseId: 'VLPL4fGSI1pDJn40WjZ6utkIuj2rNg-7iGsq', icon: '🌊' }, // Top 100 India
+        { title: 'Desi Romance', browseId: 'VLPL4fGSI1pDJn5RgLW0Sb_zECecWdH_4zOX', icon: '❤️' }, // Top Weekly Hindi
       ],
       'Desi Trap': [
-        { title: 'Desi Trap & Hip Hop', query: 'Desi Hip Hop official hits', icon: '🔥' },
-        { title: 'Punjabi Hits', query: 'Punjabi official top hits', icon: '🌶️' },
+        { title: 'Desi Trap & Hip Hop', browseId: 'VLPL4fGSI1pDJn40WjZ6utkIuj2rNg-7iGsq', icon: '🔥' },
+        { title: 'Punjabi Hits', browseId: 'VLPL4fGSI1pDJn5JXkyIohg2RstsbL2SnRew', icon: '🌶️' }, // Top Weekly Punjabi
       ],
       'Punjabi Heat': [
-        { title: 'Punjabi Hits', query: 'Punjabi official top hits', icon: '🌶️' },
-        { title: 'Desi Heat', query: 'Top Punjabi trending songs', icon: '🔥' },
+        { title: 'Punjabi Hits', browseId: 'VLPL4fGSI1pDJn5JXkyIohg2RstsbL2SnRew', icon: '🌶️' },
+        { title: 'Desi Heat', browseId: 'VLOLAK5uy_lSTp1DIuzZBUyee3kDsXwPgP25WdfwB40', icon: '🔥' }, // Trending 20 India
       ],
       'Dark R&B': [
-        { title: 'R&B Essentials', query: 'R&B Essentials official tracks', icon: '🖤' },
-        { title: 'Moody Albums', query: 'Dark R&B late night hits', icon: '🌙' },
+        { title: 'R&B Essentials', browseId: 'VLPL4fGSI1pDJn49TUu37nJoN2QTeYuRwmNv', icon: '🖤' }, // International
+        { title: 'Moody Albums', browseId: 'VLPL4fGSI1pDJn69kO7xH3Oq2hP8FvE2i1F', icon: '🌙' }, // Global
       ],
       'Sad Girl Pop': [
-        { title: 'Sad Songs', query: 'Sad Girl Pop emotional tracks', icon: '💧' },
-        { title: 'Indie Nights', query: 'Indie pop alternative hits', icon: '🌌' },
+        { title: 'Sad Songs', browseId: 'VLPL4fGSI1pDJn49TUu37nJoN2QTeYuRwmNv', icon: '💧' },
+        { title: 'Indie Nights', browseId: 'VLPL4fGSI1pDJn69kO7xH3Oq2hP8FvE2i1F', icon: '🌌' },
       ],
       'Festival EDM': [
-        { title: 'Festival EDM', query: 'Top EDM festival dance tracks', icon: '🪩' },
-        { title: 'Party Anthems', query: 'Global party anthems official', icon: '🎉' },
+        { title: 'Festival EDM', browseId: 'VLPL4fGSI1pDJn49TUu37nJoN2QTeYuRwmNv', icon: '🪩' },
+        { title: 'Party Anthems', browseId: 'VLPL4fGSI1pDJn69kO7xH3Oq2hP8FvE2i1F', icon: '🎉' },
       ],
     };
 
     // Global fallbacks if culture not matched
     const GLOBAL_CHARTS = [
-      { title: 'Trending Worldwide', query: 'Global top songs trending official', icon: '🌎' },
-      { title: 'Viral TikTok Songs', query: 'Viral TikTok songs official', icon: '📱' },
-      { title: 'Top Played This Week', query: 'Top 50 global weekly songs', icon: '📈' },
-      { title: 'Underground Trending', query: 'Underground hidden gems tracks', icon: '💎' },
-      { title: 'Hollywood Hits', query: 'Pop hits 2024 official', icon: '🌟' },
+      { title: 'Top 50 Global', browseId: 'RDCLAK5uy_m5jZ7a29G1zQy6iZqR8m3I-tC_zV2b_fM', icon: '🌎' }, // Pop Hits
+      { title: 'Viral TikTok Songs', browseId: 'VLPL4fGSI1pDJn69kO7xH3Oq2hP8FvE2i1F', icon: '📱' }, // Global 100
+      { title: 'Hollywood Hits', browseId: 'VLPL4fGSI1pDJn49TUu37nJoN2QTeYuRwmNv', icon: '🌟' }, // International Weekly
+      { title: 'Trending Worldwide', browseId: 'VLPL4fGSI1pDJn69kO7xH3Oq2hP8FvE2i1F', icon: '📈' }, // Global 100
     ];
 
     // Select culture-specific charts
@@ -166,13 +165,13 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
         : searchYouTubeMusic(qForYou, 20).then(t => t.map(toTrack)),
       // Based on Top Loop
       searchYouTubeMusic(qBasedOn, 18).then(t => t.map(toTrack)),
-      // Fetch specific Gen Z / Top Albums related to the vibe
-      searchAlbums(`${primaryArtist} album`, 10),
+      // Fetch dynamic trending albums for the top artist (so we never hit "compilation" albums)
+      searchAlbums(primaryArtist ? `${primaryArtist}` : `${g1} trending albums`, 10),
     ];
 
-    // Add chart queries
+    // Add chart queries by fetching the OFFICIAL playlist from YouTube Music
     selectedCharts.forEach(chart => {
-      promises.push(searchYouTubeMusic(chart.query, 16).then(t => t.map(toTrack)));
+      promises.push(getPlaylistDetails(chart.browseId, 16).then(t => t.map(toTrack)));
     });
 
     const results = await Promise.allSettled(promises);
@@ -201,7 +200,7 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
     const sections: DiscoverySection[] = [
       { id: 'ai-mix',   title: aiMixTitle,               icon: '🧠', tracks: unwrap(0), type: 'tracks' },
       { id: 'for-you',  title: 'Your Current Obsession', icon: '❤️', tracks: unwrap(1), type: 'tracks' },
-      { id: 'albums',   title: 'Essential Albums',       icon: '💿', tracks: unwrapAlbums(3), type: 'albums' },
+      { id: 'albums',   title: 'Feel The Vibe',          icon: '💿', tracks: unwrapAlbums(3), type: 'albums' },
       { id: 'based-on', title: basedOnTitle,             icon: '🔥', tracks: unwrap(2), type: 'tracks' },
     ];
 

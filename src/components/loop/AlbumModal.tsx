@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, X, Heart, Loader2 } from 'lucide-react';
+import { Play, X, Heart, Loader2, BookmarkPlus, Check } from 'lucide-react';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
 import { getAlbumDetailsFn } from '@/functions/recommendations';
+import { usePlaylist } from '@/hooks/usePlaylist';
 
 interface AlbumModalProps {
   album: { id: string; title: string; artist: string; albumArt: string } | null;
@@ -11,8 +12,10 @@ interface AlbumModalProps {
 
 export function AlbumModal({ album, onClose }: AlbumModalProps) {
   const { playTrack } = usePlayback();
+  const { createPlaylist } = usePlaylist();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!album) return;
@@ -38,6 +41,14 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
     if (tracks.length > 0) {
       // Play the first (or hottest) track instantly
       playTrack(tracks[0]);
+    }
+  };
+
+  const handleSaveAlbum = () => {
+    if (tracks.length > 0 && album) {
+      createPlaylist(album.title, tracks);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     }
   };
 
@@ -101,9 +112,12 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
                   Instant Play
                 </button>
                 <button
-                  className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                  onClick={handleSaveAlbum}
+                  disabled={loading || tracks.length === 0 || saved}
+                  className="flex h-[52px] px-6 shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
                 >
-                  <Heart className="h-5 w-5" />
+                  {saved ? <Check className="h-4 w-4 text-green-400" /> : <BookmarkPlus className="h-4 w-4" />}
+                  {saved ? 'Saved' : 'Save Album'}
                 </button>
               </div>
             </div>

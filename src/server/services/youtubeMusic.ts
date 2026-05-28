@@ -335,6 +335,27 @@ export async function getAlbumDetails(browseId: string): Promise<YTMTrack[]> {
   }
 }
 
+export async function getPlaylistDetails(browseId: string, limit = 20): Promise<YTMTrack[]> {
+  try {
+    const data = await post('browse', { browseId });
+    let contents = dig(data, 'contents', 'twoColumnBrowseResultsRenderer', 'secondaryContents', 'sectionListRenderer', 'contents', 0, 'musicPlaylistShelfRenderer', 'contents');
+    
+    if (!contents) {
+       contents = dig(data, 'contents', 'singleColumnBrowseResultsRenderer', 'tabs', 0, 'tabRenderer', 'content', 'sectionListRenderer', 'contents', 0, 'musicPlaylistShelfRenderer', 'contents') ?? [];
+    }
+    
+    const tracks: YTMTrack[] = [];
+    for (const item of contents) {
+      const track = parseListItem(item.musicResponsiveListItemRenderer);
+      if (track && track.videoId) tracks.push(track);
+    }
+    return tracks.slice(0, limit);
+  } catch (err) {
+    console.error('[YTMusic] getPlaylistDetails failed:', err);
+    return [];
+  }
+}
+
 export async function resolveVideoId(trackName: string, artistName: string): Promise<string | null> {
   // Search without "official audio" to avoid label-restricted embeds.
   // "Official Audio" tracks are commonly blocked from third-party iFrame embedding.
