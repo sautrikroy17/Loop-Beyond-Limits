@@ -14,20 +14,40 @@ import { usePlayback } from '@/hooks/usePlayback';
 let userId: string | null = null;
 let bootDone = false;
 let beforeUnloadListener: (() => void) | null = null;
+// Pre-cached so beforeunload save is 100% synchronous (no async getSession call during tab close)
+let cachedAccessToken: string | null = null;
+let cachedSupabaseUrl = '';
+let cachedAnonKey = '';
 
 // ── Public API ────────────────────────────────────────────────────
 
 export async function initPlaybackSync(uid: string) {
-  // Only run once per session
+  // Only run once per logged-in session
   if (userId === uid && bootDone) return;
   userId = uid;
   bootDone = true;
 
-  // 1. Restore from cloud if localStorage has nothing
+  // Pre-cache auth credentials for the beforeunload handler
+  // (beforeunload can't await async calls reliably)
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (sessionData?.session?.access_token) {
+    cachedAccessToken = sessionData.session.access_token;
+    cachedSupabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    cachedAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  }
+
+  // Keep the token fresh whenever Supabase silently refreshes it
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.access_token) {
+      cachedAccessToken = session.access_token;
+    }
+  });
+
+  // 1. Restore from cloud if localStorage has nothing (cross-device case)
   const localState = usePlayback.getState();
   if (!localState.currentTrack) {
     try {
-      const cloudState = await loadCloudState(uid);
+      const cloudState = await loadCloudState();
       if (cloudState?.currentTrack) {
         usePlayback.setState({
           currentTrack: cloudState.currentTrack,
@@ -35,22 +55,22 @@ export async function initPlaybackSync(uid: string) {
           progress: cloudState.progress || 0,
           isShuffle: cloudState.isShuffle || false,
           repeatMode: cloudState.repeatMode || 'none',
-          isPlaying: false, // Always start paused — user presses play
+          isPlaying: false, // Always start paused — user explicitly presses play
         });
       }
     } catch {
-      // Silently ignore cloud errors — localStorage is the fallback
+      // Silently ignore — localStorage is the fallback on the same device
     }
   }
 
-  // 2. Save to cloud when tab closes
+  // 2. Register beforeunload handler (uses pre-cached token, fully synchronous)
   if (beforeUnloadListener) {
     window.removeEventListener('beforeunload', beforeUnloadListener);
   }
   beforeUnloadListener = () => {
     const state = usePlayback.getState();
-    if (state.currentTrack) {
-      saveCloudStateBeacon(uid, state);
+    if (state.currentTrack && cachedAccessToken) {
+      saveCloudStateBeacon(state);
     }
   };
   window.addEventListener('beforeunload', beforeUnloadListener);
@@ -59,44 +79,43 @@ export async function initPlaybackSync(uid: string) {
 export function stopPlaybackSync() {
   userId = null;
   bootDone = false;
+  cachedAccessToken = null;
   if (beforeUnloadListener) {
     window.removeEventListener('beforeunload', beforeUnloadListener);
     beforeUnloadListener = null;
   }
 }
 
-// ── Cloud Read/Write ──────────────────────────────────────────────
+// ── Cloud Read ────────────────────────────────────────────────────
 
-async function loadCloudState(uid: string) {
+async function loadCloudState() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data?.user?.user_metadata?.playback_state) return null;
   return data.user.user_metadata.playback_state;
 }
 
-function saveCloudStateBeacon(uid: string, state: ReturnType<typeof usePlayback.getState>) {
-  // keepalive: true ensures this request completes even as the tab closes
-  supabase.auth.getSession().then(({ data }) => {
-    const session = data?.session;
-    if (!session?.access_token) return;
+// ── Cloud Write (synchronous-safe for beforeunload) ───────────────
 
-    const payload = {
-      currentTrack: state.currentTrack,
-      queue: state.queue.slice(0, 30), // limit size
-      progress: state.progress,
-      isShuffle: state.isShuffle,
-      repeatMode: state.repeatMode,
-    };
+function saveCloudStateBeacon(state: ReturnType<typeof usePlayback.getState>) {
+  if (!cachedAccessToken || !cachedSupabaseUrl) return;
 
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`;
-    fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ data: { playback_state: payload } }),
-      keepalive: true,
-    }).catch(() => {});
-  });
+  const payload = {
+    currentTrack: state.currentTrack,
+    queue: state.queue.slice(0, 30), // cap to stay under 8KB auth metadata limit
+    progress: state.progress,
+    isShuffle: state.isShuffle,
+    repeatMode: state.repeatMode,
+  };
+
+  // keepalive: true guarantees this request completes even as the tab is closing
+  fetch(`${cachedSupabaseUrl}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${cachedAccessToken}`,
+      apikey: cachedAnonKey,
+    },
+    body: JSON.stringify({ data: { playback_state: payload } }),
+    keepalive: true,
+  }).catch(() => {});
 }
