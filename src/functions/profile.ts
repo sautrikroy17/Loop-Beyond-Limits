@@ -4,32 +4,38 @@ import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
 import { usePlayback } from '@/hooks/usePlayback';
 import { hybridSearchFn, getRecommendationsFn } from '@/functions/search';
 
+let _saveTimeout: any = null;
+
 export async function saveProfileFn() {
-  const { session } = useAuth.getState();
-  if (!session?.user) return;
-
-  const intel = useListeningIntelligence.getState();
+  if (_saveTimeout) clearTimeout(_saveTimeout);
   
-  // We still save the top 10 arrays for easy querying/analytics if needed
-  const topArtists = intel.getTopArtists(10);
-  const topGenres = intel.getTopGenres(10);
-  const moodHistory = intel.getTopGenres(1)[0]; 
+  _saveTimeout = setTimeout(async () => {
+    const { session } = useAuth.getState();
+    if (!session?.user) return;
 
-  try {
-    await (supabase as any).from('user_profiles').upsert({
-      id: session.user.id,
-      display_name: session.user.user_metadata.full_name,
-      avatar_url: session.user.user_metadata.avatar_url,
-      top_artists: topArtists,
-      top_genres: topGenres,
-      mood_history: moodHistory,
-      artist_weights: intel.artistWeights,
-      genre_weights: intel.genreWeights,
-      events: intel.events
-    }, { onConflict: 'id' });
-  } catch (error) {
-    console.error('Error saving profile:', error);
-  }
+    const intel = useListeningIntelligence.getState();
+    
+    // We still save the top 10 arrays for easy querying/analytics if needed
+    const topArtists = intel.getTopArtists(10);
+    const topGenres = intel.getTopGenres(10);
+    const moodHistory = intel.getTopGenres(1)[0]; 
+
+    try {
+      await (supabase as any).from('user_profiles').upsert({
+        id: session.user.id,
+        display_name: session.user.user_metadata.full_name,
+        avatar_url: session.user.user_metadata.avatar_url,
+        top_artists: topArtists,
+        top_genres: topGenres,
+        mood_history: moodHistory,
+        artist_weights: intel.artistWeights,
+        genre_weights: intel.genreWeights,
+        events: intel.events
+      }, { onConflict: 'id' });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
+  }, 10000); // 10-second debounce to protect database
 }
 
 export async function loadProfileFn() {
