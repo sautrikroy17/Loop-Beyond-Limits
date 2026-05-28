@@ -158,8 +158,8 @@
 
   html {
     scroll-behavior: smooth;
-    /* Base color must match gradient end so no hard seam appears at page bottom */
-    background-color: oklch(0.06 0.022 260);
+    /* Dark navy base that matches gradient — gives depth without pure black */
+    background-color: oklch(0.075 0.028 268);
   }
 
   body {
@@ -167,8 +167,8 @@
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    /* Gradient-matched deep navy — prevents the pure-black cutoff */
-    background-color: oklch(0.06 0.022 260);
+    /* Gradient-matched deep navy — keeps premium feel throughout */
+    background-color: oklch(0.075 0.028 268);
   }
 }
 

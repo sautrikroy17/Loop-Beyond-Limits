@@ -19,6 +19,7 @@ import { useAudioEngine } from '@/hooks/useAudioData';
 import { initProfileSync } from '@/hooks/useUserProfile';
 import { initSettings } from '@/hooks/useSettings';
 import { initListeningIntelligence } from '@/hooks/useListeningIntelligence';
+import { PlaylistQuickAccess } from '@/components/loop/PlaylistQuickAccess';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -80,6 +81,9 @@ function Index() {
         onProfileOpen={() => setProfileOpen(true)}
         onLibraryOpen={() => setLibraryOpen(true)}
       />
+
+      {/* Top 3 playlists — right side quick access (xl+ screens) */}
+      <PlaylistQuickAccess />
 
       {/* Page content — pb accounts for fixed player bar at bottom */}
       <div className={currentTrack ? 'pb-28' : 'pb-0'}>

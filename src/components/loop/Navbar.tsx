@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Search, Settings, User, ListMusic } from 'lucide-react';
+import { Search, Settings, User, Library } from 'lucide-react';
 import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
 import { useAuth } from '@/hooks/useAuth';
 import { LoopLogo } from './LoopLogo';
@@ -21,11 +21,10 @@ interface NavbarProps {
 export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryOpen }: NavbarProps) {
   const { scrollY } = useScroll();
 
-  // Pill fills in with background on scroll
   const pillBg = useTransform(
     scrollY,
     [0, 60],
-    ['oklch(0.07 0.028 260 / 0.3)', 'oklch(0.07 0.028 260 / 0.88)'],
+    ['oklch(0.07 0.028 260 / 0.30)', 'oklch(0.07 0.028 260 / 0.88)'],
   );
   const pillBorder = useTransform(
     scrollY,
@@ -42,10 +41,9 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
   const mood      = intel.getCurrentMood();
   const moodBadge = MOOD_BADGES[mood] ?? '';
   const hasData   = intel.events.length > 0;
-  const { user } = useAuth();
+  const { user }  = useAuth();
 
   return (
-    /* Fixed container that spans full width but only to position the pill */
     <div className="fixed inset-x-0 top-0 z-40 flex justify-center px-4 pt-4">
       <motion.nav
         style={{
@@ -54,17 +52,19 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
           backdropFilter: pillBlur,
           WebkitBackdropFilter: pillBlur as unknown as string,
         }}
-        className="flex w-full max-w-4xl items-center justify-between rounded-2xl border px-4 py-2.5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]"
+        className="flex w-full max-w-5xl items-center justify-between rounded-2xl border px-4 py-2.5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]"
       >
         {/* Logo */}
         <a href="#top" className="flex items-center gap-0 shrink-0">
           <LoopLogo size={28} showText={true} textSize="text-[15px]" />
         </a>
 
-        {/* Center nav links */}
+        {/* Center nav — Home · Discover · Mood pill · Library */}
         <nav className="hidden items-center gap-0.5 md:flex">
           <NavLink href="#top">Home</NavLink>
           <NavLink href="#discover">Discover</NavLink>
+
+          {/* Mood badge */}
           {hasData && moodBadge && (
             <motion.span
               initial={{ opacity: 0, scale: 0.85 }}
@@ -79,29 +79,31 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
               {moodBadge}
             </motion.span>
           )}
+
+          {/* Library — right beside the mood pill in center nav */}
+          <button
+            onClick={onLibraryOpen}
+            className="ml-1 flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium text-white/45 transition-all hover:bg-white/[0.06] hover:text-white/80 border border-transparent hover:border-white/[0.08]"
+            title="Your Library"
+          >
+            <Library className="h-3.5 w-3.5" />
+            <span>Library</span>
+          </button>
         </nav>
 
         {/* Right actions */}
-        <div className="flex items-center gap-1.5">
-          {/* Search pill */}
+        <div className="flex items-center gap-2">
+          {/* Enlarged search bar */}
           <button
             onClick={onSearchOpen}
-            className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.05] px-3 py-1.5 text-sm text-white/50 transition-all hover:bg-white/[0.10] hover:text-white/80"
+            id="navbar-search-btn"
+            className="flex items-center gap-2.5 rounded-xl border border-white/[0.09] bg-white/[0.05] px-4 py-2 text-white/45 transition-all hover:bg-white/[0.10] hover:text-white/75 hover:border-white/[0.14] min-w-[200px] sm:min-w-[240px]"
           >
-            <Search className="h-3.5 w-3.5" />
-            <span className="hidden sm:block text-xs">Search</span>
-            <kbd className="hidden rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-white/35 sm:inline-block">
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1 text-left text-[12px]">Search anything...</span>
+            <kbd className="hidden rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] text-white/30 sm:inline-block shrink-0">
               ⌘K
             </kbd>
-          </button>
-
-          {/* Library */}
-          <button
-            onClick={onLibraryOpen}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/45 transition-all hover:bg-white/[0.09] hover:text-white/80"
-            title="Your Library"
-          >
-            <ListMusic className="h-3.5 w-3.5" />
           </button>
 
           {/* Profile */}
@@ -111,7 +113,7 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
             style={{
               borderColor: hasData ? 'oklch(0.72 0.26 248 / 0.35)' : 'oklch(1 0 0 / 0.08)',
               background:  hasData ? 'oklch(0.72 0.26 248 / 0.10)' : 'oklch(1 0 0 / 0.04)',
-              color:       hasData ? 'oklch(0.82 0.22 248)'          : 'oklch(1 0 0 / 0.45)',
+              color:       hasData ? 'oklch(0.82 0.22 248)'         : 'oklch(1 0 0 / 0.45)',
             }}
             title="Profile & Stats"
           >
