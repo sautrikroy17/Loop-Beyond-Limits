@@ -385,6 +385,56 @@ function QueuePanel() {
   );
 }
 
+function WhiteSlider({
+  value,
+  min = 0,
+  max = 100,
+  step = 0.5,
+  onChange,
+  onCommit,
+  className = '',
+}: {
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (v: number) => void;
+  onCommit?: (v: number) => void;
+  className?: string;
+}) {
+  const pct = ((value - min) / (max - min)) * 100;
+
+  return (
+    <div className={`group relative flex items-center ${className}`} style={{ height: 16 }}>
+      {/* Track */}
+      <div className="relative h-[3px] w-full rounded-full bg-white/20">
+        {/* Fill */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-white/80 transition-none"
+          style={{ width: `${pct}%` }}
+        />
+        {/* Thumb */}
+        <div
+          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+      {/* Invisible range for interaction */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        onMouseUp={(e) => onCommit?.(Number((e.target as HTMLInputElement).value))}
+        onTouchEnd={(e) => onCommit?.(Number((e.target as HTMLInputElement).value))}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      />
+    </div>
+  );
+}
+
 // ─── Seekbar ─────────────────────────────────────────────────────
 
 function MusicSeekbar() {
@@ -568,13 +618,13 @@ export function MusicPlayer() {
             <button onClick={() => setVolume(volume === 0 ? 70 : 0)} className="text-white/40 hover:text-white/80 transition-colors">
               {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>
-            <input
-              type="range"
+            <WhiteSlider
+              value={volume}
               min={0}
               max={100}
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              className="flex-1 h-1 bg-white/20 rounded-full appearance-none outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full"
+              step={1}
+              className="flex-1"
+              onChange={setVolume}
             />
             <span className="w-7 text-right text-[11px] tabular-nums text-white/30">{volume}</span>
           </div>

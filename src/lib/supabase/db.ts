@@ -232,7 +232,7 @@ export async function upsertUserProfile(
 ): Promise<void> {
   const { error } = await supabase
     .from('user_profiles')
-    .upsert({ id: userId, ...fields, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    .upsert({ id: userId, ...fields }, { onConflict: 'id' });
   if (error) console.error('[db] upsertUserProfile:', error.message);
 }
 
