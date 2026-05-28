@@ -50,33 +50,37 @@ export interface ListeningStats {
 // ── Genre inference from title/artist strings ─────────────────────
 
 const GENRE_PATTERNS: [RegExp, string][] = [
-  [/lo-?fi|lofi|study|focus|sleep|ambient/i,       'lofi'],
-  [/phonk|drift|dark\s*trap|aggressive/i,           'phonk'],
-  [/trap|drill|street|hood/i,                       'trap'],
-  [/house|techno|edm|dance|club|rave/i,             'house'],
-  [/r&b|rnb|soul|neo\s*soul|smooth/i,               'rnb'],
-  [/jazz|blues|bebop|swing/i,                       'jazz'],
-  [/indie|alt(?:ernative)?|emo|bedroom\s*pop/i,     'indie'],
-  [/hip.?hop|rap|freestyle|bars|verse/i,            'hiphop'],
-  [/pop|mainstream|viral|trending/i,                'pop'],
-  [/classical|orchestral|piano|symphony/i,          'classical'],
-  [/metal|rock|punk|hardcore|grunge/i,              'rock'],
-  [/bollywood|hindi|punjabi|desi|filmi/i,           'bollywood'],
-  [/kpop|k-pop|bts|blackpink/i,                    'kpop'],
-  [/slowed|reverb|reverbed/i,                       'slowed'],
-  [/synthwave|retrowave|vaporwave|outrun/i,         'synthwave'],
-  [/acoustic|unplugged|folk|country|singer|writer/i,'acoustic'],
-  [/afrobeats?|afropop|amapiano/i,                  'afrobeats'],
-  [/latin|reggaeton|salsa|bachata/i,                'latin'],
+  // Deep Vibes & Micro-Genres
+  [/weeknd|chase atlantic|partynextdoor|6lack/i, 'Dark R&B'],
+  [/travis scott|playboi carti|yeat|ken carson/i, 'Atmospheric Trap'],
+  [/lana del rey|billie eilish|mitski|phoebe bridgers/i, 'Sad Girl Pop'],
+  [/deftones|loathe|my bloody valentine/i, 'Shoegaze'],
+  [/arijit singh|shreya ghoshal|jubin/i, 'Bollywood Romance'],
+  [/karan aujla|sidhu moose|ap dhillon/i, 'Punjabi Heat'],
+  [/seedhe maut|krsna|divine/i, 'Desi Trap'],
+  [/lo-?fi|study|sleep/i, 'Lo-Fi Study'],
+  [/phonk|drift/i, 'Phonk'],
+  [/synthwave|retrowave/i, 'Synthwave'],
+  [/house|techno|edm/i, 'Festival EDM'],
+  [/afrobeats|burna boy|rema/i, 'Afro Beats'],
+  [/kpop|bts|blackpink/i, 'K-Pop Energy'],
+  [/slowed|reverb/i, 'Slow Reverb'],
+  [/drill|central cee/i, 'Drill'],
+  [/classical|symphony|zimmer/i, 'Cinematic'],
+
+  // Fallbacks
+  [/r&b|rnb/i, 'Luxury R&B'],
+  [/trap|hip.?hop|rap/i, 'Underground Hip-Hop'],
+  [/indie|alt/i, 'Indie Nights'],
+  [/pop|viral/i, 'Viral TikTok'],
+  [/bollywood|hindi/i, 'Desi Heat'],
 ];
 
 export function inferGenres(title: string, artist: string): string[] {
   const s = `${title} ${artist}`;
   const found = GENRE_PATTERNS.filter(([re]) => re.test(s)).map(([, g]) => g);
-  return found.length > 0 ? found : ['pop'];
+  return found.length > 0 ? found : ['Viral TikTok'];
 }
-
-
 
 // ── Zustand store ─────────────────────────────────────────────────
 
@@ -95,6 +99,7 @@ interface IntelligenceState {
   // Derived (computed getters)
   getTopGenres: (n?: number) => string[];
   getTopArtists: (n?: number) => string[];
+  getTopReplayedTracks: (n?: number) => { title: string; artist: string }[];
   getVibeQuerySeed: () => { artist: string; genre: string };
   getStats: () => ListeningStats;
   getRecentArtists: (n?: number) => string[];
@@ -171,6 +176,25 @@ export const useListeningIntelligence = create<IntelligenceState>()(
           .sort((a, b) => b[1] - a[1])
           .slice(0, n)
           .map(([a]) => a);
+      },
+
+      getTopReplayedTracks: (n = 3) => {
+        const events = get().events;
+        const trackScores: Record<string, { title: string; artist: string; score: number }> = {};
+        
+        for (const e of events) {
+          const key = `${e.title}|${e.artist}`;
+          if (!trackScores[key]) {
+            trackScores[key] = { title: e.title, artist: e.artist, score: 0 };
+          }
+          trackScores[key].score += (e.repeated ? 3 : 0) + (e.completed ? 1 : 0);
+        }
+
+        return Object.values(trackScores)
+          .filter(t => t.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, n)
+          .map(t => ({ title: t.title, artist: t.artist }));
       },
 
       getRecentArtists: (n = 3) => {

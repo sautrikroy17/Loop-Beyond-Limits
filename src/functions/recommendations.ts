@@ -27,6 +27,7 @@ interface PersonalizedSeed {
   topGenres?: string[];      // e.g. ['lofi', 'phonk', 'bollywood']
   topArtists?: string[];     // e.g. ['arijit singh', 'the weeknd']
   recentArtists?: string[];
+  topReplayedTracks?: { title: string; artist: string }[];
   genre?: string;            // single primary genre hint
 }
 
@@ -69,7 +70,7 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
   .handler(async ({ data }): Promise<DiscoverySection[]> => {
     const {
       trackId, artist, topGenres = [], topArtists = [],
-      recentArtists = []
+      recentArtists = [], topReplayedTracks = []
     } = data;
 
     const g1 = topGenres[0] ?? 'Pop';
@@ -77,28 +78,32 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
     const g3 = topGenres[2] ?? 'R&B';
     const primaryArtist = artist ?? topArtists[0] ?? recentArtists[0] ?? '';
 
-    // Build contextual "More Like" label
-    const artistLabel = primaryArtist
-      ? primaryArtist.split(/[,&]/)[0].trim()
-      : null;
-    const moreLikeLabel = artistLabel ? `More Like ${toTitleCase(artistLabel)}` : 'Similar Artists';
+    // Extract top replayed tracks
+    const t1 = topReplayedTracks[0];
+    const t2 = topReplayedTracks[1];
 
-    // Queries based entirely on user's pure taste
+    // Build dynamic titles based on recent activity
+    const basedOnTitle = t1 ? `Because you looped ${t1.title}` : `Because you replayed ${primaryArtist}`;
+    const similarTitle = t2 ? `Deep dive into ${t2.title}` : `Similar to ${toTitleCase(primaryArtist)}`;
+
+    // Queries prioritizing song identity and micro-genres
     const qForYou = trackId
       ? '' // We use getRelatedTracks if trackId exists
-      : `${primaryArtist} ${g1} mix playlist`;
+      : t1 ? `${t1.title} ${t1.artist} mix playlist` : `${primaryArtist} ${g1} mix playlist`;
 
-    const qSimilar = primaryArtist
-      ? `${primaryArtist} similar artists ${g1}`
-      : `${g1} similar artists mix`;
+    const qSimilar = t2 
+      ? `${t2.title} ${t2.artist} similar songs mix` 
+      : `${primaryArtist} similar artists ${g1}`;
 
-    const qGenre1Trending = `${g1} top songs trending 2024 hits`;
-    const qGenre2Classics = `${g2} best songs classics playlist`;
-    const qGenre3Hidden   = `${g3} underground hidden gems rare tracks`;
+    const qGenre1Trending = `${g1} viral trending 2024 hits playlist`;
+    const qGenre2Classics = `${g2} best tracks universe playlist`;
+    const qGenre3Hidden   = `${g3} underground gems rare tracks`;
     
-    const qBasedOn = topArtists.length > 0
-      ? `${topArtists[0]} ${g1} best playlist`
-      : `global top songs viral playlist`;
+    const qBasedOn = t1
+      ? `${t1.title} ${g1} best playlist`
+      : topArtists.length > 0
+        ? `${topArtists[0]} ${g1} best playlist`
+        : `global top songs viral playlist`;
 
     // Fetch all in parallel
     const [forYou, similar, g1Trending, g2Classics, g3Hidden, basedOn] =
@@ -108,19 +113,19 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
           ? getRelatedTracks(trackId, 20).then(t => t.map(toTrack))
           : searchYouTubeMusic(qForYou, 20).then(t => t.map(toTrack)),
 
-        // More Like X
+        // Deep Dive / Similar
         searchYouTubeMusic(qSimilar, 18).then(t => t.map(toTrack)),
 
-        // Genre 1 Trending
+        // Genre 1 Trending -> e.g. "Dark R&B Rotation"
         searchYouTubeMusic(qGenre1Trending, 18).then(t => t.map(toTrack)),
 
-        // Genre 2 Classics
+        // Genre 2 Universe -> e.g. "Atmospheric Trap Universe"
         searchYouTubeMusic(qGenre2Classics, 18).then(t => t.map(toTrack)),
 
-        // Genre 3 Hidden Gems
+        // Genre 3 Hidden Gems -> e.g. "Underground Sad Girl Pop"
         searchYouTubeMusic(qGenre3Hidden, 16).then(t => t.map(toTrack)),
 
-        // Based on Top Artist
+        // Based on Top Loop
         searchYouTubeMusic(qBasedOn, 18).then(t => t.map(toTrack)),
       ]);
 
@@ -129,12 +134,12 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
     }
 
     const sections: DiscoverySection[] = [
-      { id: 'for-you',     title: 'For You',                               icon: '❤️', tracks: unwrap(forYou) },
-      { id: 'similar',     title: moreLikeLabel,                           icon: '🎵', tracks: unwrap(similar) },
-      { id: 'g1-trending', title: `Trending ${toTitleCase(g1)}`,           icon: '🔥', tracks: unwrap(g1Trending) },
-      { id: 'g2-classics', title: `Top ${toTitleCase(g2)}`,                icon: '👑', tracks: unwrap(g2Classics) },
-      { id: 'g3-hidden',   title: `Hidden ${toTitleCase(g3)} Gems`,        icon: '💎', tracks: unwrap(g3Hidden) },
-      { id: 'based-on',    title: `Based on ${toTitleCase(primaryArtist || g1)}`, icon: '🧠', tracks: unwrap(basedOn) },
+      { id: 'for-you',     title: 'Your Current Obsession',                            icon: '❤️', tracks: unwrap(forYou) },
+      { id: 'based-on',    title: basedOnTitle,                                        icon: '🧠', tracks: unwrap(basedOn) },
+      { id: 'similar',     title: similarTitle,                                        icon: '🎵', tracks: unwrap(similar) },
+      { id: 'g1-trending', title: `${toTitleCase(g1)} Rotation`,                       icon: '🔥', tracks: unwrap(g1Trending) },
+      { id: 'g2-classics', title: `${toTitleCase(g2)} Universe`,                       icon: '🌌', tracks: unwrap(g2Classics) },
+      { id: 'g3-hidden',   title: `Underground ${toTitleCase(g3)}`,                    icon: '💎', tracks: unwrap(g3Hidden) },
     ];
 
     return sections.filter(s => s.tracks.length > 0);
