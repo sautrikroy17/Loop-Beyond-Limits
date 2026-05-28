@@ -92,6 +92,9 @@ export const initAuthListener = () => {
               session.user.user_metadata?.avatar_url,
             );
           });
+          import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
+            initPlaybackSync(session.user.id);
+          });
         }
       }
     });
