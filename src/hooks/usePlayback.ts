@@ -40,6 +40,7 @@ interface PlaybackState {
   prevTrack: () => void;
   addToQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
+  reorderQueue: (oldIndex: number, newIndex: number) => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   toggleAutoplay: () => void;
@@ -148,6 +149,12 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
 
   addToQueue:       (track)   => set((s) => ({ queue: [...s.queue, track] })),
   removeFromQueue:  (index)   => set((s) => ({ queue: s.queue.filter((_, i) => i !== index) })),
+  reorderQueue: (oldIndex, newIndex) => set((s) => {
+    const q = [...s.queue];
+    const [moved] = q.splice(oldIndex, 1);
+    q.splice(newIndex, 0, moved);
+    return { queue: q };
+  }),
   toggleShuffle:    ()        => set((s) => ({ isShuffle: !s.isShuffle })),
 
   toggleRepeat: () => set((s) => {
@@ -156,8 +163,14 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
   }),
   toggleAutoplay: () => {
     const next = !get().isAutoplay;
-    set({ isAutoplay: next });
-    // Sync to settings store so the Settings panel toggle matches PlayerBar
+    set({
+      isAutoplay: next,
+      // Turning OFF: wipe the auto-filled queue immediately → music stops after current track
+      // Turning ON:  leave queue as-is; it'll refill on next play
+      queue: next ? get().queue : [],
+      isAutoQueuing: false,
+    });
+    // Keep Settings panel toggle in sync
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { useSettings } = require('@/hooks/useSettings');

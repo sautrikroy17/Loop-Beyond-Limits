@@ -82,7 +82,6 @@ function LyricStage({
           <motion.button
             key={idx}
             onClick={() => !isActive && onSeek(line.time)}
-            layout
             animate={{
               opacity: isActive ? 1 : dist === 1 ? 0.35 : 0.14,
               scale:   isActive ? 1 : dist === 1 ? 0.88 : 0.76,

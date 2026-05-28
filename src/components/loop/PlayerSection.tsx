@@ -4,9 +4,24 @@ import { Waveform } from "./Waveform";
 import { SectionShell } from "./SectionShell";
 import { useTactileHover } from "@/hooks/useTactileHover";
 import { usePlayback } from "@/hooks/usePlayback";
+import { GripVertical, X } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 function formatDuration(ms?: number) {
-  if (!ms) return "--:--";
+  if (!ms) return "";
   const s = Math.floor(ms / 1000);
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 }
@@ -18,12 +33,102 @@ const lyrics = [
   "I get my light right from the source, yeah",
 ];
 
+// ── Drag-and-drop queue item ───────────────────────────────────────
+
+function SortableQueueItem({ track, index, uniqueId }: { track: any; index: number; uniqueId: string }) {
+  const { removeFromQueue } = usePlayback();
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: uniqueId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.45 : 1,
+    zIndex: isDragging ? 999 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 py-2.5 group border-b border-white/[0.05] last:border-0"
+    >
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="shrink-0 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/55 transition-colors touch-none"
+        title="Drag to reorder"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+
+      {/* Album art */}
+      <div
+        className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-white/10 bg-cover bg-center"
+        style={{
+          backgroundImage: track.albumArt ? `url(${track.albumArt})` : undefined,
+          background: !track.albumArt
+            ? `linear-gradient(135deg, oklch(0.5 0.2 ${260 + index * 25}), oklch(0.25 0.06 280))`
+            : undefined,
+        }}
+      />
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm text-white">{track.title}</div>
+        <div className="truncate text-xs text-white/40">{track.artist}</div>
+      </div>
+
+      {/* Duration */}
+      {track.durationMs ? (
+        <span className="text-xs tabular-nums text-white/30 shrink-0">
+          {formatDuration(track.durationMs)}
+        </span>
+      ) : null}
+
+      {/* Remove */}
+      <button
+        onClick={() => removeFromQueue(index)}
+        className="shrink-0 text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+        title="Remove from queue"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────
+
 export function PlayerSection() {
-  const { 
-    currentTrack, queue, isPlaying, progress, 
-    isShuffle, repeatMode, 
-    togglePlayPause, nextTrack, prevTrack, toggleShuffle, toggleRepeat 
+  const {
+    currentTrack, queue, isPlaying, isAutoplay,
+    isShuffle, repeatMode,
+    togglePlayPause, nextTrack, prevTrack, toggleShuffle, toggleRepeat,
+    reorderQueue,
   } = usePlayback();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  // Build stable unique IDs for sortable
+  const sortableIds = queue.map((t, i) => `${t.id}-${i}`);
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = sortableIds.indexOf(String(active.id));
+    const newIdx = sortableIds.indexOf(String(over.id));
+    if (oldIdx !== -1 && newIdx !== -1) reorderQueue(oldIdx, newIdx);
+  }
 
   return (
     <SectionShell id="player" tone="violet" className="py-32 sm:py-48">
@@ -58,8 +163,7 @@ export function PlayerSection() {
                   <div
                     className="absolute inset-0 rounded-[2rem] blur-2xl opacity-80"
                     style={{
-                      background:
-                        "conic-gradient(from 0deg, oklch(0.7 0.22 290), oklch(0.72 0.2 240), oklch(0.82 0.15 200), oklch(0.7 0.22 290))",
+                      background: "conic-gradient(from 0deg, oklch(0.7 0.22 290), oklch(0.72 0.2 240), oklch(0.82 0.15 200), oklch(0.7 0.22 290))",
                     }}
                   />
                   <div
@@ -107,17 +211,10 @@ export function PlayerSection() {
                     {lyrics.map((l, i) => (
                       <motion.div
                         key={i}
-                        animate={{
-                          opacity: i === 1 ? 1 : 0.35,
-                          x: i === 1 ? 6 : 0,
-                        }}
+                        animate={{ opacity: i === 1 ? 1 : 0.35, x: i === 1 ? 6 : 0 }}
                         transition={{ duration: 0.8 }}
                         className={`font-display text-lg ${i === 1 ? "text-foreground" : "text-muted-foreground"}`}
-                        style={
-                          i === 1
-                            ? { textShadow: "0 0 24px oklch(0.7 0.22 290 / 0.6)" }
-                            : undefined
-                        }
+                        style={i === 1 ? { textShadow: "0 0 24px oklch(0.7 0.22 290 / 0.6)" } : undefined}
                       >
                         {l}
                       </motion.div>
@@ -125,21 +222,49 @@ export function PlayerSection() {
                   </div>
                 </div>
 
+                {/* Queue with drag & drop */}
                 <div className="glass rounded-2xl p-6">
                   <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.25em] text-muted-foreground">
                     <span>Up next</span>
-                    <span>Queue</span>
+                    <div className="flex items-center gap-1.5">
+                      {queue.length > 0 && (
+                        <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] normal-case tracking-normal">
+                          {queue.length}
+                        </span>
+                      )}
+                      <span>Queue</span>
+                    </div>
                   </div>
-                  <div className="divide-y divide-white/5">
-                    {queue.length === 0 && (
-                      <div className="py-8 text-center text-sm text-muted-foreground">
-                        Queue is empty. Autoplay will pick the next song.
+
+                  {queue.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <div className="text-sm text-muted-foreground">Queue is empty.</div>
+                      <div className="mt-1 text-[11px] text-white/25">
+                        {isAutoplay
+                          ? "Autoplay will pick the next song."
+                          : "Autoplay is off — music stops here."}
                       </div>
-                    )}
-                    {queue.slice(0, 10).map((track, i) => (
-                      <QueueItem key={`${track.id}-${i}`} track={track} i={i} />
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+                        <div className="max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                          {queue.slice(0, 20).map((track, i) => (
+                            <SortableQueueItem
+                              key={sortableIds[i]}
+                              track={track}
+                              index={i}
+                              uniqueId={sortableIds[i]}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
                 </div>
               </div>
             </div>
@@ -151,21 +276,12 @@ export function PlayerSection() {
 }
 
 function Ctrl({ children, onClick, active }: { children: React.ReactNode; onClick?: () => void; active?: boolean }) {
-  const tactile = useTactileHover({
-    maxTilt: 8,
-    spotlightStrength: 0.28,
-    stiffness: 260,
-    damping: 20,
-  });
+  const tactile = useTactileHover({ maxTilt: 8, spotlightStrength: 0.28, stiffness: 260, damping: 20 });
   return (
     <motion.button
       onClick={onClick}
       {...tactile.bind}
-      style={{
-        ...tactile.transformStyle,
-        rotateX: tactile.rx,
-        rotateY: tactile.ry,
-      }}
+      style={{ ...tactile.transformStyle, rotateX: tactile.rx, rotateY: tactile.ry }}
       whileHover={{ scale: 1.12, y: -3 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -174,10 +290,7 @@ function Ctrl({ children, onClick, active }: { children: React.ReactNode; onClic
       <motion.span
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 rounded-full"
-        style={{
-          background: tactile.spotlightBg,
-          opacity: tactile.spotlightOpacity,
-        }}
+        style={{ background: tactile.spotlightBg, opacity: tactile.spotlightOpacity }}
       />
       {children}
     </motion.button>
@@ -185,22 +298,14 @@ function Ctrl({ children, onClick, active }: { children: React.ReactNode; onClic
 }
 
 function PlayBtn({ isPlaying, onClick }: { isPlaying?: boolean; onClick?: () => void }) {
-  const tactile = useTactileHover({
-    maxTilt: 9,
-    spotlightStrength: 0.34,
-    stiffness: 260,
-    damping: 20,
-  });
+  const tactile = useTactileHover({ maxTilt: 9, spotlightStrength: 0.34, stiffness: 260, damping: 20 });
   return (
     <motion.button
       onClick={onClick}
       {...tactile.bind}
       style={{
-        ...tactile.transformStyle,
-        rotateX: tactile.rx,
-        rotateY: tactile.ry,
-        background:
-          "linear-gradient(135deg, oklch(0.78 0.22 290), oklch(0.72 0.2 240))",
+        ...tactile.transformStyle, rotateX: tactile.rx, rotateY: tactile.ry,
+        background: "linear-gradient(135deg, oklch(0.78 0.22 290), oklch(0.72 0.2 240))",
         boxShadow: "0 0 60px -5px oklch(0.7 0.22 290 / 0.85)",
       }}
       whileHover={{ scale: 1.1 }}
@@ -211,65 +316,11 @@ function PlayBtn({ isPlaying, onClick }: { isPlaying?: boolean; onClick?: () => 
       <motion.span
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 rounded-full"
-        style={{
-          background: tactile.spotlightBg,
-          opacity: tactile.spotlightOpacity,
-        }}
+        style={{ background: tactile.spotlightBg, opacity: tactile.spotlightOpacity }}
       />
       <span className={isPlaying ? "text-xl text-primary-foreground" : "ml-1 text-xl text-primary-foreground"}>
         {isPlaying ? '⏸' : '▶'}
       </span>
     </motion.button>
-  );
-}
-
-function QueueItem({
-  track,
-  i,
-}: {
-  track: any;
-  i: number;
-}) {
-  const tactile = useTactileHover({
-    maxTilt: 6,
-    spotlightStrength: 0.22,
-    stiffness: 240,
-    damping: 20,
-  });
-
-  return (
-    <motion.div
-      {...tactile.bind}
-      style={{
-        ...tactile.transformStyle,
-        rotateX: tactile.rx,
-        rotateY: tactile.ry,
-      }}
-      whileHover={{ x: 4, y: -2 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20 }}
-      className="flex items-center gap-3 py-3 relative overflow-hidden"
-    >
-      <motion.span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background: tactile.spotlightBg,
-          opacity: tactile.spotlightOpacity,
-        }}
-      />
-      <div
-        className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-white/10"
-        style={{
-          background: track.albumArt 
-            ? `url(${track.albumArt}) center/cover`
-            : `linear-gradient(135deg, oklch(0.5 0.2 ${260 + i * 25}), oklch(0.25 0.06 280))`
-        }}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm">{track.title}</div>
-        <div className="truncate text-xs text-muted-foreground">{track.artist}</div>
-      </div>
-      <div className="text-xs tabular-nums text-muted-foreground">{formatDuration(track.durationMs)}</div>
-    </motion.div>
   );
 }
