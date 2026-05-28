@@ -61,12 +61,18 @@ export const initAuthListener = () => {
       import('@/functions/profile').then(({ loadProfileFn }) => {
         loadProfileFn();
       });
+      import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
+        initPlaybackSync(session.user.id);
+      });
     }
 
     if (event === 'SIGNED_OUT') {
       // Clear local data so next user starts fresh
       import('./useUserProfile').then(({ useUserProfile }) => {
         useUserProfile.getState().clearLocalData();
+      });
+      import('@/lib/supabase/playbackSync').then(({ stopPlaybackSync }) => {
+        stopPlaybackSync();
       });
     }
   });
