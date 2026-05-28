@@ -74,73 +74,97 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
     } = data;
 
     const g1 = topGenres[0] ?? 'Pop';
-    const g2 = topGenres[1] ?? 'Hip Hop';
-    const g3 = topGenres[2] ?? 'R&B';
     const primaryArtist = artist ?? topArtists[0] ?? recentArtists[0] ?? '';
 
-    // Extract top replayed tracks
+    // 1. Core Dynamic Sections (Your Obsessions / Similar)
     const t1 = topReplayedTracks[0];
-    const t2 = topReplayedTracks[1];
-
-    // Build dynamic titles based on recent activity
-    const basedOnTitle = t1 ? `Because you looped ${t1.title}` : `Because you replayed ${primaryArtist}`;
-    const similarTitle = t2 ? `Deep dive into ${t2.title}` : `Similar to ${toTitleCase(primaryArtist)}`;
-
-    // Queries prioritizing song identity and micro-genres
-    const qForYou = trackId
-      ? '' // We use getRelatedTracks if trackId exists
-      : t1 ? `${t1.title} ${t1.artist} mix playlist` : `${primaryArtist} ${g1} mix playlist`;
-
-    const qSimilar = t2 
-      ? `${t2.title} ${t2.artist} similar songs mix` 
-      : `${primaryArtist} similar artists ${g1}`;
-
-    const qGenre1Trending = `${g1} viral trending 2024 hits playlist`;
-    const qGenre2Classics = `${g2} best tracks universe playlist`;
-    const qGenre3Hidden   = `${g3} underground gems rare tracks`;
+    const basedOnTitle = t1 ? `Because you looped ${t1.title}` : `Because you replayed ${toTitleCase(primaryArtist)}`;
     
-    const qBasedOn = t1
-      ? `${t1.title} ${g1} best playlist`
-      : topArtists.length > 0
-        ? `${topArtists[0]} ${g1} best playlist`
-        : `global top songs viral playlist`;
+    const qForYou = trackId ? '' : t1 ? `${t1.title} ${t1.artist} mix` : `${primaryArtist} ${g1} mix`;
+    const qBasedOn = t1 ? `${t1.title} ${g1} playlist` : `${topArtists[0] || 'Viral'} ${g1} best playlist`;
+
+    // 2. Real Music Culture Charts & Playlists
+    // These strings map directly to massive real playlists on YT Music
+    const CHART_POOL: Record<string, { title: string; query: string; icon: string }[]> = {
+      'Bollywood Romance': [
+        { title: 'Bollywood Hits', query: 'Bollywood Hits playlist', icon: '🌊' },
+        { title: 'Desi Romance', query: 'Desi Romance Hindi songs playlist', icon: '❤️' },
+      ],
+      'Desi Trap': [
+        { title: 'Desi Trap & Hip Hop', query: 'Desi Hip Hop playlist', icon: '🔥' },
+        { title: 'Punjabi Hits', query: 'Punjabi Hits playlist', icon: '🌶️' },
+      ],
+      'Punjabi Heat': [
+        { title: 'Punjabi Hits', query: 'Punjabi Hits playlist', icon: '🌶️' },
+        { title: 'Desi Heat', query: 'Top Punjabi trending playlist', icon: '🔥' },
+      ],
+      'Dark R&B': [
+        { title: 'R&B Essentials', query: 'R&B Essentials playlist', icon: '🖤' },
+        { title: 'Moody Albums', query: 'Dark R&B late night playlist', icon: '🌙' },
+      ],
+      'Sad Girl Pop': [
+        { title: 'Sad Songs', query: 'Sad Girl Pop emotional playlist', icon: '💧' },
+        { title: 'Indie Nights', query: 'Indie pop alternative playlist', icon: '🌌' },
+      ],
+      'Festival EDM': [
+        { title: 'Festival EDM', query: 'Top EDM festival dance playlist', icon: '🪩' },
+        { title: 'Party Anthems', query: 'Global party anthems playlist', icon: '🎉' },
+      ],
+    };
+
+    // Global fallbacks if culture not matched
+    const GLOBAL_CHARTS = [
+      { title: 'Trending Worldwide', query: 'Global top songs trending playlist', icon: '🌎' },
+      { title: 'Viral TikTok Songs', query: 'Viral TikTok songs playlist', icon: '📱' },
+      { title: 'Top Played This Week', query: 'Top 50 global weekly playlist', icon: '📈' },
+      { title: 'Underground Trending', query: 'Underground hidden gems playlist', icon: '💎' },
+      { title: 'Hollywood Hits', query: 'Pop hits 2024 playlist', icon: '🌟' },
+    ];
+
+    // Select culture-specific charts
+    let selectedCharts = CHART_POOL[g1] || [];
+    
+    // Fill the rest with Global Charts
+    const needed = 4 - selectedCharts.length;
+    for (let i = 0; i < needed; i++) {
+      if (GLOBAL_CHARTS[i]) selectedCharts.push(GLOBAL_CHARTS[i]);
+    }
 
     // Fetch all in parallel
-    const [forYou, similar, g1Trending, g2Classics, g3Hidden, basedOn] =
-      await Promise.allSettled([
-        // For You: best signal from YTM related
-        trackId
-          ? getRelatedTracks(trackId, 20).then(t => t.map(toTrack))
-          : searchYouTubeMusic(qForYou, 20).then(t => t.map(toTrack)),
+    const promises = [
+      // For You: best signal from YTM related
+      trackId
+        ? getRelatedTracks(trackId, 20).then(t => t.map(toTrack))
+        : searchYouTubeMusic(qForYou, 20).then(t => t.map(toTrack)),
+      // Based on Top Loop
+      searchYouTubeMusic(qBasedOn, 18).then(t => t.map(toTrack)),
+    ];
 
-        // Deep Dive / Similar
-        searchYouTubeMusic(qSimilar, 18).then(t => t.map(toTrack)),
+    // Add chart queries
+    selectedCharts.forEach(chart => {
+      promises.push(searchYouTubeMusic(chart.query, 16).then(t => t.map(toTrack)));
+    });
 
-        // Genre 1 Trending -> e.g. "Dark R&B Rotation"
-        searchYouTubeMusic(qGenre1Trending, 18).then(t => t.map(toTrack)),
+    const results = await Promise.allSettled(promises);
 
-        // Genre 2 Universe -> e.g. "Atmospheric Trap Universe"
-        searchYouTubeMusic(qGenre2Classics, 18).then(t => t.map(toTrack)),
-
-        // Genre 3 Hidden Gems -> e.g. "Underground Sad Girl Pop"
-        searchYouTubeMusic(qGenre3Hidden, 16).then(t => t.map(toTrack)),
-
-        // Based on Top Loop
-        searchYouTubeMusic(qBasedOn, 18).then(t => t.map(toTrack)),
-      ]);
-
-    function unwrap(r: PromiseSettledResult<DiscoveryTrack[]>): DiscoveryTrack[] {
-      return r.status === 'fulfilled' ? r.value : [];
+    function unwrap(index: number): DiscoveryTrack[] {
+      const r = results[index];
+      return r?.status === 'fulfilled' ? r.value : [];
     }
 
     const sections: DiscoverySection[] = [
-      { id: 'for-you',     title: 'Your Current Obsession',                            icon: '❤️', tracks: unwrap(forYou) },
-      { id: 'based-on',    title: basedOnTitle,                                        icon: '🧠', tracks: unwrap(basedOn) },
-      { id: 'similar',     title: similarTitle,                                        icon: '🎵', tracks: unwrap(similar) },
-      { id: 'g1-trending', title: `${toTitleCase(g1)} Rotation`,                       icon: '🔥', tracks: unwrap(g1Trending) },
-      { id: 'g2-classics', title: `${toTitleCase(g2)} Universe`,                       icon: '🌌', tracks: unwrap(g2Classics) },
-      { id: 'g3-hidden',   title: `Underground ${toTitleCase(g3)}`,                    icon: '💎', tracks: unwrap(g3Hidden) },
+      { id: 'for-you',  title: 'Your Current Obsession', icon: '❤️', tracks: unwrap(0) },
+      { id: 'based-on', title: basedOnTitle, icon: '🧠', tracks: unwrap(1) },
     ];
+
+    selectedCharts.forEach((chart, idx) => {
+      sections.push({
+        id: `chart-${idx}`,
+        title: chart.title,
+        icon: chart.icon,
+        tracks: unwrap(2 + idx),
+      });
+    });
 
     return sections.filter(s => s.tracks.length > 0);
   });
