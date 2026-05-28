@@ -15,6 +15,7 @@ export function AudioEngine() {
   const trackIdRef         = useRef<string | null>(null);
   const isReadyRef         = useRef(false);
   const progressRafRef     = useRef<number | null>(null);
+  const currentYtIdRef     = useRef<string | null>(null);
 
   // KEY FIX: When true, we are mid-transition between tracks.
   // YouTube fires a PAUSED event when loadVideoById() interrupts a playing track.
@@ -182,6 +183,7 @@ export function AudioEngine() {
       if (cancelled) return;
 
       if (ytId) {
+        currentYtIdRef.current = ytId;
         const startSeconds = 0; // Always start from beginning per user request
         if (usePlayback.getState().isPlaying) {
           playerRef.current?.loadVideoById({ videoId: ytId, startSeconds });
@@ -214,6 +216,7 @@ export function AudioEngine() {
 
   // ── 3. Toggle play/pause for SAME track ───────────────────────
   const isPlaying = usePlayback(s => s.isPlaying);
+  const youtubePlayerReady = usePlayback(s => s.youtubePlayerReady);
 
   useEffect(() => {
     if (!isReadyRef.current || !playerRef.current) return;
@@ -226,7 +229,7 @@ export function AudioEngine() {
       const YTState = window.YT?.PlayerState;
       if (state === YTState?.CUED || state === YTState?.UNSTARTED) {
         // Force fully load and play the track if it was stuck in a cued background state
-        const videoId = playerRef.current.getVideoData?.()?.video_id;
+        const videoId = playerRef.current.getVideoData?.()?.video_id || currentYtIdRef.current;
         if (videoId) {
           const startSeconds = 0;
           playerRef.current.loadVideoById?.({ videoId, startSeconds });
@@ -239,7 +242,7 @@ export function AudioEngine() {
     } else {
       playerRef.current.pauseVideo?.();
     }
-  }, [isPlaying]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isPlaying, youtubePlayerReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 4. Seek ───────────────────────────────────────────────────
   const seekTarget = usePlayback(s => s.seekTarget);
