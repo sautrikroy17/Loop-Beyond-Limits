@@ -15,7 +15,7 @@
  */
 
 import { createServerFn } from '@tanstack/react-start';
-import { searchYouTubeMusic, getRelatedTracks } from '../server/services/youtubeMusic';
+import { searchYouTubeMusic, getRelatedTracks, searchAlbums, getAlbumDetails } from '../server/services/youtubeMusic';
 
 interface PersonalizedSeed {
   // Current track context
@@ -45,6 +45,7 @@ interface DiscoverySection {
   title: string;
   tracks: DiscoveryTrack[];
   icon?: string;
+  type?: 'tracks' | 'albums';
 }
 
 function toTrack(t: any): DiscoveryTrack {
@@ -138,6 +139,8 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
         : searchYouTubeMusic(qForYou, 20).then(t => t.map(toTrack)),
       // Based on Top Loop
       searchYouTubeMusic(qBasedOn, 18).then(t => t.map(toTrack)),
+      // Fetch specific Gen Z / Top Albums related to the vibe
+      searchAlbums(`${g1} best albums 2024`, 10),
     ];
 
     // Add chart queries
@@ -152,9 +155,24 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
       return r?.status === 'fulfilled' ? r.value : [];
     }
 
+    function unwrapAlbums(index: number): DiscoveryTrack[] {
+      const r = results[index];
+      if (r?.status === 'fulfilled' && Array.isArray(r.value)) {
+        return r.value.map(a => ({
+          id: a.id,
+          youtubeId: a.id,
+          title: a.title,
+          artist: a.artist,
+          albumArt: a.albumArt
+        }));
+      }
+      return [];
+    }
+
     const sections: DiscoverySection[] = [
-      { id: 'for-you',  title: 'Your Current Obsession', icon: '❤️', tracks: unwrap(0) },
-      { id: 'based-on', title: basedOnTitle, icon: '🧠', tracks: unwrap(1) },
+      { id: 'for-you',  title: 'Your Current Obsession', icon: '❤️', tracks: unwrap(0), type: 'tracks' },
+      { id: 'albums',   title: 'Essential Albums',       icon: '💿', tracks: unwrapAlbums(2), type: 'albums' },
+      { id: 'based-on', title: basedOnTitle,             icon: '🧠', tracks: unwrap(1), type: 'tracks' },
     ];
 
     selectedCharts.forEach((chart, idx) => {
@@ -162,9 +180,17 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
         id: `chart-${idx}`,
         title: chart.title,
         icon: chart.icon,
-        tracks: unwrap(2 + idx),
+        tracks: unwrap(3 + idx),
+        type: 'tracks',
       });
     });
 
-    return sections.filter(s => s.tracks.length > 0);
+    return sections.filter(s => s.tracks && s.tracks.length > 0);
+  });
+
+export const getAlbumDetailsFn = createServerFn({ method: 'GET' })
+  .inputValidator((browseId: string) => browseId)
+  .handler(async ({ data: browseId }): Promise<DiscoveryTrack[]> => {
+    const tracks = await getAlbumDetails(browseId);
+    return tracks.map(toTrack);
   });

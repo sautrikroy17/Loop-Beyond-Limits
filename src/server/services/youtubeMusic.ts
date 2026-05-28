@@ -260,6 +260,81 @@ export async function getRelatedTracks(videoId: string, limit = 10): Promise<YTM
  * Find the best YouTube video ID for a track name + artist.
  * Used by AudioEngine when a track only has Spotify metadata (no videoId).
  */
+export interface YTMAlbum {
+  id: string; // browseId
+  title: string;
+  artist: string;
+  albumArt: string;
+  tracks?: YTMTrack[];
+}
+
+function parseAlbumItem(renderer: any): YTMAlbum | null {
+  if (!renderer) return null;
+  
+  const browseId = dig(renderer, 'navigationEndpoint', 'browseEndpoint', 'browseId');
+  if (!browseId || !browseId.startsWith('MPREb_')) return null;
+
+  const title = dig(renderer, 'flexColumns', 0, 'musicResponsiveListItemFlexColumnRenderer', 'text', 'runs', 0, 'text');
+  if (!title) return null;
+
+  const subtitleRuns: any[] = dig(renderer, 'flexColumns', 1, 'musicResponsiveListItemFlexColumnRenderer', 'text', 'runs') || [];
+  let artist = '';
+  for (const r of subtitleRuns) {
+    const text = r.text || '';
+    if (text.toLowerCase() === 'album' || text === '•' || text === '·') continue;
+    artist += text;
+  }
+  artist = artist.replace(/\s+/g, ' ').trim();
+
+  const thumbnails: any[] = dig(renderer, 'thumbnail', 'musicThumbnailRenderer', 'thumbnail', 'thumbnails') || [];
+  const rawThumb = thumbnails[thumbnails.length - 1]?.url ?? '';
+  const albumArt = upgradeThumbUrl(rawThumb, browseId);
+
+  return { id: browseId, title, artist: artist || 'Unknown Artist', albumArt };
+}
+
+export async function searchAlbums(query: string, limit = 10): Promise<YTMAlbum[]> {
+  try {
+    const data = await post('search', {
+      query,
+      params: 'EgWKAQIYAWoKEAoQAxAEEAkQBQ==',
+    });
+    
+    const tabs = dig(data, 'contents', 'tabbedSearchResultsRenderer', 'tabs') ?? [];
+    const sectionList = dig(tabs, 0, 'tabRenderer', 'content', 'sectionListRenderer', 'contents') ?? [];
+    
+    const albums: YTMAlbum[] = [];
+    for (const section of sectionList) {
+      const items: any[] = dig(section, 'musicShelfRenderer', 'contents') ?? [];
+      for (const item of items) {
+        const album = parseAlbumItem(item.musicResponsiveListItemRenderer);
+        if (album) albums.push(album);
+      }
+    }
+    return albums.slice(0, limit);
+  } catch (err) {
+    console.error('[YTMusic] searchAlbums failed:', err);
+    return [];
+  }
+}
+
+export async function getAlbumDetails(browseId: string): Promise<YTMTrack[]> {
+  try {
+    const data = await post('browse', { browseId });
+    const contents = dig(data, 'contents', 'twoColumnBrowseResultsRenderer', 'secondaryContents', 'sectionListRenderer', 'contents', 0, 'musicShelfRenderer', 'contents') ?? [];
+    
+    const tracks: YTMTrack[] = [];
+    for (const item of contents) {
+      const track = parseListItem(item.musicResponsiveListItemRenderer);
+      if (track && track.videoId) tracks.push(track);
+    }
+    return tracks;
+  } catch (err) {
+    console.error('[YTMusic] getAlbumDetails failed:', err);
+    return [];
+  }
+}
+
 export async function resolveVideoId(trackName: string, artistName: string): Promise<string | null> {
   // Search without "official audio" to avoid label-restricted embeds.
   // "Official Audio" tracks are commonly blocked from third-party iFrame embedding.

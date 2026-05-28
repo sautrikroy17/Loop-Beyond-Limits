@@ -5,6 +5,7 @@
  * powered by useDiscovery (YTM InnerTube + session history).
  */
 
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Plus, Music2 } from 'lucide-react';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
@@ -12,6 +13,7 @@ import { useDiscovery, type DiscoverySection } from '@/hooks/useDiscovery';
 import { LikeButton } from './LikeButton';
 import { Reveal } from './Reveal';
 import { DailyMix } from './DailyMix';
+import { AlbumModal } from './AlbumModal';
 
 // ─── Section icon map ─────────────────────────────────────────────
 
@@ -109,6 +111,56 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
   );
 }
 
+// ─── Album Card ───────────────────────────────────────────────────
+
+function AlbumCard({ album, index = 0, onClick }: { album: any; index?: number; onClick: () => void }) {
+  return (
+    <motion.div 
+      initial={{ rotateX: -80, opacity: 0, y: -40, transformPerspective: 1200 }}
+      whileInView={{ rotateX: 0, opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-20px' }}
+      transition={{ duration: 0.8, type: "spring", bounce: 0.35, delay: index * 0.05 }}
+      className="group relative w-48 shrink-0 select-none cursor-pointer"
+      style={{ transformStyle: 'preserve-3d' }}
+      onClick={onClick}
+    >
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]">
+        {album.albumArt ? (
+          <img
+            src={album.albumArt}
+            alt={album.title}
+            className="h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Music2 className="h-8 w-8 text-white/10" />
+          </div>
+        )}
+
+        {/* Hover actions */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2">
+             <div className="rounded-full bg-white/10 p-3 backdrop-blur-md">
+               <Play className="ml-1 h-6 w-6 text-white" />
+             </div>
+             <span className="text-xs font-semibold text-white tracking-widest uppercase">View Tracks</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <div className="w-full text-left">
+          <div className="truncate text-[14px] font-semibold text-white/90 transition-colors group-hover:text-white">
+            {album.title}
+          </div>
+          <div className="mt-0.5 truncate text-[12px] text-white/40">{album.artist}</div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Skeleton row ─────────────────────────────────────────────────
 
 function SkeletonRow() {
@@ -130,7 +182,7 @@ function SkeletonRow() {
 
 // ─── Section row ──────────────────────────────────────────────────
 
-function SectionRow({ section, delay = 0 }: { section: DiscoverySection; delay?: number }) {
+function SectionRow({ section, delay = 0, onAlbumClick }: { section: DiscoverySection; delay?: number; onAlbumClick: (album: any) => void }) {
   const meta = SECTION_META[section.id] ?? { emoji: '○', sub: '' };
 
   return (
@@ -153,7 +205,11 @@ function SectionRow({ section, delay = 0 }: { section: DiscoverySection; delay?:
         <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           <div className="flex gap-4 pb-2">
             {section.tracks.map((track, i) => (
-              <TrackCard key={track.id} track={track as Track} index={i} />
+              section.type === 'albums' ? (
+                <AlbumCard key={track.id} album={track} index={i} onClick={() => onAlbumClick(track)} />
+              ) : (
+                <TrackCard key={track.id} track={track as Track} index={i} />
+              )
             ))}
           </div>
         </div>
@@ -181,6 +237,7 @@ function Divider() {
 export function RecommendationFeed() {
   const { sections, isLoading, hasLoaded } = useDiscovery();
   const { currentTrack } = usePlayback();
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
 
   return (
     <section id="discover" className="relative px-6 py-28">
@@ -246,7 +303,7 @@ export function RecommendationFeed() {
             >
               {sections.map((section, i) => (
                 <div key={section.id}>
-                  <SectionRow section={section} delay={i * 0.06} />
+                  <SectionRow section={section} delay={i * 0.06} onAlbumClick={setSelectedAlbum} />
                   {i < sections.length - 1 && <div className="mt-20"><Divider /></div>}
                 </div>
               ))}
@@ -255,6 +312,10 @@ export function RecommendationFeed() {
         </AnimatePresence>
 
       </div>
+      
+      {selectedAlbum && (
+        <AlbumModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />
+      )}
     </section>
   );
 }
