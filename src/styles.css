@@ -425,94 +425,173 @@ img {
 
 /* ════════════════════════════════════════════════════════════
    PHONE / PWA — MOBILE ONLY STYLES
-   All rules below use touch/mobile media queries.
-   Desktop is completely unaffected.
+   RULE: Every selector below lives inside a mobile media query.
+   Desktop is 100% untouched.
    ════════════════════════════════════════════════════════════ */
 
-/* Prevent double-tap zoom on all interactive elements — mobile only */
+/* ── 1. Touch fundamentals ───────────────────────────────── */
 @media (pointer: coarse) {
-  * {
-    touch-action: manipulation;
+  * { touch-action: manipulation; }
+
+  html, body { overscroll-behavior: none; }
+
+  /* Prevent iOS auto-zoom on inputs */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* ── 2. Safe area insets (notch / Dynamic Island / home bar) */
+@supports (padding: env(safe-area-inset-top)) {
+  @media (max-width: 768px) {
+    body { padding-top: env(safe-area-inset-top); }
+
+    /* Player bar above home indicator */
+    .player-bar-safe {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 0.25rem);
+    }
+  }
+}
+
+/* ── 3. PWA standalone (launched from home screen) ───────── */
+@media (display-mode: standalone) {
+  * { scrollbar-width: none !important; }
+  *::-webkit-scrollbar { display: none !important; }
+  body { min-height: 100dvh; overscroll-behavior: none; }
+  html { background-color: #000; }
+}
+
+/* ── 4. Momentum scrolling ───────────────────────────────── */
+@media (max-width: 768px) {
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── 5. NAVBAR — compact mobile pill ────────────────────── */
+@media (max-width: 768px) {
+  /* Tighter top padding so navbar doesn't eat too much space */
+  .fixed.inset-x-0.top-0.z-40 {
+    padding: 10px 12px 0 !important;
   }
 
-  /* Minimum 44px tap targets — Apple HIG / Material guidelines */
-  button,
-  [role="button"],
-  a,
-  input[type="checkbox"],
-  input[type="radio"] {
+  /* Search bar — compact on mobile */
+  #navbar-search-btn {
+    min-width: 140px !important;
+    padding: 7px 12px !important;
+  }
+
+  /* Hide the ⌘K keyboard hint on mobile */
+  #navbar-search-btn kbd {
+    display: none !important;
+  }
+}
+
+/* ── 6. DISCOVERY FEED — mobile card sizing ──────────────── */
+@media (max-width: 768px) {
+  /* Section padding */
+  #discover {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 60px !important;
+    padding-bottom: 120px !important;
+  }
+
+  /* Section gap */
+  #discover > .mx-auto {
+    row-gap: 48px !important;
+  }
+
+  /* Horizontal scroll — snap on mobile */
+  #discover .overflow-x-auto {
+    scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+  }
+
+  #discover .flex.gap-4 > * {
+    scroll-snap-align: start;
+  }
+
+  /* Discover headline — tighter */
+  #discover h2 {
+    font-size: clamp(1.6rem, 7vw, 2.4rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  /* AI Hero Mix — compact on mobile */
+  #discover .rounded-3xl > .relative.z-10 {
+    padding: 20px !important;
+  }
+
+  #discover .rounded-3xl h2 {
+    font-size: clamp(1.4rem, 6vw, 2rem) !important;
+  }
+
+  /* Play My Mix button — full width */
+  #discover button.rounded-full.px-8 {
+    width: 100% !important;
+    justify-content: center;
+    padding: 14px 20px !important;
+    border-radius: 14px !important;
+  }
+}
+
+/* ── 7. PLAYER BAR — slim mini-bar on mobile ─────────────── */
+@media (max-width: 768px) {
+  /* Rounded top corners — card-style */
+  .player-bar-safe {
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  /* Inner layout — tighter padding */
+  .player-bar-safe > .pt-\[16px\] > .mx-auto {
+    padding: 8px 14px !important;
+    gap: 8px !important;
+  }
+
+  /* Album art — slightly larger */
+  .player-bar-safe .h-11.w-11 {
+    height: 46px !important;
+    width: 46px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Bump font sizes on player info */
+  .player-bar-safe .text-\[13px\].font-semibold {
+    font-size: 14px !important;
+  }
+
+  /* Icon buttons — bigger tap area */
+  .player-bar-safe button.rounded-full {
+    min-height: 40px !important;
+    min-width: 40px !important;
+  }
+
+  /* Play/pause main button */
+  .player-bar-safe .h-11.w-11.rounded-full {
+    height: 44px !important;
+    width: 44px !important;
+  }
+}
+
+/* ── 8. MINIMUM TAP TARGETS ──────────────────────────────── */
+@media (pointer: coarse) {
+  button, [role="button"], a[href] {
     min-height: 44px;
     min-width: 44px;
   }
 
-  /* No rubber-band bounce on iOS — feels more native */
-  html, body {
-    overscroll-behavior: none;
+  /* Round icon buttons — extra padding instead of size */
+  button.rounded-full.p-2 {
+    padding: 10px !important;
   }
 }
 
-/* Safe area insets — iPhone notch, Dynamic Island, home indicator bar */
-@supports (padding-top: env(safe-area-inset-top)) {
-  @media (max-width: 768px) {
-    /* Main app body respects the notch at top */
-    body {
-      padding-top: env(safe-area-inset-top);
-    }
-
-    /* Player bar sits above the iOS home indicator at the bottom */
-    .player-bar-safe {
-      padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
-    }
-
-    /* Modals and full-screen overlays */
-    .modal-safe-top {
-      padding-top: env(safe-area-inset-top);
-    }
-
-    .modal-safe-bottom {
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-  }
-}
-
-/* PWA standalone mode — when launched from home screen */
-@media (display-mode: standalone) {
-  /* Hide any scroll bars — feels completely native */
-  * {
-    scrollbar-width: none !important;
-  }
-  *::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  /* Body takes full screen — no browser chrome */
-  body {
-    min-height: 100dvh;
-    overscroll-behavior: none;
-  }
-
-  /* Status bar area at top — keep it pitch black */
-  html {
-    background-color: #000;
-  }
-}
-
-/* Smooth momentum scrolling on iOS for all scroll containers */
+/* ── 9. HERO SECTION — mobile spacing ───────────────────── */
 @media (max-width: 768px) {
-  .overflow-y-auto,
-  .overflow-auto,
-  [style*="overflow"] {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Slightly larger text for readability on small screens */
-  .text-\[11px\] { font-size: 12px; }
-  .text-\[12px\] { font-size: 13px; }
-
-  /* Better spacing on search modal for keyboards */
-  input[type="search"],
-  input[type="text"] {
-    font-size: 16px; /* Prevents iOS auto-zoom on focus */
+  /* Give hero content room below the navbar */
+  section:first-of-type {
+    padding-top: 80px !important;
   }
 }
-
