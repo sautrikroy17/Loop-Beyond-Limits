@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/hooks/useAuth';
 import type { Track } from '@/hooks/usePlayback';
 
 interface Props {
@@ -11,23 +12,19 @@ interface Props {
 
 export function LikeButton({ track, size = 'sm', className = '' }: Props) {
   const { likedTrackIds, likeTrack, unlikeTrack } = useUserProfile();
+  const { user } = useAuth();
   const liked = likedTrackIds.includes(track.id);
-
   const iconSize = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
 
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
-        liked ? unlikeTrack(track.id) : likeTrack(track);
+        liked ? unlikeTrack(track.id, user?.id) : likeTrack(track, user?.id);
       }}
       className={`relative flex items-center justify-center rounded-full transition-colors ${
         size === 'sm' ? 'h-8 w-8' : 'h-9 w-9'
-      } ${
-        liked
-          ? 'text-pink-400'
-          : 'text-white/30 hover:text-white/70'
-      } ${className}`}
+      } ${liked ? 'text-pink-400' : 'text-white/30 hover:text-white/70'} ${className}`}
       title={liked ? 'Unlike' : 'Like'}
     >
       <AnimatePresence mode="wait">
@@ -38,14 +35,10 @@ export function LikeButton({ track, size = 'sm', className = '' }: Props) {
           exit={{ scale: 0.6, opacity: 0 }}
           transition={{ duration: 0.15 }}
         >
-          <Heart
-            className={iconSize}
-            style={liked ? { fill: 'currentColor' } : {}}
-          />
+          <Heart className={iconSize} style={liked ? { fill: 'currentColor' } : {}} />
         </motion.span>
       </AnimatePresence>
 
-      {/* Burst ring on like */}
       <AnimatePresence>
         {liked && (
           <motion.span

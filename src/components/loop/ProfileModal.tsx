@@ -697,7 +697,8 @@ export function ProfileModal({
   const [tab, setTab] = useState<ProfileTab>(mode === 'profile' ? 'stats' : 'liked');
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
-  const { likedTrackIds, recentlyPlayed, playlists, deletePlaylist, createPlaylist } = useUserProfile();
+  const { likedTracks, recentlyPlayed, playlists, deletePlaylist, createPlaylist } = useUserProfile();
+  const { user } = useAuth();
   const { playTrack } = usePlayback();
 
   useEffect(() => {
@@ -708,7 +709,7 @@ export function ProfileModal({
     }
   }, [isOpen, mode]);
 
-  const likedTracks = recentlyPlayed.filter(t => likedTrackIds.includes(t.id));
+  // likedTracks now comes directly from the store (synced from Supabase)
 
   const ALL_TABS = [
     { id: 'liked'     as ProfileTab, label: 'Liked',     icon: <Heart className="h-3.5 w-3.5" />,     count: likedTracks.length },
@@ -753,7 +754,7 @@ export function ProfileModal({
               {showCreatePlaylist && (
                 <CreatePlaylistModal
                   onClose={() => setShowCreatePlaylist(false)}
-                  onCreate={(name, coverArt) => createPlaylist(name, coverArt)}
+                  onCreate={(name, coverArt) => createPlaylist(name, coverArt, user?.id)}
                 />
               )}
             </AnimatePresence>
@@ -875,7 +876,7 @@ export function ProfileModal({
                                   </div>
                                 </div>
                                 <button
-                                  onClick={e => { e.stopPropagation(); deletePlaylist(p.id); }}
+                                  onClick={e => { e.stopPropagation(); deletePlaylist(p.id, user?.id); }}
                                   className="opacity-0 group-hover:opacity-100 rounded-full p-1.5 text-white/25 hover:bg-red-500/10 hover:text-red-400/60 transition-all"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
