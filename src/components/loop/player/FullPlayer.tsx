@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import {
   X, SkipBack, SkipForward, Play, Pause, Shuffle, Repeat, Repeat1,
-  Volume2, VolumeX, Loader2, Plus, Mic2, ListMusic, Music2,
+  Volume2, VolumeX, Loader2, Plus, Mic2, ListMusic, Music2, FolderPlus, Check
 } from 'lucide-react';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
 import { subscribeToAudio } from '@/hooks/useAudioData';
@@ -10,6 +10,7 @@ import { FrequencyBars } from '@/components/loop/visualizer/FrequencyBars';
 import { CinematicLyrics } from './CinematicLyrics';
 import { LikeButton } from '@/components/loop/LikeButton';
 import { LoopLogoCanvas } from '@/components/loop/LoopLogo';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 import { SpotifyCanvas } from '@/components/loop/visualizer/SpotifyCanvas';
 
@@ -122,6 +123,97 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
+function PlaylistPickerPopup({ onClose, track }: { onClose: () => void, track: Track }) {
+  const { playlists, addTrackToPlaylist, createPlaylist } = useUserProfile();
+  const [added, setAdded] = useState<string | null>(null);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  const handleAdd = (playlistId: string) => {
+    addTrackToPlaylist(playlistId, track);
+    setAdded(playlistId);
+    setTimeout(() => onClose(), 800);
+  };
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPlaylistName.trim()) return;
+    const newPl = createPlaylist(newPlaylistName.trim());
+    addTrackToPlaylist(newPl.id, track);
+    setAdded(newPl.id);
+    setNewPlaylistName('');
+    setTimeout(() => onClose(), 800);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      className="absolute bottom-full right-0 mb-2 w-52 overflow-hidden rounded-2xl border border-white/[0.08] shadow-2xl z-50"
+      style={{ background: 'oklch(0.08 0.025 260 / 0.98)', backdropFilter: 'blur(24px)' }}
+    >
+      <div className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.3em] text-white/30 border-b border-white/[0.06]">
+        Add to Playlist
+      </div>
+      
+      <form onSubmit={handleCreate} className="border-b border-white/[0.06] p-2 flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="New Playlist..."
+          value={newPlaylistName}
+          onChange={e => setNewPlaylistName(e.target.value)}
+          className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded px-2 py-1.5 text-[11px] text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors"
+        />
+        <button
+          type="submit"
+          disabled={!newPlaylistName.trim()}
+          className="h-7 w-7 flex items-center justify-center shrink-0 rounded bg-white/[0.06] text-white/60 hover:bg-white/[0.1] hover:text-white disabled:opacity-30 transition-all"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </form>
+
+      {playlists.length === 0 ? (
+        <div className="px-3 py-5 text-center text-[11px] text-white/30">
+          No playlists yet
+        </div>
+      ) : (
+        <div className="max-h-56 overflow-y-auto py-1" style={{ scrollbarWidth: 'none' }}>
+          {playlists.map(p => (
+            <button
+              key={p.id}
+              onClick={() => handleAdd(p.id)}
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-white/[0.06]"
+            >
+              <div className="h-7 w-7 shrink-0 overflow-hidden rounded-lg bg-white/[0.06] flex items-center justify-center">
+                {p.coverArt
+                  ? <img src={p.coverArt} alt="" className="h-full w-full object-cover" />
+                  : <span className="text-[10px] text-white/30">♪</span>
+                }
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[11px] font-medium text-white/80">{p.name}</div>
+              </div>
+              {added === p.id && <Check className="h-3 w-3 shrink-0 text-[oklch(0.72_0.26_248)]" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function FullSeekbar() {
   const { duration, seekTo } = usePlayback();
   const progress = usePlayback(s => s.progress);
@@ -180,6 +272,7 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
 
   const [tab, setTab] = useState<Tab>('lyrics');
+  const [showPlaylistPicker, setPicker] = useState(false);
   const REPEAT_ICON = repeatMode === 'one' ? Repeat1 : Repeat;
 
   useEffect(() => {
@@ -227,10 +320,10 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           </div>
 
           {/* Body */}
-          <div className="relative z-10 flex flex-1 overflow-hidden">
+          <div className="relative z-10 flex flex-1 flex-col md:flex-row overflow-y-auto md:overflow-hidden pb-[env(safe-area-inset-bottom)]">
 
             {/* ── Left: Album + controls ──────────────────────────── */}
-            <div className="flex w-full max-w-[22rem] shrink-0 flex-col justify-center gap-5 px-8 py-4">
+            <div className="flex w-full md:max-w-[22rem] shrink-0 flex-col justify-center gap-5 px-6 md:px-8 py-4">
 
               {/* Reactive album art — scale + glow from audio engine */}
               <AnimatePresence mode="wait">
@@ -248,9 +341,9 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 </motion.div>
               </AnimatePresence>
 
-              {/* Track info + like */}
+              {/* Track info + like/playlist */}
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1 text-center">
+                <div className="min-w-0 flex-1 text-center md:text-left">
                   <div className="truncate text-[17px] font-semibold text-white">
                     {currentTrack?.title || '—'}
                   </div>
@@ -258,12 +351,27 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     {currentTrack?.artist}
                   </div>
                 </div>
-                {currentTrack && (
-                  <LikeButton track={currentTrack} size="md" className="shrink-0 -mt-0.5" />
-                )}
+                <div className="flex shrink-0 items-center gap-1 -mt-0.5">
+                  <div className="relative">
+                    <button
+                      onClick={() => setPicker(v => !v)}
+                      className={`rounded-full p-2 transition-colors ${showPlaylistPicker ? 'text-[oklch(0.72_0.26_248)]' : 'text-white/30 hover:text-white/70'}`}
+                    >
+                      <FolderPlus className="h-5 w-5" />
+                    </button>
+                    <AnimatePresence>
+                      {showPlaylistPicker && currentTrack && (
+                        <PlaylistPickerPopup onClose={() => setPicker(false)} track={currentTrack} />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  {currentTrack && (
+                    <LikeButton track={currentTrack} size="md" />
+                  )}
+                </div>
               </div>
 
-              <div className="w-full overflow-hidden rounded-lg">
+              <div className="hidden md:block w-full overflow-hidden rounded-lg">
                 <FrequencyBars height={52} numBars={56} />
               </div>
 
@@ -331,7 +439,7 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             </div>
 
             {/* ── Right: Lyrics / Queue ──────────────────────────── */}
-            <div className="flex flex-1 flex-col overflow-hidden border-l border-white/[0.06]">
+            <div className="flex min-h-[400px] md:min-h-0 flex-1 flex-col overflow-hidden border-t md:border-l md:border-t-0 border-white/[0.06] mt-4 md:mt-0">
               {/* Tabs */}
               <div className="flex shrink-0 items-center gap-1 border-b border-white/[0.06] px-4 py-3">
                 {(['lyrics', 'queue'] as Tab[]).map((t) => (
@@ -353,7 +461,7 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden relative">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={tab}
@@ -361,7 +469,7 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.16 }}
-                    className="h-full"
+                    className="absolute inset-0 h-full w-full"
                   >
                     {tab === 'lyrics' && <CinematicLyrics track={currentTrack} />}
                     {tab === 'queue'  && <QueueView />}
