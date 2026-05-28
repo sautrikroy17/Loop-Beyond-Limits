@@ -385,10 +385,10 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
 
           {/* ── Main 3-section bar (offset top by canvas height) ── */}
           <div className="pt-[16px]">
-            <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-5 py-3">
+            <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-4 py-2 md:px-5 md:py-3">
 
               {/* ════════════════ LEFT: Track info + quick actions ════════════════ */}
-              <div className="flex min-w-0 w-[240px] shrink-0 items-center gap-3">
+              <div className="flex min-w-0 flex-1 md:w-[240px] md:flex-none shrink-0 items-center gap-3">
                 {/* Album art — opens full player on click */}
                 <button onClick={onExpand} className="relative shrink-0">
                   <div className="h-11 w-11 overflow-hidden rounded-xl bg-white/8">
@@ -413,18 +413,18 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
                   </div>
                 </button>
 
-                {/* Queue */}
+                {/* Queue (Desktop Only) */}
                 <button
                   onClick={handleQueueAdd}
                   title="Add to Queue"
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
+                  className={`hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
                     queueAdded ? 'text-[oklch(0.72_0.26_248)]' : 'text-white/30 hover:text-white/70'
                   }`}
                 >
                   {queueAdded ? <Check className="h-4 w-4" /> : <ListPlus className="h-4 w-4" />}
                 </button>
 
-                {/* Like Button */}
+                {/* Like Button (Desktop Only) */}
                 <button
                   onClick={() => {
                     if (!currentTrack) return;
@@ -435,15 +435,15 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
                     }
                   }}
                   title="Like"
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
+                  className={`hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
                     isLiked(currentTrack?.id || '') ? 'text-red-500 hover:text-red-400' : 'text-white/30 hover:text-white/70'
                   }`}
                 >
                   <Heart className="h-4 w-4" fill={isLiked(currentTrack?.id || '') ? 'currentColor' : 'none'} />
                 </button>
 
-                {/* Add to Playlist */}
-                <div className="relative shrink-0">
+                {/* Add to Playlist (Desktop Only) */}
+                <div className="relative shrink-0 hidden md:block">
                   <button
                     onClick={() => setPicker(v => !v)}
                     title="Add to Playlist"
@@ -461,10 +461,32 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Mobile Essential Controls (Hidden on Desktop) */}
+                <div className="flex items-center gap-1 md:hidden ml-auto">
+                  <button
+                    onClick={togglePlayPause}
+                    disabled={isLoadingTrack}
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-transform active:scale-95 disabled:opacity-40"
+                  >
+                    {isLoadingTrack
+                      ? <Loader2 className="h-5 w-5 animate-spin" />
+                      : isPlaying
+                      ? <Pause className="h-5 w-5 fill-current" />
+                      : <Play className="h-5 w-5 fill-current ml-0.5" />
+                    }
+                  </button>
+                  <button
+                    onClick={nextTrack}
+                    className="flex h-10 w-10 items-center justify-center text-white/55 transition-colors active:text-white"
+                  >
+                    <SkipForward className="h-5 w-5 fill-current" />
+                  </button>
+                </div>
               </div>
 
-              {/* ════════════════ CENTER: Controls + Seekbar ════════════════ */}
-              <div className="flex flex-1 flex-col items-center gap-2 min-w-0 max-w-[600px] mx-auto">
+              {/* ════════════════ CENTER: Controls + Seekbar (Desktop Only) ════════════════ */}
+              <div className="hidden md:flex flex-1 flex-col items-center gap-2 min-w-0 max-w-[600px] mx-auto">
                 {/* Playback controls */}
                 <div className="flex items-center gap-1.5">
                   <button
@@ -533,8 +555,8 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
                 </div>
               </div>
 
-              {/* ════════════════ RIGHT: Volume + extras ════════════════ */}
-              <div className="flex w-[200px] shrink-0 items-center justify-end gap-2">
+              {/* ════════════════ RIGHT: Volume + extras (Desktop Only) ════════════════ */}
+              <div className="hidden md:flex w-[200px] shrink-0 items-center justify-end gap-2">
                 {/* Volume */}
                 <button
                   onClick={() => setVolume(volume === 0 ? 70 : 0)}
