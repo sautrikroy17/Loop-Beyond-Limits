@@ -114,7 +114,7 @@ export async function getDailyMixFn() {
   try {
     // 1. Check local storage first for a lightning-fast cached mix
     const today = new Date().toISOString().split('T')[0];
-    const cacheKey = `loop_daily_mix_v3_${session.user.id}`;
+    const cacheKey = `loop_daily_mix_v4_${session.user.id}`;
     const cachedStr = localStorage.getItem(cacheKey);
     
     if (cachedStr) {
