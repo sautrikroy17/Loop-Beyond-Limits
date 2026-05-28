@@ -569,9 +569,12 @@ export function MusicPlayer() {
               {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>
             <input
-              type="range" min={0} max={100} value={volume}
+              type="range"
+              min={0}
+              max={100}
+              value={volume}
               onChange={(e) => setVolume(Number(e.target.value))}
-              className="flex-1 accent-[oklch(0.75_0.22_290)] cursor-pointer"
+              className="flex-1 h-1 bg-white/20 rounded-full appearance-none outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full"
             />
             <span className="w-7 text-right text-[11px] tabular-nums text-white/30">{volume}</span>
           </div>

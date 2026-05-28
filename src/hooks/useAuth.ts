@@ -41,6 +41,9 @@ export const initAuthListener = () => {
       import('@/functions/profile').then(({ loadProfileFn }) => {
         loadProfileFn();
       });
+      import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
+        initPlaybackSync(session.user.id);
+      });
     }
   });
 

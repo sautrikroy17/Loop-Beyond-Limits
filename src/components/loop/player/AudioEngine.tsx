@@ -244,10 +244,30 @@ export function AudioEngine() {
       });
 
       try {
-        navigator.mediaSession.setActionHandler('play', () => usePlayback.getState().setPlaying(true));
-        navigator.mediaSession.setActionHandler('pause', () => usePlayback.getState().setPlaying(false));
+        navigator.mediaSession.setActionHandler('play', () => {
+          playerRef.current?.playVideo?.();
+          usePlayback.getState().setPlaying(true);
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+          playerRef.current?.pauseVideo?.();
+          usePlayback.getState().setPlaying(false);
+        });
         navigator.mediaSession.setActionHandler('previoustrack', () => usePlayback.getState().prevTrack());
         navigator.mediaSession.setActionHandler('nexttrack', () => usePlayback.getState().nextTrack());
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+          if (details.seekTime && playerRef.current?.seekTo) {
+            playerRef.current.seekTo(details.seekTime, true);
+            usePlayback.getState().setProgress(details.seekTime);
+          }
+        });
+        navigator.mediaSession.setActionHandler('seekbackward', () => {
+          const t = Math.max((playerRef.current?.getCurrentTime() || 0) - 10, 0);
+          playerRef.current?.seekTo(t, true);
+        });
+        navigator.mediaSession.setActionHandler('seekforward', () => {
+          const t = (playerRef.current?.getCurrentTime() || 0) + 10;
+          playerRef.current?.seekTo(t, true);
+        });
       } catch (e) {
         console.warn('MediaSession action handlers not supported', e);
       }

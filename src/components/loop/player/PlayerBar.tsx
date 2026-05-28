@@ -567,13 +567,13 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
                     : <Volume2 className="h-4 w-4" />
                   }
                 </button>
-                <WhiteSlider
-                  value={volume}
+                <input
+                  type="range"
                   min={0}
                   max={100}
-                  step={1}
-                  className="w-24"
-                  onChange={setVolume}
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="w-20 lg:w-24 h-1 bg-white/20 rounded-full appearance-none outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full"
                 />
 
                 {/* Autoplay */}

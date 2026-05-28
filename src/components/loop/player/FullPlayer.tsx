@@ -430,7 +430,7 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   max={100}
                   value={volume}
                   onChange={(e) => setVolume(Number(e.target.value))}
-                  className="flex-1 cursor-pointer accent-[oklch(0.72_0.23_290)] thumbless-range"
+                  className="flex-1 h-1 bg-white/20 rounded-full appearance-none outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full"
                 />
                 <span className="w-7 shrink-0 text-right text-[10px] tabular-nums text-white/22">
                   {volume}
