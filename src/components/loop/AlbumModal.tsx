@@ -131,7 +131,7 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
           </div>
 
           {/* Right Side: Tracklist */}
-          <div className="flex w-full flex-col bg-black/20 pb-4">
+          <div className="flex flex-1 min-w-0 flex-col bg-black/20 pb-4">
             <div className="p-6 pb-2">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40">Tracklist</h3>
             </div>
@@ -149,6 +149,7 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
                       track={track}
                       onPlay={() => playTrack(track)}
                       showDuration={true}
+                      hideCover={true}
                     >
                       <span className="w-6 text-right text-[11px] font-medium text-white/30 group-hover:text-white/60">
                         {i + 1}

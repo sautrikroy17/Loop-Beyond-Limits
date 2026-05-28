@@ -102,11 +102,12 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 // ── Track Row ────────────────────────────────────────────────────
 
 export function TrackRow({
-  track, onPlay, showDuration = false, children,
+  track, onPlay, showDuration = false, hideCover = false, children,
 }: {
   track: Track;
   onPlay: () => void;
   showDuration?: boolean;
+  hideCover?: boolean;
   children?: React.ReactNode;
 }) {
   const { playlists, addTrackToPlaylist } = useUserProfile();
@@ -126,18 +127,20 @@ export function TrackRow({
       {children}
 
       {/* Album art */}
-      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/[0.05]">
-        {track.albumArt
-          ? <img src={track.albumArt} alt="" className="h-full w-full object-cover" />
-          : <Music2 className="m-auto mt-2.5 h-5 w-5 text-white/20" />
-        }
-        <button
-          onClick={onPlay}
-          className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <Play className="h-4 w-4 fill-white text-white" />
-        </button>
-      </div>
+      {!hideCover && (
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/[0.05]">
+          {track.albumArt
+            ? <img src={track.albumArt} alt="" className="h-full w-full object-cover" />
+            : <Music2 className="m-auto mt-2.5 h-5 w-5 text-white/20" />
+          }
+          <button
+            onClick={onPlay}
+            className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <Play className="h-4 w-4 fill-white text-white" />
+          </button>
+        </div>
+      )}
 
       {/* ── 3-column info: [Title] [Artist centered] [Duration] ── */}
       <div className="flex flex-1 min-w-0 items-center gap-2 cursor-pointer" onClick={onPlay}>
