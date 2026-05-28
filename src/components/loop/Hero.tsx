@@ -94,7 +94,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
           className="mb-10 inline-flex items-center gap-2.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.38em] text-white/35 backdrop-blur-sm"
         >
           <span className="h-1 w-1 rounded-full bg-[oklch(0.72_0.26_248)] shadow-[0_0_6px_oklch(0.72_0.26_248)]" />
-          Feel every wave. Every drop. Every night.
+          Feel every beat. Every drop. Every night.
         </motion.p>
 
         {/* Main headline */}
@@ -120,7 +120,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
               color: 'transparent',
             }}
           >
-            Waves
+          Beat
           </motion.span>
         </h1>
 
@@ -133,7 +133,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
         >
           Search any track, remix, or underground find.
           <br />
-          <span className="text-white/22">Synced lyrics · Smart recommendations · No buffering.</span>
+          <span className="text-white/22">Synced lyrics · Smart recommendations · No ads.</span>
         </motion.p>
 
         {/* CTAs */}

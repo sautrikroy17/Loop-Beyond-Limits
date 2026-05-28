@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Heart, Clock, ListMusic, Play, Trash2, Music2,
   User, Plus, Camera, Image as ImageIcon, ChevronLeft,
-  Search as SearchIcon, Check, Pencil,
+  Search as SearchIcon, Check, Pencil, Loader2,
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
@@ -22,6 +22,7 @@ import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/supabase/auth';
 import { LikeButton } from './LikeButton';
+import { hybridSearchFn } from '@/functions/search';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors,
@@ -75,11 +76,10 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 // ── Track Row ────────────────────────────────────────────────────
 
 function TrackRow({
-  track, onPlay, index, showDuration = false, children,
+  track, onPlay, showDuration = false, children,
 }: {
   track: Track;
   onPlay: () => void;
-  index?: number;
   showDuration?: boolean;
   children?: React.ReactNode;
 }) {
@@ -97,6 +97,8 @@ function TrackRow({
   return (
     <div className="group relative flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-white/[0.035] transition-colors">
       {children}
+
+      {/* Album art */}
       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/[0.05]">
         {track.albumArt
           ? <img src={track.albumArt} alt="" className="h-full w-full object-cover" />
@@ -109,15 +111,27 @@ function TrackRow({
           <Play className="h-4 w-4 fill-white text-white" />
         </button>
       </div>
-      <div className="min-w-0 flex-1 cursor-pointer" onClick={onPlay}>
-        <div className="truncate text-[13px] font-medium text-white/90">{track.title}</div>
-        <div className="truncate text-[11px] text-white/38">{track.artist}</div>
+
+      {/* ── 3-column info: [Title] [Artist centered] [Duration] ── */}
+      <div className="flex flex-1 min-w-0 items-center gap-2 cursor-pointer" onClick={onPlay}>
+        {/* Song title — left */}
+        <div className="flex-1 min-w-0 truncate text-[13px] font-medium text-white/90">
+          {track.title}
+        </div>
+        {/* Artist — center */}
+        <div className="w-[28%] shrink-0 truncate text-center text-[11px] text-white/45">
+          {track.artist}
+        </div>
+        {/* Duration — right */}
+        {showDuration && (
+          <div className="w-10 shrink-0 text-right tabular-nums text-[11px] text-white/30">
+            {fmtMs(track.durationMs)}
+          </div>
+        )}
       </div>
-      {showDuration && track.durationMs && (
-        <span className="shrink-0 tabular-nums text-[11px] text-white/30 mr-1">{fmtMs(track.durationMs)}</span>
-      )}
+
+      {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
-        {/* Add-to-playlist button */}
         <div className="relative" ref={pickerRef}>
           <button
             onClick={(e) => { e.stopPropagation(); setShowPicker(v => !v); }}
@@ -207,25 +221,34 @@ function AddSongsPanel({ playlistId, onClose }: { playlistId: string; onClose: (
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
-  const { addTrackToPlaylist, playlists } = useUserProfile();
-  const { recentlyPlayed } = useUserProfile();
+  const { addTrackToPlaylist, playlists, recentlyPlayed } = useUserProfile();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
+  // Live search — history when empty, full catalog when typing
   useEffect(() => {
     if (!query.trim()) {
-      setResults(recentlyPlayed.slice(0, 10));
+      setResults(recentlyPlayed.slice(0, 15));
+      setLoading(false);
       return;
     }
     setLoading(true);
-    const q = query.trim().toLowerCase();
-    // Filter from recent + deduplicate — instant, no API call
-    const filtered = recentlyPlayed.filter(
-      t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
-    ).slice(0, 20);
-    setResults(filtered);
-    setLoading(false);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await hybridSearchFn({ data: query.trim() });
+        setResults(res as Track[]);
+      } catch {
+        // Fallback to history filter
+        const q = query.toLowerCase();
+        setResults(recentlyPlayed.filter(
+          t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+        ).slice(0, 20));
+      } finally {
+        setLoading(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
   }, [query, recentlyPlayed]);
 
   const playlist = playlists.find(p => p.id === playlistId);
@@ -252,36 +275,38 @@ function AddSongsPanel({ playlistId, onClose }: { playlistId: string; onClose: (
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search your history..."
+            placeholder="Search any song, artist..."
             className="flex-1 bg-transparent text-[13px] text-white placeholder:text-white/25 outline-none"
           />
+          {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-white/30 shrink-0" />}
         </div>
       </div>
 
+      {/* Label */}
+      <div className="px-6 py-2 text-[10px] uppercase tracking-[0.3em] text-white/25">
+        {query ? `Results for "${query}"` : 'Recent tracks'}
+      </div>
+
       {/* Results */}
-      <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'none' }}>
-        {!query && (
-          <div className="mb-3 text-[10px] uppercase tracking-[0.3em] text-white/25">Recent tracks</div>
-        )}
-        {results.length === 0 ? (
-          <EmptyState icon={<Music2 className="h-7 w-7" />} text="No tracks found" />
+      <div className="flex-1 overflow-y-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
+        {results.length === 0 && !loading ? (
+          <EmptyState icon={<Music2 className="h-7 w-7" />} text={query ? 'No results found' : 'No recent tracks'} />
         ) : (
           <div className="space-y-0.5">
             {results.map(track => (
-              <div key={track.id} className="group flex items-center gap-2 rounded-xl px-2 py-2.5 hover:bg-white/[0.035] transition-colors">
+              <div key={track.id} className="group flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-white/[0.035] transition-colors">
                 <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/[0.05]">
                   {track.albumArt
                     ? <img src={track.albumArt} alt="" className="h-full w-full object-cover" />
                     : <Music2 className="m-auto mt-2.5 h-5 w-5 text-white/20" />
                   }
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px] font-medium text-white/90">{track.title}</div>
-                  <div className="truncate text-[11px] text-white/38">{track.artist}</div>
+                {/* 3-column info */}
+                <div className="flex flex-1 min-w-0 items-center gap-2">
+                  <div className="flex-1 min-w-0 truncate text-[13px] font-medium text-white/90">{track.title}</div>
+                  <div className="w-[28%] shrink-0 truncate text-center text-[11px] text-white/45">{track.artist}</div>
+                  <div className="w-10 shrink-0 text-right tabular-nums text-[11px] text-white/30">{fmtMs(track.durationMs)}</div>
                 </div>
-                {track.durationMs && (
-                  <span className="shrink-0 tabular-nums text-[11px] text-white/30">{fmtMs(track.durationMs)}</span>
-                )}
                 <button
                   onClick={() => addTrackToPlaylist(playlistId, track)}
                   disabled={addedIds.has(track.id)}

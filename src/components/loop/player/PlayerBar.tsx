@@ -1,9 +1,19 @@
+/**
+ * PlayerBar — Spotify-style 3-section layout
+ *
+ * [Left: Track info + Queue + Playlist]
+ * [Center: Controls + Seekbar with white track]
+ * [Right: Volume with white track + Autoplay + Karaoke]
+ *
+ * Top edge: EQ canvas — 64 bars that pulse with audio frequency
+ */
+
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Play, Pause, SkipBack, SkipForward, ChevronUp, Volume2, VolumeX,
-  Loader2, Mic2, Shuffle, Repeat, Repeat1, Infinity, ListPlus, FolderPlus, Check
+  Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
+  Loader2, Mic2, Shuffle, Repeat, Repeat1, Infinity, ListPlus, FolderPlus, Check,
 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePlayback } from '@/hooks/usePlayback';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { subscribeToAudio } from '@/hooks/useAudioData';
@@ -13,91 +23,183 @@ function fmt(s: number): string {
   return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 }
 
-// ── Audio-Reactive Neon Line ─────────────────────────────────────
-
+// ── EQ Progress Canvas ───────────────────────────────────────────
 /**
- * Thin neon line at the top of the player bar.
- * - Pulses in brightness/glow on each beat
- * - A bright shimmer highlight slides based on treble energy
- * - Colors shift subtly with mid-range energy
- * Pure DOM mutations via RAF — zero React rerenders.
+ * Replaces the static neon line with a full EQ equalizer bar visualization.
+ * - 64 bars across the full player width
+ * - Bars in the "played" portion rise/fall with actual frequency bins
+ * - Bars ahead of playhead = dim grey track
+ * - Glow effect behind played bars
+ * - Click/drag to seek
  */
-function AudioReactiveLine({ pct }: { pct: number }) {
-  const fillRef    = useRef<HTMLDivElement>(null);
-  const glowRef    = useRef<HTMLDivElement>(null);
-  const shimmerRef = useRef<HTMLDivElement>(null);
-  const pctRef     = useRef(pct);
+function EQProgressCanvas({
+  pct,
+  onSeek,
+}: {
+  pct: number;
+  onSeek: (pct: number) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pctRef    = useRef(pct);
 
-  // Keep pctRef in sync
   useEffect(() => { pctRef.current = pct; }, [pct]);
 
+  // Handle click/drag to seek
+  const handleInteract = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    onSeek(ratio * 100);
+  }, [onSeek]);
+
   useEffect(() => {
-    let shimmerPos = 0;
-    let shimmerDir = 1;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    return subscribeToAudio((d) => {
+    const resize = () => {
+      canvas.width  = canvas.getBoundingClientRect().width  || window.innerWidth;
+      canvas.height = canvas.getBoundingClientRect().height || 16;
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const unsub = subscribeToAudio((d) => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const W = canvas.width;
+      const H = canvas.height;
       const p = pctRef.current;
+      const progressW = (p / 100) * W;
 
-      // Fill bar glow — pulses on beat
-      if (fillRef.current) {
-        const glowPx  = 2 + d.bass * 10 + d.beat * 16;
-        const opacity = 0.85 + d.bass * 0.15;
-        fillRef.current.style.width   = `${p}%`;
-        fillRef.current.style.opacity = opacity.toFixed(3);
-        fillRef.current.style.boxShadow = `0 0 ${glowPx}px ${glowPx / 2}px oklch(0.72 0.26 248 / ${(0.25 + d.beat * 0.55).toFixed(3)})`;
+      ctx.clearRect(0, 0, W, H);
+
+      const numBars = Math.max(32, Math.floor(W / 5));
+      const barW    = W / numBars;
+      const maxBarH = H - 2;
+
+      // Glow behind progress (soft blur layer)
+      if (progressW > 4) {
+        const glowGrad = ctx.createLinearGradient(0, 0, progressW, 0);
+        glowGrad.addColorStop(0,   'rgba(80, 180, 255, 0.12)');
+        glowGrad.addColorStop(0.5, 'rgba(130, 100, 255, 0.12)');
+        glowGrad.addColorStop(1,   'rgba(170, 140, 255, 0.10)');
+        ctx.fillStyle = glowGrad;
+        ctx.filter = 'blur(4px)';
+        ctx.fillRect(0, 0, progressW, H);
+        ctx.filter = 'none';
       }
 
-      // Outer glow layer behind the fill (larger, softer)
-      if (glowRef.current) {
-        const sz = 4 + d.loudness * 14;
-        glowRef.current.style.width  = `${Math.min(p + 2, 100)}%`;
-        glowRef.current.style.filter = `blur(${sz}px)`;
-        glowRef.current.style.opacity = (0.2 + d.bass * 0.35).toFixed(3);
+      for (let i = 0; i < numBars; i++) {
+        const x = i * barW;
+        const inProgress = x < progressW;
+        const bw = barW - 1.2;
+
+        if (inProgress) {
+          // Map to frequency bin
+          const binIdx = Math.floor((i / numBars) * d.freqBins.length);
+          const amp = d.freqBins[binIdx] || 0;
+          const barH = Math.max(2, 2 + amp * maxBarH);
+
+          // Color: blue → purple gradient based on position
+          const ratio = i / numBars;
+          const r = Math.floor(60  + ratio * 120);  // 60 → 180
+          const g = Math.floor(160 - ratio * 60);   // 160 → 100
+          const b = 255;
+          const a = 0.75 + d.loudness * 0.25;
+
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
+          ctx.fillRect(x, H - barH, bw, barH);
+
+          // Inner glow on bar top
+          if (amp > 0.3) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${(amp * 0.5).toFixed(2)})`;
+            ctx.fillRect(x, H - barH, bw, 1.5);
+          }
+        } else {
+          // Ahead of playhead: dim grey
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+          ctx.fillRect(x, H - 2, bw, 2);
+        }
       }
 
-      // Shimmer travels along the filled portion on treble energy
-      if (shimmerRef.current) {
-        shimmerPos += shimmerDir * (0.4 + d.treble * 2.5);
-        if (shimmerPos >= p) { shimmerPos = p;   shimmerDir = -1; }
-        if (shimmerPos <= 0) { shimmerPos = 0;   shimmerDir =  1; }
-        shimmerRef.current.style.left    = `${Math.min(shimmerPos, Math.max(0, p - 5))}%`;
-        shimmerRef.current.style.opacity = (0.5 + d.treble * 0.5).toFixed(3);
+      // White playhead dot
+      if (p > 0 && p < 100) {
+        const px = progressW;
+        ctx.beginPath();
+        ctx.arc(px, H / 2 + 1, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fill();
+        ctx.shadowColor = 'rgba(150, 120, 255, 0.8)';
+        ctx.shadowBlur  = 6;
+        ctx.fill();
+        ctx.shadowBlur  = 0;
       }
     });
+
+    return () => {
+      ro.disconnect();
+      unsub();
+    };
   }, []);
 
   return (
-    <div className="relative h-[3px] w-full overflow-hidden bg-white/[0.12]">
-      {/* Soft glow layer behind */}
-      <div
-        ref={glowRef}
-        className="absolute left-0 top-0 h-full will-change-[width,filter,opacity]"
-        style={{
-          background: 'linear-gradient(90deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286), oklch(0.80 0.18 208))',
-          filter: 'blur(6px)',
-          opacity: 0.2,
-        }}
-      />
-      {/* Main progress fill */}
-      <div
-        ref={fillRef}
-        className="absolute left-0 top-0 h-full will-change-[width,box-shadow,opacity] transition-none"
-        style={{
-          width: `${pct}%`,
-          background: 'linear-gradient(90deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286), oklch(0.80 0.18 208))',
-          boxShadow: '0 0 6px 2px oklch(0.72 0.26 248 / 0.3)',
-        }}
-      />
-      {/* Moving shimmer */}
-      <div
-        ref={shimmerRef}
-        className="absolute top-0 h-full w-8 will-change-[left,opacity] pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, transparent 85%)',
-          filter: 'blur(1px)',
-          opacity: 0.5,
-          transform: 'translateX(-50%)',
-        }}
+    <canvas
+      ref={canvasRef}
+      onClick={handleInteract}
+      className="absolute top-0 inset-x-0 w-full cursor-pointer"
+      style={{ height: 16, display: 'block' }}
+      title="Seek"
+    />
+  );
+}
+
+// ── Custom Slider (white track + white fill) ─────────────────────
+
+function WhiteSlider({
+  value,
+  min = 0,
+  max = 100,
+  step = 0.5,
+  onChange,
+  onCommit,
+  className = '',
+}: {
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (v: number) => void;
+  onCommit?: (v: number) => void;
+  className?: string;
+}) {
+  const pct = ((value - min) / (max - min)) * 100;
+
+  return (
+    <div className={`group relative flex items-center ${className}`} style={{ height: 16 }}>
+      {/* Track */}
+      <div className="relative h-[3px] w-full rounded-full bg-white/20">
+        {/* Fill */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-white/80 transition-none"
+          style={{ width: `${pct}%` }}
+        />
+        {/* Thumb (visible on hover) */}
+        <div
+          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+      {/* Invisible range for interaction */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        onMouseUp={(e) => onCommit?.(Number((e.target as HTMLInputElement).value))}
+        onTouchEnd={(e) => onCommit?.(Number((e.target as HTMLInputElement).value))}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
       />
     </div>
   );
@@ -133,14 +235,14 @@ function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="absolute bottom-full right-0 mb-2 w-56 overflow-hidden rounded-2xl border border-white/[0.08] shadow-2xl z-50"
-      style={{ background: 'oklch(0.08 0.025 260 / 0.98)', backdropFilter: 'blur(24px) saturate(180%)' }}
+      className="absolute bottom-full right-0 mb-2 w-52 overflow-hidden rounded-2xl border border-white/[0.08] shadow-2xl z-50"
+      style={{ background: 'oklch(0.08 0.025 260 / 0.98)', backdropFilter: 'blur(24px)' }}
     >
       <div className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.3em] text-white/30 border-b border-white/[0.06]">
         Add to Playlist
       </div>
       {playlists.length === 0 ? (
-        <div className="px-3 py-5 text-center text-xs text-white/30">
+        <div className="px-3 py-5 text-center text-[11px] text-white/30">
           No playlists yet — create one in the Library
         </div>
       ) : (
@@ -149,19 +251,18 @@ function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
             <button
               key={p.id}
               onClick={() => handleAdd(p.id)}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-white/[0.06]"
             >
-              <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white/[0.06] flex items-center justify-center">
+              <div className="h-7 w-7 shrink-0 overflow-hidden rounded-lg bg-white/[0.06] flex items-center justify-center">
                 {p.coverArt
                   ? <img src={p.coverArt} alt="" className="h-full w-full object-cover" />
                   : <span className="text-[10px] text-white/30">♪</span>
                 }
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12px] font-medium text-white/80">{p.name}</div>
-                <div className="text-[10px] text-white/35">{p.tracks.length} tracks</div>
+                <div className="truncate text-[11px] font-medium text-white/80">{p.name}</div>
               </div>
-              {added === p.id && <Check className="h-3.5 w-3.5 shrink-0 text-[oklch(0.72_0.26_248)]" />}
+              {added === p.id && <Check className="h-3 w-3 shrink-0 text-[oklch(0.72_0.26_248)]" />}
             </button>
           ))}
         </div>
@@ -181,20 +282,25 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
     addToQueue,
   } = usePlayback();
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragVal, setDragVal]       = useState(0);
-  const [showPlaylistPicker, setShowPlaylistPicker] = useState(false);
-  const [queueAdded, setQueueAdded] = useState(false);
+  const [seekDrag, setSeekDrag]         = useState(false);
+  const [seekVal,  setSeekVal]          = useState(0);
+  const [showPlaylistPicker, setPicker] = useState(false);
+  const [queueAdded, setQueueAdded]     = useState(false);
 
   const pct         = duration > 0 ? (progress / duration) * 100 : 0;
-  const displayTime = isDragging ? dragVal : progress;
+  const displayTime = seekDrag ? seekVal : progress;
 
-  const handleAddToQueue = () => {
+  const handleQueueAdd = () => {
     if (!currentTrack) return;
     addToQueue(currentTrack);
     setQueueAdded(true);
     setTimeout(() => setQueueAdded(false), 1200);
   };
+
+  const handleEQSeek = useCallback((p: number) => {
+    if (!duration) return;
+    seekTo((p / 100) * duration);
+  }, [duration, seekTo]);
 
   return (
     <AnimatePresence>
@@ -205,177 +311,187 @@ export function PlayerBar({ onExpand, onKaraoke }: { onExpand: () => void; onKar
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06]"
-          style={{ background: 'oklch(0.06 0.024 260 / 0.97)', backdropFilter: 'blur(32px) saturate(180%)' }}
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.05]"
+          style={{
+            background: 'oklch(0.07 0.024 260 / 0.96)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+          }}
         >
-          {/* ── Audio-reactive neon progress line ── */}
-          <AudioReactiveLine pct={pct} />
+          {/* ── EQ + Progress canvas at top edge ── */}
+          <EQProgressCanvas pct={pct} onSeek={handleEQSeek} />
 
-          <div className="mx-auto flex max-w-screen-xl items-center gap-3 px-4 py-3 sm:gap-4">
-            {/* Album art + track info */}
-            <button
-              onClick={onExpand}
-              className="group flex min-w-0 flex-1 items-center gap-3 text-left sm:flex-none sm:w-48"
-            >
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white/8">
-                {currentTrack.albumArt && (
-                  <img src={currentTrack.albumArt} alt="" className="h-full w-full object-cover" />
-                )}
-                {isLoadingTrack && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <Loader2 className="h-4 w-4 animate-spin text-white/60" />
+          {/* ── Main 3-section bar (offset top by canvas height) ── */}
+          <div className="pt-[16px]">
+            <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-5 py-3">
+
+              {/* ════════════════ LEFT: Track info + quick actions ════════════════ */}
+              <div className="flex min-w-0 w-[240px] shrink-0 items-center gap-3">
+                {/* Album art — opens full player on click */}
+                <button onClick={onExpand} className="relative shrink-0">
+                  <div className="h-11 w-11 overflow-hidden rounded-xl bg-white/8">
+                    {currentTrack.albumArt && (
+                      <img src={currentTrack.albumArt} alt="" className="h-full w-full object-cover" />
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1 sm:flex-none">
-                <div className="truncate text-sm font-medium text-white">{currentTrack.title}</div>
-                <div className="truncate text-xs text-white/45">{currentTrack.artist}</div>
-              </div>
-              <ChevronUp className="h-4 w-4 shrink-0 text-white/25 transition-colors group-hover:text-white/60" />
-            </button>
+                  {isLoadingTrack && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
+                      <Loader2 className="h-4 w-4 animate-spin text-white/60" />
+                    </div>
+                  )}
+                </button>
 
-            {/* ── Queue + Playlist quick-action buttons ── */}
-            <div className="flex shrink-0 items-center gap-0.5">
-              {/* Add to Queue */}
-              <button
-                onClick={handleAddToQueue}
-                title="Add to Queue"
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all hover:bg-white/[0.06] ${
-                  queueAdded ? 'text-[oklch(0.72_0.26_248)]' : 'text-white/35 hover:text-white/75'
-                }`}
-              >
-                {queueAdded
-                  ? <Check className="h-3.5 w-3.5" />
-                  : <ListPlus className="h-4 w-4" />
-                }
-              </button>
+                {/* Track name + artist (stacked) */}
+                <button onClick={onExpand} className="min-w-0 flex-1 text-left">
+                  <div className="truncate text-[13px] font-semibold leading-tight text-white">
+                    {currentTrack.title}
+                  </div>
+                  <div className="truncate text-[11px] leading-tight text-white/45 mt-0.5">
+                    {currentTrack.artist}
+                  </div>
+                </button>
 
-              {/* Add to Playlist */}
-              <div className="relative">
+                {/* Queue */}
                 <button
-                  onClick={() => setShowPlaylistPicker(v => !v)}
-                  title="Add to Playlist"
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all hover:bg-white/[0.06] ${
-                    showPlaylistPicker ? 'text-[oklch(0.72_0.26_248)] bg-white/[0.05]' : 'text-white/35 hover:text-white/75'
+                  onClick={handleQueueAdd}
+                  title="Add to Queue"
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
+                    queueAdded ? 'text-[oklch(0.72_0.26_248)]' : 'text-white/30 hover:text-white/70'
                   }`}
                 >
-                  <FolderPlus className="h-4 w-4" />
+                  {queueAdded ? <Check className="h-4 w-4" /> : <ListPlus className="h-4 w-4" />}
                 </button>
-                <AnimatePresence>
-                  {showPlaylistPicker && (
-                    <PlaylistPickerPopup onClose={() => setShowPlaylistPicker(false)} />
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
 
-            {/* Playback controls */}
-            <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-              <button
-                onClick={toggleShuffle}
-                className={`hidden sm:flex rounded-full p-2 transition-colors hover:bg-white/5 ${isShuffle ? 'text-white' : 'text-white/30 hover:text-white/60'}`}
-                title="Shuffle"
-              >
-                <Shuffle className="h-4 w-4" />
-              </button>
-
-              <button onClick={prevTrack} className="rounded-full p-2 text-white/50 transition-colors hover:bg-white/5 hover:text-white">
-                <SkipBack className="h-5 w-5 fill-current" />
-              </button>
-
-              <button
-                onClick={togglePlayPause}
-                disabled={isLoadingTrack}
-                className="mx-1 flex h-10 w-10 items-center justify-center rounded-full text-white transition-transform hover:scale-105 active:scale-95 disabled:opacity-40"
-                style={{
-                  background: 'linear-gradient(135deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286))',
-                  boxShadow: '0 0 28px -4px oklch(0.72 0.26 248 / 0.65)',
-                }}
-              >
-                {isLoadingTrack
-                  ? <Loader2 className="h-5 w-5 animate-spin" />
-                  : isPlaying
-                  ? <Pause className="h-5 w-5 fill-current" />
-                  : <Play className="h-5 w-5 fill-current ml-0.5" />
-                }
-              </button>
-
-              <button onClick={nextTrack} className="rounded-full p-2 text-white/50 transition-colors hover:bg-white/5 hover:text-white">
-                <SkipForward className="h-5 w-5 fill-current" />
-              </button>
-
-              <button
-                onClick={toggleRepeat}
-                className={`hidden sm:flex rounded-full p-2 transition-colors hover:bg-white/5 ${repeatMode !== 'none' ? 'text-white' : 'text-white/30 hover:text-white/60'}`}
-                title="Repeat"
-              >
-                {repeatMode === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />}
-              </button>
-            </div>
-
-            {/* Seekbar */}
-            <div className="hidden flex-1 items-center gap-2 sm:flex">
-              <span className="w-9 shrink-0 text-right text-[11px] tabular-nums text-white/30">{fmt(displayTime)}</span>
-              <div className="group relative flex-1">
-                <div className="h-1 w-full overflow-hidden rounded-full bg-white/25 shadow-inner">
-                  <div
-                    className="h-full rounded-full transition-none"
-                    style={{
-                      width: `${isDragging && duration > 0 ? (dragVal / duration) * 100 : pct}%`,
-                      background: 'linear-gradient(90deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286), oklch(0.80 0.18 208))',
-                    }}
-                  />
+                {/* Add to Playlist */}
+                <div className="relative shrink-0">
+                  <button
+                    onClick={() => setPicker(v => !v)}
+                    title="Add to Playlist"
+                    className={`flex h-8 w-8 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
+                      showPlaylistPicker
+                        ? 'bg-white/[0.06] text-[oklch(0.72_0.26_248)]'
+                        : 'text-white/30 hover:text-white/70'
+                    }`}
+                  >
+                    <FolderPlus className="h-4 w-4" />
+                  </button>
+                  <AnimatePresence>
+                    {showPlaylistPicker && (
+                      <PlaylistPickerPopup onClose={() => setPicker(false)} />
+                    )}
+                  </AnimatePresence>
                 </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || 1}
-                  step={0.5}
-                  value={displayTime}
-                  onChange={(e) => { setIsDragging(true); setDragVal(Number(e.target.value)); }}
-                  onMouseUp={(e) => { seekTo(Number((e.target as HTMLInputElement).value)); setIsDragging(false); }}
-                  onTouchEnd={(e) => { seekTo(Number((e.target as HTMLInputElement).value)); setIsDragging(false); }}
-                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                />
-                <div
-                  className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-white shadow opacity-0 transition-opacity group-hover:opacity-100"
-                  style={{ left: `calc(${pct}% - 6px)` }}
-                />
               </div>
-              <span className="w-9 shrink-0 text-[11px] tabular-nums text-white/30">{fmt(duration)}</span>
-            </div>
 
-            {/* Volume */}
-            <div className="hidden shrink-0 items-center gap-2 sm:flex">
-              <button
-                onClick={() => setVolume(volume === 0 ? 75 : 0)}
-                className="text-white/30 transition-colors hover:text-white/70"
-              >
-                {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
-              <input
-                type="range" min={0} max={100} value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                className="w-20 cursor-pointer accent-[oklch(0.75_0.22_290)]"
-              />
-            </div>
+              {/* ════════════════ CENTER: Controls + Seekbar ════════════════ */}
+              <div className="flex flex-1 flex-col items-center gap-2 min-w-0 max-w-[600px] mx-auto">
+                {/* Playback controls */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={toggleShuffle}
+                    className={`rounded-full p-2 transition-colors hover:bg-white/[0.06] ${isShuffle ? 'text-white' : 'text-white/28 hover:text-white/60'}`}
+                  >
+                    <Shuffle className="h-4 w-4" />
+                  </button>
 
-            {/* Autoplay + Karaoke */}
-            <div className="hidden shrink-0 items-center gap-1 sm:flex">
-              <button
-                onClick={toggleAutoplay}
-                title="Autoplay"
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/5 ${isAutoplay ? 'text-white' : 'text-white/30 hover:text-white/70'}`}
-              >
-                <Infinity className="h-4 w-4" />
-              </button>
-              <button
-                onClick={onKaraoke}
-                title="Karaoke Mode (K)"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/5 hover:text-white/70"
-              >
-                <Mic2 className="h-4 w-4" />
-              </button>
+                  <button
+                    onClick={prevTrack}
+                    className="rounded-full p-2 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white"
+                  >
+                    <SkipBack className="h-5 w-5 fill-current" />
+                  </button>
+
+                  <button
+                    onClick={togglePlayPause}
+                    disabled={isLoadingTrack}
+                    className="mx-1 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-40"
+                    style={{
+                      background: 'linear-gradient(135deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286))',
+                      boxShadow: '0 0 30px -4px oklch(0.72 0.26 248 / 0.6)',
+                    }}
+                  >
+                    {isLoadingTrack
+                      ? <Loader2 className="h-5 w-5 animate-spin" />
+                      : isPlaying
+                      ? <Pause className="h-5 w-5 fill-current" />
+                      : <Play className="h-5 w-5 fill-current ml-0.5" />
+                    }
+                  </button>
+
+                  <button
+                    onClick={nextTrack}
+                    className="rounded-full p-2 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white"
+                  >
+                    <SkipForward className="h-5 w-5 fill-current" />
+                  </button>
+
+                  <button
+                    onClick={toggleRepeat}
+                    className={`rounded-full p-2 transition-colors hover:bg-white/[0.06] ${repeatMode !== 'none' ? 'text-white' : 'text-white/28 hover:text-white/60'}`}
+                  >
+                    {repeatMode === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                {/* Seekbar with white track */}
+                <div className="flex w-full items-center gap-2.5">
+                  <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-white/32">
+                    {fmt(displayTime)}
+                  </span>
+                  <WhiteSlider
+                    value={displayTime}
+                    min={0}
+                    max={duration || 1}
+                    step={0.5}
+                    className="flex-1"
+                    onChange={(v) => { setSeekDrag(true); setSeekVal(v); }}
+                    onCommit={(v) => { seekTo(v); setSeekDrag(false); }}
+                  />
+                  <span className="w-8 shrink-0 text-[11px] tabular-nums text-white/32">
+                    {fmt(duration)}
+                  </span>
+                </div>
+              </div>
+
+              {/* ════════════════ RIGHT: Volume + extras ════════════════ */}
+              <div className="flex w-[200px] shrink-0 items-center justify-end gap-2">
+                {/* Volume */}
+                <button
+                  onClick={() => setVolume(volume === 0 ? 70 : 0)}
+                  className="text-white/32 transition-colors hover:text-white/70"
+                >
+                  {volume === 0
+                    ? <VolumeX className="h-4 w-4" />
+                    : <Volume2 className="h-4 w-4" />
+                  }
+                </button>
+                <WhiteSlider
+                  value={volume}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="w-24"
+                  onChange={setVolume}
+                />
+
+                {/* Autoplay */}
+                <button
+                  onClick={toggleAutoplay}
+                  title="Autoplay"
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/[0.06] ${isAutoplay ? 'text-white' : 'text-white/28 hover:text-white/70'}`}
+                >
+                  <Infinity className="h-4 w-4" />
+                </button>
+
+                {/* Karaoke */}
+                <button
+                  onClick={onKaraoke}
+                  title="Karaoke (K)"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/28 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+                >
+                  <Mic2 className="h-4 w-4" />
+                </button>
+              </div>
+
             </div>
           </div>
         </motion.div>
