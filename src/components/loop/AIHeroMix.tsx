@@ -29,9 +29,9 @@ export function AIHeroMix({ section }: AIHeroMixProps) {
   return (
     <Reveal delay={0.1}>
       <div className="group relative mt-12 mb-16 overflow-hidden rounded-3xl" style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}>
-        {/* Animated Background */}
+        {/* Animated Background - Reduced blur on mobile for performance */}
         <div 
-          className="absolute inset-0 z-0 scale-110 blur-3xl opacity-60 transition-transform duration-1000 group-hover:scale-125"
+          className="absolute inset-0 z-0 scale-110 blur-2xl opacity-40 md:blur-3xl md:opacity-60 transition-transform duration-1000 group-hover:scale-125"
           style={{ backgroundImage: `url(${coverArt})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-black/80 via-black/40 to-transparent" />
@@ -39,10 +39,12 @@ export function AIHeroMix({ section }: AIHeroMixProps) {
         {/* Main Content */}
         <div className="relative z-10 flex flex-col items-start p-8 sm:p-12 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
-            <div className="mb-4 flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/10 w-fit">
-              <Sparkles className="h-4 w-4 text-[oklch(0.80_0.22_290)]" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Live Identity: {identity}</span>
-            </div>
+            {identity && (
+              <div className="mb-4 flex items-center gap-2 rounded-full bg-black/40 md:bg-white/10 px-4 py-1.5 md:backdrop-blur-md border border-white/10 w-fit">
+                <Sparkles className="h-4 w-4 text-[oklch(0.80_0.22_290)]" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white">Live Identity: {identity}</span>
+              </div>
+            )}
             
             <h2 className="mb-4 font-display text-[clamp(2.5rem,5vw,4rem)] font-bold leading-[1.1] tracking-tight text-white mix-blend-overlay drop-shadow-2xl">
               {section.title}

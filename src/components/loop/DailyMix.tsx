@@ -55,8 +55,8 @@ export function DailyMix() {
       className="relative mb-20 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 shadow-2xl backdrop-blur-xl"
     >
       <div className="absolute inset-0 z-0">
-        <div className="absolute -left-[10%] -top-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-primary/10 blur-[100px]" />
-        <div className="absolute -right-[10%] -bottom-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-blue-500/10 blur-[100px]" style={{ animationDelay: '2s' }} />
+        <div className="absolute -left-[10%] -top-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-primary/10 blur-[60px] md:blur-[100px]" />
+        <div className="absolute -right-[10%] -bottom-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-blue-500/10 blur-[60px] md:blur-[100px]" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="relative z-10 flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">

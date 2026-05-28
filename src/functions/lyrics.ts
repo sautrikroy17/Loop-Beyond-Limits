@@ -251,8 +251,8 @@ export const getLyricsFn = createServerFn({ method: 'GET' })
     const cleanTitle  = sanitizeTitle(rawTitle);
     const cleanArtist = primaryArtist(rawArtist);
 
-    // Cache key: lowercase sanitized title + artist
-    const cacheKey = `${cleanTitle.toLowerCase()}|${cleanArtist.toLowerCase()}`;
+    // Cache key: v2 busts the cache for failed mobile requests
+    const cacheKey = `v2|${cleanTitle.toLowerCase()}|${cleanArtist.toLowerCase()}`;
     const cached = cacheGet(cacheKey);
     if (cached) return cached;
 
