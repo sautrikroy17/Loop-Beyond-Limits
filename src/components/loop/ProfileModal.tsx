@@ -571,30 +571,70 @@ function PlaylistEditor({ playlistId, onBack }: { playlistId: string; onBack: ()
 // ── Profile Tab ───────────────────────────────────────────────────
 
 function ProfileTab({ onClose }: { onClose: () => void }) {
-  const intel = useListeningIntelligence();
-  const topArtists = intel.getTopArtists(5);
-  const topGenre = intel.getTopGenres(1)[0] || 'Unknown';
-  const mood = intel.getCurrentMood();
   const { user } = useAuth();
-  const { recentlyPlayed } = useUserProfile();
+  const { recentlyPlayed, likedTracks, customAvatarUrl, updateAvatar } = useUserProfile();
   const { playTrack } = usePlayback();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const topTracksMap = intel.events.reduce((acc, e) => { acc[e.trackId] = (acc[e.trackId] || 0) + 1; return acc; }, {} as Record<string, number>);
-  const topTracks = Object.entries(topTracksMap).sort((a, b) => b[1] - a[1]).map(([id]) => recentlyPlayed.find(t => t.id === id)).filter(Boolean).slice(0, 5) as Track[];
+  // ── Stats derived from synced recentlyPlayed ──────────────────────
+  // Top Artists: count occurrences across recently played
+  const artistCounts = recentlyPlayed.reduce((acc, t) => {
+    if (t.artist) acc[t.artist] = (acc[t.artist] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const topArtists = Object.entries(artistCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name]) => name);
 
-  const MOOD_LABELS: Record<string, string> = {
-    focus: '🎯 Focus Mode', chill: '🌊 Chill Vibes', 'night-drive': '🌙 Night Drive',
-    party: '🔥 Party Mode', emotional: '💙 Emotional', gym: '⚡ Gym Mode',
-    underground: '💎 Underground', morning: '☀️ Morning Energy', discovery: '✨ Discovery', balanced: '🎵 Balanced',
-  };
+  // Top Tracks: most recently played (deduplicated, LIFO order)
+  const topTracks = recentlyPlayed.slice(0, 5);
+
+  // Top Genre: count by genre field if available, else 'Unknown'
+  const genreCounts = recentlyPlayed.reduce((acc, t) => {
+    const g = (t as any).genre || (t as any).tags?.[0];
+    if (g) acc[g] = (acc[g] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+
+  // Vibe: simple heuristic from artist/genre mix
+  const vibe = (() => {
+    if (recentlyPlayed.length === 0) return '🎵 Balanced';
+    const recent5 = recentlyPlayed.slice(0, 5);
+    const hasNight = recent5.some(t => /night|dark|slow|sad|cry/i.test(t.title + t.artist));
+    const hasChill = recent5.some(t => /chill|lo.fi|jazz|sleep|calm|acoustic/i.test(t.title + t.artist));
+    const hasParty = recent5.some(t => /party|dance|club|bass|hype|edm/i.test(t.title + t.artist));
+    if (hasNight) return '🌙 Night Drive';
+    if (hasChill) return '🌊 Chill Vibes';
+    if (hasParty) return '🔥 Party Mode';
+    return '🎵 Balanced';
+  })();
+
+  // ── Avatar ────────────────────────────────────────────────────────
+  // Priority: Supabase-stored custom avatar → Google OAuth avatar
+  const avatarSrc = customAvatarUrl || user?.user_metadata?.avatar_url;
 
   const handleUpdateAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    const dataUrl = await readFileAsDataUrl(file);
-    const { supabase } = await import('@/lib/supabase/client');
-    await supabase.auth.updateUser({ data: { avatar_url: dataUrl } });
+    setUploading(true);
+    try {
+      // Upload to Supabase Storage → stores URL in user_profiles table
+      const url = await updateAvatar(file, user.id);
+      if (!url) {
+        // Fallback: store as data URL in auth metadata (if storage bucket not set up)
+        const { readFileAsDataUrl: readFn } = await Promise.resolve({ readFileAsDataUrl });
+        const dataUrl = await readFn(file);
+        const { supabase } = await import('@/lib/supabase/client');
+        await supabase.auth.updateUser({ data: { avatar_url: dataUrl } });
+        await supabase.auth.refreshSession();
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   return (
@@ -605,17 +645,19 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
           className="relative mb-4 group cursor-pointer"
           onClick={() => user && fileInputRef.current?.click()}
         >
-          {user?.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="Profile" className="h-20 w-20 rounded-full border border-white/10 object-cover transition-opacity group-hover:opacity-50" />
+          {avatarSrc ? (
+            <img src={avatarSrc} alt="Profile" className="h-20 w-20 rounded-full border border-white/10 object-cover transition-opacity group-hover:opacity-50" />
           ) : (
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.06] transition-opacity group-hover:opacity-50">
               <User className="h-8 w-8 text-white/30" />
             </div>
           )}
           {user && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <Camera className="h-6 w-6 text-white mb-0.5" />
-              <span className="text-[9px] font-bold text-white uppercase tracking-wider">Change</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-full">
+              {uploading
+                ? <Loader2 className="h-6 w-6 text-white animate-spin" />
+                : <><Camera className="h-5 w-5 text-white mb-0.5" /><span className="text-[9px] font-bold text-white uppercase tracking-wider">Change</span></>
+              }
             </div>
           )}
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpdateAvatar} />
@@ -651,7 +693,7 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-4">
         <div className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-3">Music Taste</div>
         <div className="grid grid-cols-2 gap-4">
-          <div><div className="text-[11px] text-white/40 mb-1">Current Vibe</div><div className="text-[14px] font-medium text-white">{MOOD_LABELS[mood] ?? mood}</div></div>
+          <div><div className="text-[11px] text-white/40 mb-1">Current Vibe</div><div className="text-[14px] font-medium text-white">{vibe}</div></div>
           <div><div className="text-[11px] text-white/40 mb-1">Top Genre</div><div className="text-[14px] font-medium text-white capitalize">{topGenre}</div></div>
         </div>
       </div>
@@ -687,6 +729,7 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
 
 // ── Main Component ────────────────────────────────────────────────
 

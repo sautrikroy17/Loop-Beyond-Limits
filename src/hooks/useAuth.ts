@@ -31,10 +31,12 @@ export const initAuthListener = () => {
     setUser(session?.user ?? null);
     setLoading(false);
 
-    // If already logged in on page load → hydrate from cloud
     if (session?.user) {
       import('./useUserProfile').then(({ useUserProfile }) => {
-        useUserProfile.getState().loadFromCloud(session.user.id);
+        useUserProfile.getState().loadFromCloud(
+          session.user.id,
+          session.user.user_metadata?.avatar_url,
+        );
       });
     }
   });
@@ -47,9 +49,11 @@ export const initAuthListener = () => {
     setLoading(false);
 
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-      // Fetch user's cloud data on login
       import('./useUserProfile').then(({ useUserProfile }) => {
-        useUserProfile.getState().loadFromCloud(session.user.id);
+        useUserProfile.getState().loadFromCloud(
+          session.user.id,
+          session.user.user_metadata?.avatar_url,
+        );
       });
     }
 

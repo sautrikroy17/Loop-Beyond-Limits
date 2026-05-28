@@ -19,7 +19,7 @@ import {
   fetchPlaylists, createPlaylistDB, updatePlaylistDB, deletePlaylistDB,
   addTrackToPlaylistDB, removeTrackFromPlaylistDB,
   fetchRecentlyPlayed, insertRecentlyPlayed,
-  fetchUserProfile,
+  fetchUserProfile, upsertUserProfile,
 } from '@/lib/supabase/db';
 
 export interface Playlist {
@@ -56,7 +56,7 @@ interface UserProfileState {
   clearHistory:            () => void;
 
   // Cloud sync
-  loadFromCloud:   (userId: string) => Promise<void>;
+  loadFromCloud:   (userId: string, googleAvatarUrl?: string) => Promise<void>;
   clearLocalData:  () => void;
 }
 
@@ -227,7 +227,7 @@ export const useUserProfile = create<UserProfileState>()(
        * is always fresh).
        * Also runs a one-time migration to push existing local data first.
        */
-      loadFromCloud: async (userId: string) => {
+      loadFromCloud: async (userId: string, googleAvatarUrl?: string) => {
         if (get()._syncing) return;
         set({ _syncing: true });
 
@@ -259,10 +259,15 @@ export const useUserProfile = create<UserProfileState>()(
             coverArt:  p.cover_art,
           }));
 
-          // Determine which avatar to show:
-          // 1. Supabase user_profiles.avatar_url (custom uploaded, cloud-synced)
-          // 2. Local customAvatarUrl
-          const avatarUrl = profile?.avatar_url ?? s.customAvatarUrl;
+          // Avatar priority:
+          // 1. user_profiles.avatar_url (custom, cloud-synced)
+          // 2. Google OAuth avatar (same for all browsers — seed it to user_profiles if missing)
+          let avatarUrl: string | null = profile?.avatar_url ?? null;
+          if (!avatarUrl && googleAvatarUrl) {
+            // Seed Google avatar into user_profiles so other browsers get it too
+            upsertUserProfile(userId, { avatar_url: googleAvatarUrl }).catch(() => {});
+            avatarUrl = googleAvatarUrl;
+          }
 
           set({
             likedTracks:     liked,
