@@ -222,7 +222,20 @@ export function AudioEngine() {
     if (!currentTrackId || currentTrackId !== trackIdRef.current) return;
 
     if (isPlaying) {
-      playerRef.current.playVideo?.();
+      const state = playerRef.current.getPlayerState?.();
+      const YTState = window.YT?.PlayerState;
+      if (state === YTState?.CUED || state === YTState?.UNSTARTED) {
+        // Force fully load and play the track if it was stuck in a cued background state
+        const videoId = playerRef.current.getVideoData?.()?.video_id;
+        if (videoId) {
+          const startSeconds = usePlayback.getState().progress || 0;
+          playerRef.current.loadVideoById?.({ videoId, startSeconds });
+        } else {
+          playerRef.current.playVideo?.();
+        }
+      } else {
+        playerRef.current.playVideo?.();
+      }
     } else {
       playerRef.current.pauseVideo?.();
     }
