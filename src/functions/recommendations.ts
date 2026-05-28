@@ -63,16 +63,16 @@ function toTrack(t: any): DiscoveryTrack {
 // ── Mood metadata ─────────────────────────────────────────────────
 
 const MOOD_META: Record<MoodLabel, { label: string; icon: string; underground: string; trending: string }> = {
-  focus:        { label: 'Focus Flow',      icon: '🎯', underground: 'lofi bollywood study instrumental',      trending: 'bollywood lofi mashup trending' },
-  chill:        { label: 'Chill Vibes',     icon: '🌊', underground: 'indie pop india hidden gems',            trending: 'chill bollywood 2024 viral' },
-  'night-drive':{ label: '2AM Drive',       icon: '🌙', underground: 'dark punjabi trap night',                trending: 'late night drive playlist bollywood' },
-  party:        { label: 'Party Mode',      icon: '🔥', underground: 'underground desi hip hop party',         trending: 'party anthems india 2024 viral banger' },
-  emotional:    { label: 'Feel Everything', icon: '💙', underground: 'emotional indie sad arijit',             trending: 'sad songs bollywood 2024 viral' },
-  gym:          { label: 'Gym Mode',        icon: '⚡', underground: 'desi hip hop workout rap',               trending: 'gym motivation punjabi hype' },
-  underground:  { label: 'Hidden Gems',     icon: '💎', underground: 'indie indian pop obscure 2024 hidden',   trending: 'underground desi trending 2024' },
-  morning:      { label: 'Morning Energy',  icon: '☀️', underground: 'morning uplifting indie india',          trending: 'uplifting morning music bollywood 2024' },
-  discovery:    { label: 'Fresh Picks',     icon: '✨', underground: 'new indie artists 2024 emerging india',  trending: 'new music 2024 discovery trending india' },
-  balanced:     { label: 'Your Mix',        icon: '🎵', underground: 'desi indie gems 2024',                   trending: 'top songs of the week india viral' },
+  focus:        { label: 'Focus Flow',      icon: '🎯', underground: 'lofi underground study instrumental',    trending: 'lofi beats mashup trending' },
+  chill:        { label: 'Chill Vibes',     icon: '🌊', underground: 'indie pop hidden gems',                  trending: 'chill 2024 viral' },
+  'night-drive':{ label: '2AM Drive',       icon: '🌙', underground: 'dark trap night',                        trending: 'late night drive playlist' },
+  party:        { label: 'Party Mode',      icon: '🔥', underground: 'underground club party',                 trending: 'party anthems 2024 viral banger' },
+  emotional:    { label: 'Feel Everything', icon: '💙', underground: 'emotional indie sad',                    trending: 'sad songs 2024 viral' },
+  gym:          { label: 'Gym Mode',        icon: '⚡', underground: 'workout motivation rap',                 trending: 'gym motivation hype' },
+  underground:  { label: 'Hidden Gems',     icon: '💎', underground: 'indie pop obscure 2024 hidden',          trending: 'underground trending 2024' },
+  morning:      { label: 'Morning Energy',  icon: '☀️', underground: 'morning uplifting indie',                trending: 'uplifting morning music 2024' },
+  discovery:    { label: 'Fresh Picks',     icon: '✨', underground: 'new indie artists 2024 emerging',        trending: 'new music 2024 discovery trending' },
+  balanced:     { label: 'Your Mix',        icon: '🎵', underground: 'indie gems 2024',                        trending: 'top songs of the week viral' },
 };
 
 // ── Hour-of-day context ───────────────────────────────────────────
@@ -95,7 +95,7 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
       genre,
     } = data;
 
-    const primaryGenre  = genre ?? topGenres[0] ?? 'bollywood';
+    const primaryGenre  = genre ?? topGenres[0] ?? 'top trending hits';
     const primaryArtist = artist ?? topArtists[0] ?? recentArtists[0] ?? '';
     const moodMeta      = MOOD_META[mood] ?? MOOD_META.balanced;
     const timeCtx       = hourLabel();
@@ -106,25 +106,25 @@ export const getDiscoverySectionsFn = createServerFn({ method: 'GET' })
       : null;
     const moreLikeLabel = artistLabel ? `More Like ${artistLabel}` : 'Similar Artists';
 
-    // Smart trending based on genre + time (Gen-Z India focus)
+    // Smart trending based on genre + time (Gen-Z adaptive)
     const trendingQuery = topGenres.length > 0
       ? `${primaryGenre} ${moodMeta.trending}`
-      : `top songs of the week india trending 2024 ${moodMeta.trending}`;
+      : `top songs of the week trending 2024 ${moodMeta.trending}`;
 
     // Underground query
     const undergroundQuery = topGenres.length > 1
       ? `${topGenres.slice(0, 2).join(' ')} ${moodMeta.underground}`
-      : moodMeta.underground;
+      : `${primaryGenre} ${moodMeta.underground}`;
 
-    // Based on you: combine top artist × top genre (or default to top charts india)
+    // Based on you: combine top artist × top genre (or default to top charts)
     const basedOnQuery = topArtists.length > 0 && topGenres.length > 0
       ? `${topArtists[0]} ${topGenres[0]} mix playlist`
-      : `top bollywood songs trending hits playlist`;
+      : `top songs of the week billboard trending playlist`;
 
     // Deep cuts: same artist, diverse tracks (or default to party/club)
     const deepCutsQuery = primaryArtist
       ? `${primaryArtist} best songs rare b-sides deep cuts`
-      : `bollywood party songs club mix trending`;
+      : `${primaryGenre} party songs club mix trending`;
 
     // Mood query (may be pre-built by client or generated here)
     const moodQ = moodQuery ?? `${primaryGenre} ${moodMeta.label.toLowerCase()} music`;
