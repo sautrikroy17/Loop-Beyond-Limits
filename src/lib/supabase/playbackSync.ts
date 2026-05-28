@@ -1,11 +1,13 @@
 import { supabase } from './client';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
+import { saveCloudPlaybackState, loadCloudPlaybackState } from './db';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 let syncChannel: RealtimeChannel | null = null;
 let currentUserId: string | null = null;
 let isApplyingSync = false;
 let unsubscribePlayback: (() => void) | null = null;
+let beforeUnloadListener: (() => void) | null = null;
 
 const localDeviceId = Math.random().toString(36).substring(2, 15);
 
@@ -32,6 +34,24 @@ export function initPlaybackSync(userId: string) {
   currentUserId = userId;
   const topic = `playback-sync-${userId}`;
   
+  // 1. Instantly load cloud state as a fallback
+  loadCloudPlaybackState(userId).then((cloudState) => {
+    // Only apply cloud state if we haven't already started playing something else
+    // or received a live WebSocket SYNC_STATE in the meantime
+    const currentState = usePlayback.getState();
+    if (cloudState && !currentState.currentTrack && !currentState.isPlaying) {
+      usePlayback.setState({
+        currentTrack: cloudState.currentTrack,
+        queue: cloudState.queue || [],
+        progress: cloudState.progress || 0,
+        isShuffle: cloudState.isShuffle || false,
+        repeatMode: cloudState.repeatMode || 'none',
+        isPlaying: false, // ALWAYS start paused when booting from cloud
+      });
+    }
+  });
+
+  // 2. Connect WebSockets
   syncChannel = supabase.channel(topic, {
     config: {
       broadcast: { ack: false },
@@ -59,6 +79,14 @@ export function initPlaybackSync(userId: string) {
     // If track or queue changed, broadcast full state
     if (state.currentTrack?.id !== prevState.currentTrack?.id || state.queue !== prevState.queue) {
       broadcastEvent({ type: 'SYNC_STATE' });
+      // Save snapshot to cloud database for true offline resuming
+      saveCloudPlaybackState(userId, {
+        currentTrack: state.currentTrack,
+        queue: state.queue.slice(0, 50),
+        progress: state.progress,
+        isShuffle: state.isShuffle,
+        repeatMode: state.repeatMode
+      });
     }
     // If we just hit play, tell other devices to pause
     else if (state.isPlaying && !prevState.isPlaying) {
@@ -67,8 +95,33 @@ export function initPlaybackSync(userId: string) {
     // If we just paused, tell other devices
     else if (!state.isPlaying && prevState.isPlaying) {
       broadcastEvent({ type: 'SYNC_PAUSE' });
+      // Save snapshot to cloud on pause
+      saveCloudPlaybackState(userId, {
+        currentTrack: state.currentTrack,
+        queue: state.queue.slice(0, 50),
+        progress: state.progress,
+        isShuffle: state.isShuffle,
+        repeatMode: state.repeatMode
+      });
     }
   });
+
+  if (typeof window !== 'undefined') {
+    beforeUnloadListener = () => {
+      const state = usePlayback.getState();
+      if (state.currentTrack) {
+        // Use keepalive or a synchronous-like beacon to save data on close
+        saveCloudPlaybackState(userId, {
+          currentTrack: state.currentTrack,
+          queue: state.queue.slice(0, 50),
+          progress: state.progress,
+          isShuffle: state.isShuffle,
+          repeatMode: state.repeatMode
+        });
+      }
+    };
+    window.addEventListener('beforeunload', beforeUnloadListener);
+  }
 }
 
 export function stopPlaybackSync() {
@@ -80,6 +133,10 @@ export function stopPlaybackSync() {
   if (unsubscribePlayback) {
     unsubscribePlayback();
     unsubscribePlayback = null;
+  }
+  if (beforeUnloadListener && typeof window !== 'undefined') {
+    window.removeEventListener('beforeunload', beforeUnloadListener);
+    beforeUnloadListener = null;
   }
 }
 

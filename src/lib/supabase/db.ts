@@ -262,3 +262,31 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
   
   return url;
 }
+
+// ── Cloud Playback Restoration ──────────────────────────────────────
+
+export async function saveCloudPlaybackState(userId: string, state: any): Promise<void> {
+  // We repurpose listening_status to store JSON stringified state
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ listening_status: JSON.stringify(state) })
+    .eq('id', userId);
+  
+  if (error) console.error('[db] saveCloudPlaybackState:', error.message);
+}
+
+export async function loadCloudPlaybackState(userId: string): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('listening_status')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data?.listening_status) return null;
+
+  try {
+    return JSON.parse(data.listening_status);
+  } catch (e) {
+    return null;
+  }
+}

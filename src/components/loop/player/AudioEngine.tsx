@@ -173,10 +173,11 @@ export function AudioEngine() {
       if (cancelled) return;
 
       if (ytId) {
+        const startSeconds = usePlayback.getState().progress || 0;
         if (usePlayback.getState().isPlaying) {
-          playerRef.current?.loadVideoById({ videoId: ytId });
+          playerRef.current?.loadVideoById({ videoId: ytId, startSeconds });
         } else {
-          playerRef.current?.cueVideoById({ videoId: ytId });
+          playerRef.current?.cueVideoById({ videoId: ytId, startSeconds });
         }
         playerRef.current?.setVolume(usePlayback.getState().volume);
       } else {
