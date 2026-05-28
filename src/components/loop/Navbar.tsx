@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Search, Settings, User, Library, LogIn } from 'lucide-react';
 import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { LoopLogo } from './LoopLogo';
 import { signInWithGoogle } from '@/lib/supabase/auth';
 
@@ -43,6 +44,7 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
   const moodBadge = MOOD_BADGES[mood] ?? '';
   const hasData   = intel.events.length > 0;
   const { user }  = useAuth();
+  const { customAvatarUrl } = useUserProfile();
 
   return (
     <div className="fixed inset-x-0 top-0 z-40 flex justify-center px-4 pt-4">
@@ -132,8 +134,8 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
               }}
               title="Profile & Stats"
             >
-              {user?.user_metadata?.avatar_url ? (
-                <img src={user.user_metadata.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+              {customAvatarUrl || user?.user_metadata?.avatar_url ? (
+                <img src={customAvatarUrl || user.user_metadata?.avatar_url} alt="Profile" className="h-full w-full object-cover" />
               ) : (
                 <User className="h-3.5 w-3.5" />
               )}
