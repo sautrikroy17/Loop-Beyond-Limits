@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Plus, Music2, Lock, LogIn } from 'lucide-react';
+import { Play, Plus, Music2, Lock, LogIn, Activity } from 'lucide-react';
 import { usePlayback, type Track } from '@/hooks/usePlayback';
 import { useDiscovery, type DiscoverySection } from '@/hooks/useDiscovery';
 import { useAuth } from '@/hooks/useAuth';
