@@ -136,7 +136,7 @@ function startRenderer(canvas: HTMLCanvasElement, palette: [RGB, RGB, RGB]) {
   ro.observe(canvas);
 
   function draw() {
-    if (document.hidden) {
+    if (document.hidden || !document.hasFocus()) {
       rafId = requestAnimationFrame(draw);
       return;
     }

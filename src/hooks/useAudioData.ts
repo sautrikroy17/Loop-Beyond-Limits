@@ -90,7 +90,7 @@ function bpmFor(title: string, artist: string): number {
 // ── RAF simulation loop ────────────────────────────────────────────
 
 function tick() {
-  if (document.hidden) {
+  if (document.hidden || !document.hasFocus()) {
     _rafId = requestAnimationFrame(tick);
     return;
   }

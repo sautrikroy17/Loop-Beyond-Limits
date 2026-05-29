@@ -110,7 +110,7 @@ function SyncedLyrics({
   useEffect(() => {
     // RAF loop: poll progress at 60fps and update DOM directly
     const tick = () => {
-      if (document.hidden) {
+      if (document.hidden || !document.hasFocus()) {
         rafRef.current = requestAnimationFrame(tick);
         return;
       }

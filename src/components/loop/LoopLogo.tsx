@@ -191,7 +191,7 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
     });
 
     function frame() {
-      if (document.hidden) {
+      if (document.hidden || !document.hasFocus()) {
         rafId = requestAnimationFrame(frame);
         return;
       }
