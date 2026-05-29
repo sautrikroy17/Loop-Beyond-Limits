@@ -294,8 +294,9 @@ export const useUserProfile = create<UserProfileState>()(
 
           // Avatar priority:
           // 1. user_profiles.avatar_url (custom, cloud-synced)
-          // 2. Google OAuth avatar (same for all browsers — seed it to user_profiles if missing)
-          let avatarUrl: string | null = dbProfile?.avatar_url ?? null;
+          // 2. Existing locally cached customAvatarUrl (survives if table is missing)
+          // 3. Google OAuth avatar
+          let avatarUrl: string | null = dbProfile?.avatar_url || s.customAvatarUrl || null;
           if (!avatarUrl && googleAvatarUrl) {
             // Seed Google avatar into user_profiles so other browsers get it too
             upsertUserProfile(userId, { avatar_url: googleAvatarUrl }).catch(() => {});
