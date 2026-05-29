@@ -53,8 +53,8 @@ const GENRE_PATTERNS: [RegExp, string][] = [
   [/travis scott|playboi carti|yeat|ken carson/i, "Atmospheric Trap"],
   [/lana del rey|billie eilish|mitski|phoebe bridgers/i, "Sad Girl Pop"],
   [/deftones|loathe|my bloody valentine/i, "Shoegaze"],
-  [/arijit singh|shreya ghoshal|jubin|vishal|shekhar|sanam|aditi singh|pritam|atif|neha kakkar|badshah|honey singh|darshan|armaan|sonu nigam|udit|kumar sanu|kk|rahman|amit trivedi|sunidhi|tulsi|zayn|guru randhawa/i, "Bollywood Romance"],
-  [/karan aujla|sidhu moose|ap dhillon|diljit|b praak|harrdy|ammy|shubh|dilpreet|jassie|jazzy|mankirt|ninja|parmish|prophec/i, "Punjabi Heat"],
+  [/arijit singh|shreya ghoshal|jubin|vishal|shekhar|sanam|aditi singh|pritam|\batif\b|neha kakkar|badshah|honey singh|darshan|armaan|sonu nigam|udit|kumar sanu|\bkk\b|rahman|amit trivedi|sunidhi|tulsi|\bzayn\b|guru randhawa/i, "Bollywood Romance"],
+  [/karan aujla|sidhu moose|ap dhillon|diljit|b praak|harrdy|ammy|shubh|dilpreet|jassie|jazzy|mankirt|ninja|parmish|prophec|ikky/i, "Punjabi Tadka"],
   [/seedhe maut|krsna|divine|emiway|mc stan|ikka|raftaar/i, "Desi Trap"],
   [/lo-?fi|study|sleep/i, "Lo-Fi Study"],
   [/phonk|drift/i, "Phonk"],
@@ -372,7 +372,7 @@ export const useListeningIntelligence = create<IntelligenceState>()(
         if (isLateNight && genreBase === "Sad Girl Pop") return "Midnight Indie Dreamer";
         if (genreBase === "Festival EDM" && !isHighSkip) return "EDM Energy";
         if (genreBase === "Bollywood Romance") return isLateNight ? "Late Night Romance" : "Bollywood Main Character";
-        if (genreBase === "Punjabi Heat") return "Punjabi Heavyweight";
+        if (genreBase === "Punjabi Tadka") return "Punjabi Tadka";
         if (genreBase === "Desi Trap") return "Desi Underground";
         if (genreBase === "Desi Heat") return "Bollywood Explorer";
         if (isHighSkip) return `${genreBase} Explorer`;
