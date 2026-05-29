@@ -77,10 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       // Mobile viewport — prevents zoom on input focus, covers safe areas
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Loop — Feel the Waves" },
+      { title: "Loop — Beyond Limits" },
       {
         name: "description",
-        content: "Loop is a mood-driven music platform built for the next generation of listeners.",
+        content: "A hyper-personalized Gen Z music platform. Feel every beat drop.",
       },
       { name: "author", content: "Loop" },
       // PWA theme color — matches app black background
@@ -91,13 +91,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Loop" },
       // OG / Social
-      { property: "og:title", content: "Loop — Feel the Waves" },
+      { property: "og:title", content: "Loop — Beyond Limits" },
       {
         property: "og:description",
-        content: "A mood-driven music platform. Feel sound, don't just hear it.",
+        content: "A hyper-personalized Gen Z music platform. Feel every beat drop.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:image", content: "https://loop-feel.vercel.app/logo.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://loop-feel.vercel.app/logo.png" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
