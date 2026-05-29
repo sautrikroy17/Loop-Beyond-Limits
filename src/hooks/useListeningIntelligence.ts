@@ -120,12 +120,30 @@ export const useListeningIntelligence = create<IntelligenceState>()(
 
       setActiveMood: (mood) => set({ activeMood: mood }),
 
+      injectLiveTrack: (raw) => {
+        const genres = inferGenres(raw.title, raw.artist);
+        const event: PlayEvent = {
+          trackId: raw.trackId,
+          title: raw.title,
+          artist: raw.artist,
+          genres,
+          timestamp: raw.timestamp,
+          listenMs: 0,
+          completed: false,
+          skipped: false,
+          repeated: false,
+          liked: false,
+        };
+        set((s) => {
+          if (s.events[0]?.trackId === raw.trackId && s.events[0]?.timestamp === raw.timestamp) return s;
+          return { events: [event, ...s.events].slice(0, MAX_EVENTS) };
+        });
+      },
+
       recordPlay: (raw) => {
         const genres = inferGenres(raw.title, raw.artist);
-        const event: PlayEvent = { ...raw, genres };
 
         set((s) => {
-          // Update genre weights: listen time positive, skip negative
           const gw = { ...s.genreWeights };
           const listenScore = raw.completed ? 2 : raw.listenMs > 30_000 ? 1 : 0.3;
           const skipPenalty = raw.skipped ? -0.5 : 0;
@@ -133,13 +151,26 @@ export const useListeningIntelligence = create<IntelligenceState>()(
             gw[g] = (gw[g] ?? 0) + listenScore + skipPenalty;
           }
 
-          // Update artist weights
           const aw = { ...s.artistWeights };
           const artistKey = raw.artist.split(/[,&]/)[0].trim().toLowerCase();
           aw[artistKey] = (aw[artistKey] ?? 0) + listenScore;
 
-          const events = [event, ...s.events].slice(0, MAX_EVENTS);
-          return { events, genreWeights: gw, artistWeights: aw };
+          const events = [...s.events];
+          const existingIdx = events.findIndex(
+            (e) => e.trackId === raw.trackId && e.timestamp === raw.timestamp
+          );
+          if (existingIdx !== -1) {
+            events[existingIdx] = {
+              ...events[existingIdx],
+              listenMs: raw.listenMs,
+              completed: raw.completed,
+              skipped: raw.skipped,
+            };
+          } else {
+            events.unshift({ ...raw, genres });
+          }
+
+          return { events: events.slice(0, MAX_EVENTS), genreWeights: gw, artistWeights: aw };
         });
       },
 
@@ -409,6 +440,16 @@ export function initListeningIntelligence() {
           if (track) {
             _currentId = track.id;
             _playStartMs = Date.now();
+            
+            // Instantly inject the newly started track into the AI brain so Taste Identity
+            // and Top Tracks update in absolutely real-time without waiting for it to finish.
+            const intel = useListeningIntelligence.getState();
+            intel.injectLiveTrack({
+              trackId: track.id,
+              title: track.title,
+              artist: track.artist,
+              timestamp: _playStartMs,
+            });
           }
         }
       });
