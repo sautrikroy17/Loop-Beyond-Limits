@@ -1,6 +1,6 @@
 <div align="center">
   <img src="public/logo.png" alt="Loop Logo" width="100" height="100" />
-  <h1>Loop — Feel the Waves 🎵</h1>
+  <h1>Loop — Beyond Limits 🎵</h1>
   <p><strong>A production-grade, mood-driven music streaming platform built for the next generation of listeners.</strong></p>
 
   [![TypeScript](https://img.shields.io/badge/TypeScript-99%25-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
