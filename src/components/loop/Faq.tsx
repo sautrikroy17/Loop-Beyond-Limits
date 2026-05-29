@@ -5,11 +5,26 @@ import { SectionShell } from "./SectionShell";
 import { useTactileHover } from "@/hooks/useTactileHover";
 
 const faqs = [
-  { q: "What makes Loop different?", a: "Loop is a cinematic, reactive interface. The visuals, depth, and motion respond to the music in real time — so listening feels like being inside the song, not selecting it from a list." },
-  { q: "Is Loop really lossless?", a: "Yes. Every track on Plus and Infinite streams in studio-grade lossless quality, with optional spatial mixes from supporting artists and labels." },
-  { q: "Does it work on mobile?", a: "Loop is mobile-first. The atmospheric interface, spatial audio, and reactive visuals are tuned for both phones and desktop." },
-  { q: "Can I listen with friends?", a: "On Loop Infinite, synced rooms let you and friends listen to the same track in the same atmosphere — anywhere in the world." },
-  { q: "How does AI discovery work?", a: "Loop learns the texture of your taste — tempo, mood, density, color — and surfaces songs you'd love before you'd think to search for them." },
+  {
+    q: "What makes Loop different?",
+    a: "Loop is a cinematic, reactive interface. The visuals, depth, and motion respond to the music in real time — so listening feels like being inside the song, not selecting it from a list.",
+  },
+  {
+    q: "Is Loop really lossless?",
+    a: "Yes. Every track on Plus and Infinite streams in studio-grade lossless quality, with optional spatial mixes from supporting artists and labels.",
+  },
+  {
+    q: "Does it work on mobile?",
+    a: "Loop is mobile-first. The atmospheric interface, spatial audio, and reactive visuals are tuned for both phones and desktop.",
+  },
+  {
+    q: "Can I listen with friends?",
+    a: "On Loop Infinite, synced rooms let you and friends listen to the same track in the same atmosphere — anywhere in the world.",
+  },
+  {
+    q: "How does AI discovery work?",
+    a: "Loop learns the texture of your taste — tempo, mood, density, color — and surfaces songs you'd love before you'd think to search for them.",
+  },
 ];
 
 export function Faq() {
@@ -35,12 +50,7 @@ export function Faq() {
             const isOpen = open === i;
             return (
               <Reveal key={f.q} delay={i * 0.05}>
-                <FaqRow
-                  f={f}
-                  i={i}
-                  isOpen={isOpen}
-                  onToggle={() => setOpen(isOpen ? null : i)}
-                />
+                <FaqRow f={f} i={i} isOpen={isOpen} onToggle={() => setOpen(isOpen ? null : i)} />
               </Reveal>
             );
           })}

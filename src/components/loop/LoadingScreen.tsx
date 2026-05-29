@@ -13,8 +13,8 @@
  *  3.4s — full-bleed exit: scale + blur + opacity out
  */
 
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -23,7 +23,7 @@ function ParticleField() {
   const particles = Array.from({ length: 28 }, (_, i) => ({
     id: i,
     x: (i * 37.1 + 11) % 100,
-    y: (i * 53.7 + 7)  % 100,
+    y: (i * 53.7 + 7) % 100,
     size: 1 + (i % 3) * 0.5,
     dur: 4 + (i % 5) * 1.2,
     del: (i * 0.22) % 3,
@@ -38,13 +38,13 @@ function ParticleField() {
           className="absolute rounded-full bg-white"
           style={{
             left: `${p.x}%`,
-            top:  `${p.y}%`,
-            width:  p.size,
+            top: `${p.y}%`,
+            width: p.size,
             height: p.size,
             opacity: p.op,
           }}
           animate={{ opacity: [p.op, p.op * 4, p.op], y: [0, -18, 0] }}
-          transition={{ duration: p.dur, delay: p.del, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: p.dur, delay: p.del, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
     </div>
@@ -57,12 +57,12 @@ function LogoMark() {
     <svg width="88" height="88" viewBox="0 0 88 88" fill="none" className="overflow-visible">
       <defs>
         <linearGradient id="lg-a" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="oklch(0.88 0.16 248)" />
-          <stop offset="48%"  stopColor="oklch(0.76 0.26 270)" />
+          <stop offset="0%" stopColor="oklch(0.88 0.16 248)" />
+          <stop offset="48%" stopColor="oklch(0.76 0.26 270)" />
           <stop offset="100%" stopColor="oklch(0.80 0.20 210)" />
         </linearGradient>
         <linearGradient id="lg-b" x1="88" y1="88" x2="0" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="oklch(0.72 0.26 248)" />
+          <stop offset="0%" stopColor="oklch(0.72 0.26 248)" />
           <stop offset="100%" stopColor="oklch(0.68 0.24 286)" />
         </linearGradient>
         <filter id="glow-logo" x="-30%" y="-30%" width="160%" height="160%">
@@ -98,7 +98,9 @@ function LogoMark() {
 
       {/* Center dot */}
       <motion.circle
-        cx="44" cy="44" r="3"
+        cx="44"
+        cy="44"
+        r="3"
         fill="url(#lg-a)"
         filter="url(#glow-logo)"
         initial={{ scale: 0, opacity: 0 }}
@@ -113,7 +115,7 @@ function LogoMark() {
 
 export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase]       = useState<'in' | 'loaded' | 'out'>('in');
+  const [phase, setPhase] = useState<"in" | "loaded" | "out">("in");
 
   useEffect(() => {
     // Start filling after logo has drawn
@@ -131,7 +133,7 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
         } else {
           // Hold at 100%
           setTimeout(() => {
-            setPhase('out');
+            setPhase("out");
             setTimeout(onComplete, 800);
           }, 380);
         }
@@ -143,26 +145,26 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   }, [onComplete]);
 
   const stages = [
-    [0,  'Initializing acoustic nodes'],
-    [22, 'Calibrating soundstage'],
-    [48, 'Loading discovery engine'],
-    [74, 'Syncing playback core'],
-    [92, 'Unleashing Loop'],
+    [0, "Initializing acoustic nodes"],
+    [22, "Calibrating soundstage"],
+    [48, "Loading discovery engine"],
+    [74, "Syncing playback core"],
+    [92, "Unleashing Loop"],
   ] as const;
 
-  const stageText = [...stages].reverse().find(([t]) => progress >= t)?.[1] ?? '';
+  const stageText = [...stages].reverse().find(([t]) => progress >= t)?.[1] ?? "";
 
   return (
     <AnimatePresence>
-      {phase !== 'out' && (
+      {phase !== "out" && (
         <motion.div
           key="loading"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.04, filter: 'blur(20px)' }}
+          exit={{ opacity: 0, scale: 1.04, filter: "blur(20px)" }}
           transition={{ duration: 0.9, ease }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
-          style={{ background: 'oklch(0.04 0.024 258)' }}
+          style={{ background: "oklch(0.04 0.024 258)" }}
         >
           {/* Ambient glow */}
           <motion.div
@@ -170,12 +172,13 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
             initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 2.5, ease: 'easeOut' }}
+            transition={{ duration: 2.5, ease: "easeOut" }}
             style={{
-              width: '60vmax',
-              height: '60vmax',
-              background: 'radial-gradient(ellipse at center, oklch(0.68 0.24 286 / 0.22) 0%, oklch(0.72 0.26 248 / 0.10) 45%, transparent 72%)',
-              filter: 'blur(32px)',
+              width: "60vmax",
+              height: "60vmax",
+              background:
+                "radial-gradient(ellipse at center, oklch(0.68 0.24 286 / 0.22) 0%, oklch(0.72 0.26 248 / 0.10) 45%, transparent 72%)",
+              filter: "blur(32px)",
             }}
           />
 
@@ -189,14 +192,14 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
               <LogoMark />
 
               <motion.div
-                initial={{ opacity: 0, y: 12, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                initial={{ opacity: 0, y: 12, filter: "blur(10px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ duration: 1.0, delay: 1.1, ease }}
                 className="text-center"
               >
                 <div
                   className="font-display text-[26px] font-bold tracking-[0.22em] text-white"
-                  style={{ letterSpacing: '0.22em' }}
+                  style={{ letterSpacing: "0.22em" }}
                 >
                   LOOP
                 </div>
@@ -228,7 +231,8 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
                   className="absolute inset-y-0 left-0 rounded-full"
                   style={{
                     width: `${progress}%`,
-                    background: 'linear-gradient(90deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286), oklch(0.80 0.18 208))',
+                    background:
+                      "linear-gradient(90deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286), oklch(0.80 0.18 208))",
                   }}
                   transition={{ duration: 0.15 }}
                 />
@@ -237,8 +241,8 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
                   className="absolute inset-y-[-3px] w-6 rounded-full blur-[4px]"
                   style={{
                     left: `calc(${progress}% - 12px)`,
-                    background: 'oklch(0.72 0.26 248 / 0.8)',
-                    transition: 'left 0.15s',
+                    background: "oklch(0.72 0.26 248 / 0.8)",
+                    transition: "left 0.15s",
                   }}
                 />
               </div>

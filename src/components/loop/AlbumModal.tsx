@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, X, Heart, Loader2, BookmarkPlus, Check } from 'lucide-react';
-import { usePlayback, type Track } from '@/hooks/usePlayback';
-import { getAlbumDetailsFn } from '@/functions/recommendations';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useAuth } from '@/hooks/useAuth';
-import { TrackRow } from './ProfileModal';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Play, X, Heart, Loader2, BookmarkPlus, Check } from "lucide-react";
+import { usePlayback, type Track } from "@/hooks/usePlayback";
+import { getAlbumDetailsFn } from "@/functions/recommendations";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { TrackRow } from "./ProfileModal";
 
 interface AlbumModalProps {
   album: { id: string; title: string; artist: string; albumArt: string } | null;
@@ -25,7 +25,7 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
     let cancelled = false;
     setLoading(true);
     setTracks([]);
-    
+
     getAlbumDetailsFn({ data: album })
       .then((res) => {
         if (!cancelled) setTracks(res as Track[]);
@@ -35,7 +35,9 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
         if (!cancelled) setLoading(false);
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [album]);
 
   if (!album) return null;
@@ -50,12 +52,15 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
 
   const handleSaveAlbum = () => {
     if (tracks.length > 0 && album) {
-      saveAlbum({
-        id: album.id,
-        title: album.title,
-        artist: album.artist,
-        albumArt: album.albumArt
-      }, user?.id);
+      saveAlbum(
+        {
+          id: album.id,
+          title: album.title,
+          artist: album.artist,
+          albumArt: album.albumArt,
+        },
+        user?.id,
+      );
     }
   };
 
@@ -78,7 +83,10 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="relative flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl sm:flex-row"
-          style={{ background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95))', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05)' }}
+          style={{
+            background: "linear-gradient(145deg, rgba(30,30,30,0.9), rgba(15,15,15,0.95))",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05)",
+          }}
         >
           {/* Close Button */}
           <button
@@ -91,20 +99,26 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
           {/* Left Side: Art & Actions */}
           <div className="relative w-full shrink-0 p-8 sm:w-[400px]">
             {/* Background blur of art */}
-            <div 
+            <div
               className="absolute inset-0 z-0 opacity-30 blur-[60px]"
-              style={{ backgroundImage: `url(${album.albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+              style={{
+                backgroundImage: `url(${album.albumArt})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
             />
-            
+
             <div className="relative z-10 flex h-full flex-col">
               <img
                 src={album.albumArt}
                 alt={album.title}
                 className="aspect-square w-full rounded-xl object-cover shadow-2xl"
               />
-              
+
               <div className="mt-6 text-center sm:text-left">
-                <h2 className="text-2xl font-bold tracking-tight text-white line-clamp-2">{album.title}</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-white line-clamp-2">
+                  {album.title}
+                </h2>
                 <p className="mt-1 text-base text-white/60">{album.artist}</p>
               </div>
 
@@ -113,9 +127,16 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
                   onClick={handleInstantPlay}
                   disabled={loading || tracks.length === 0}
                   className="flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-semibold text-white transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
-                  style={{ background: 'linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.65 0.21 244))' }}
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.65 0.21 244))",
+                  }}
                 >
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5 fill-current" />}
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Play className="h-5 w-5 fill-current" />
+                  )}
                   Instant Play
                 </button>
                 <button
@@ -123,8 +144,12 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
                   disabled={loading || tracks.length === 0 || saved}
                   className="flex h-[52px] px-6 shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
                 >
-                  {saved ? <Check className="h-4 w-4 text-green-400" /> : <BookmarkPlus className="h-4 w-4" />}
-                  {saved ? 'Saved' : 'Save Album'}
+                  {saved ? (
+                    <Check className="h-4 w-4 text-green-400" />
+                  ) : (
+                    <BookmarkPlus className="h-4 w-4" />
+                  )}
+                  {saved ? "Saved" : "Save Album"}
                 </button>
               </div>
             </div>
@@ -133,10 +158,12 @@ export function AlbumModal({ album, onClose }: AlbumModalProps) {
           {/* Right Side: Tracklist */}
           <div className="flex flex-1 min-w-0 flex-col bg-black/20 pb-4">
             <div className="p-6 pb-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40">Tracklist</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40">
+                Tracklist
+              </h3>
             </div>
-            
-            <div className="flex-1 overflow-y-auto px-2 pb-6" style={{ scrollbarWidth: 'none' }}>
+
+            <div className="flex-1 overflow-y-auto px-2 pb-6" style={{ scrollbarWidth: "none" }}>
               {loading ? (
                 <div className="flex h-40 items-center justify-center">
                   <Loader2 className="h-6 w-6 animate-spin text-white/30" />

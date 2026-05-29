@@ -1,31 +1,31 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Search, Settings, User, Library, LogIn, Home } from 'lucide-react';
-import { useListeningIntelligence } from '@/hooks/useListeningIntelligence';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { LoopLogo } from './LoopLogo';
-import { signInWithGoogle } from '@/lib/supabase/auth';
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Search, Settings, User, Library, LogIn, Home } from "lucide-react";
+import { useListeningIntelligence } from "@/hooks/useListeningIntelligence";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { LoopLogo } from "./LoopLogo";
+import { signInWithGoogle } from "@/lib/supabase/auth";
 
 const GENRE_ICONS: Record<string, string> = {
-  'Dark R&B': '🖤',
-  'Atmospheric Trap': '🌌',
-  'Sad Girl Pop': '💧',
-  'Shoegaze': '🎸',
-  'Bollywood Romance': '🌊',
-  'Punjabi Heat': '🌶️',
-  'Desi Trap': '🔥',
-  'Lo-Fi Study': '☕',
-  'Phonk': '🚗',
-  'Hyperpop': '⚡',
-  'Pop': '✨',
-  'Hip-Hop': '🎤',
-  'House': '🪩'
+  "Dark R&B": "🖤",
+  "Atmospheric Trap": "🌌",
+  "Sad Girl Pop": "💧",
+  Shoegaze: "🎸",
+  "Bollywood Romance": "🌊",
+  "Punjabi Heat": "🌶️",
+  "Desi Trap": "🔥",
+  "Lo-Fi Study": "☕",
+  Phonk: "🚗",
+  Hyperpop: "⚡",
+  Pop: "✨",
+  "Hip-Hop": "🎤",
+  House: "🪩",
 };
 
 function toTitleCase(str: string) {
   return str.replace(
     /\w\S*/g,
-    text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+    (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase(),
   );
 }
 
@@ -36,31 +36,32 @@ interface NavbarProps {
   onLibraryOpen: () => void;
 }
 
-export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryOpen }: NavbarProps) {
+export function Navbar({
+  onSearchOpen,
+  onSettingsOpen,
+  onProfileOpen,
+  onLibraryOpen,
+}: NavbarProps) {
   const { scrollY } = useScroll();
 
   const pillBg = useTransform(
     scrollY,
     [0, 60],
-    ['oklch(0.07 0.028 260 / 0.30)', 'oklch(0.07 0.028 260 / 0.88)'],
+    ["oklch(0.07 0.028 260 / 0.30)", "oklch(0.07 0.028 260 / 0.88)"],
   );
-  const pillBorder = useTransform(
-    scrollY,
-    [0, 60],
-    ['oklch(1 0 0 / 0.05)', 'oklch(1 0 0 / 0.10)'],
-  );
+  const pillBorder = useTransform(scrollY, [0, 60], ["oklch(1 0 0 / 0.05)", "oklch(1 0 0 / 0.10)"]);
   const pillBlur = useTransform(
     scrollY,
     [0, 60],
-    ['blur(12px) saturate(140%)', 'blur(24px) saturate(180%)'],
+    ["blur(12px) saturate(140%)", "blur(24px) saturate(180%)"],
   );
 
-  const intel     = useListeningIntelligence();
-  const topGenre  = intel.getTopGenres(1)[0] ?? '';
-  const vibeIcon  = GENRE_ICONS[topGenre] ?? '🎵';
-  const moodBadge = topGenre ? `${vibeIcon} ${topGenre}` : '';
-  const hasData   = intel.events.length > 0;
-  const { user }  = useAuth();
+  const intel = useListeningIntelligence();
+  const topGenre = intel.getTopGenres(1)[0] ?? "";
+  const vibeIcon = GENRE_ICONS[topGenre] ?? "🎵";
+  const moodBadge = topGenre ? `${vibeIcon} ${topGenre}` : "";
+  const hasData = intel.events.length > 0;
+  const { user } = useAuth();
   const { customAvatarUrl } = useUserProfile();
 
   return (
@@ -93,9 +94,9 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
                 animate={{ opacity: 1, scale: 1 }}
                 className="ml-1 rounded-full px-3 py-1 text-[11px] font-medium"
                 style={{
-                  background: 'oklch(0.72 0.26 248 / 0.10)',
-                  color: 'oklch(0.82 0.20 248)',
-                  border: '1px solid oklch(0.72 0.26 248 / 0.20)',
+                  background: "oklch(0.72 0.26 248 / 0.10)",
+                  color: "oklch(0.82 0.20 248)",
+                  border: "1px solid oklch(0.72 0.26 248 / 0.20)",
                 }}
               >
                 {moodBadge}
@@ -135,9 +136,10 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
                   onClick={signInWithGoogle}
                   className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{
-                    borderColor: 'oklch(0.72 0.26 248 / 0.35)',
-                    background: 'linear-gradient(135deg, oklch(0.72 0.26 248 / 0.15), oklch(0.68 0.24 286 / 0.15))',
-                    color: 'oklch(0.85 0.20 248)',
+                    borderColor: "oklch(0.72 0.26 248 / 0.35)",
+                    background:
+                      "linear-gradient(135deg, oklch(0.72 0.26 248 / 0.15), oklch(0.68 0.24 286 / 0.15))",
+                    color: "oklch(0.85 0.20 248)",
                   }}
                 >
                   <LogIn className="h-3.5 w-3.5" />
@@ -148,14 +150,18 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
                   onClick={onProfileOpen}
                   className="relative flex h-8 w-8 items-center justify-center rounded-xl border transition-all hover:text-white/80 overflow-hidden"
                   style={{
-                    borderColor: hasData ? 'oklch(0.72 0.26 248 / 0.35)' : 'oklch(1 0 0 / 0.08)',
-                    background:  hasData ? 'oklch(0.72 0.26 248 / 0.10)' : 'oklch(1 0 0 / 0.04)',
-                    color:       hasData ? 'oklch(0.82 0.22 248)'         : 'oklch(1 0 0 / 0.45)',
+                    borderColor: hasData ? "oklch(0.72 0.26 248 / 0.35)" : "oklch(1 0 0 / 0.08)",
+                    background: hasData ? "oklch(0.72 0.26 248 / 0.10)" : "oklch(1 0 0 / 0.04)",
+                    color: hasData ? "oklch(0.82 0.22 248)" : "oklch(1 0 0 / 0.45)",
                   }}
                   title="Profile & Stats"
                 >
                   {customAvatarUrl || user?.user_metadata?.avatar_url ? (
-                    <img src={customAvatarUrl || user.user_metadata?.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                    <img
+                      src={customAvatarUrl || user.user_metadata?.avatar_url}
+                      alt="Profile"
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <User className="h-3.5 w-3.5" />
                   )}
@@ -178,30 +184,49 @@ export function Navbar({ onSearchOpen, onSettingsOpen, onProfileOpen, onLibraryO
       {/* ── Mobile Bottom Navigation Bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-50 md:hidden border-t border-white/[0.05] bg-[oklch(0.07_0.024_260)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
         <div className="flex items-center justify-around px-2 py-3">
-          <a href="#top" className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors">
+          <a
+            href="#top"
+            className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors"
+          >
             <Home className="h-[22px] w-[22px]" />
             <span className="text-[10px] font-medium">Home</span>
           </a>
-          
-          <button onClick={onSearchOpen} className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors">
+
+          <button
+            onClick={onSearchOpen}
+            className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors"
+          >
             <Search className="h-[22px] w-[22px]" />
             <span className="text-[10px] font-medium">Search</span>
           </button>
-          
-          <button onClick={onLibraryOpen} className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors">
+
+          <button
+            onClick={onLibraryOpen}
+            className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors"
+          >
             <Library className="h-[22px] w-[22px]" />
             <span className="text-[10px] font-medium">Library</span>
           </button>
-          
+
           {!user ? (
-            <button onClick={signInWithGoogle} className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors">
+            <button
+              onClick={signInWithGoogle}
+              className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors"
+            >
               <LogIn className="h-[22px] w-[22px]" />
               <span className="text-[10px] font-medium">Log In</span>
             </button>
           ) : (
-            <button onClick={onProfileOpen} className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors">
+            <button
+              onClick={onProfileOpen}
+              className="flex flex-col items-center gap-1 text-white/40 hover:text-white active:text-white transition-colors"
+            >
               {customAvatarUrl || user.user_metadata?.avatar_url ? (
-                <img src={customAvatarUrl || user.user_metadata?.avatar_url} className="h-[22px] w-[22px] rounded-full object-cover border border-white/20" alt="Profile" />
+                <img
+                  src={customAvatarUrl || user.user_metadata?.avatar_url}
+                  className="h-[22px] w-[22px] rounded-full object-cover border border-white/20"
+                  alt="Profile"
+                />
               ) : (
                 <User className="h-[22px] w-[22px]" />
               )}

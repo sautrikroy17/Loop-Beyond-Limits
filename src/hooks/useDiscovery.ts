@@ -6,10 +6,10 @@
  * Session-caches by trackId to avoid redundant calls.
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { usePlayback } from './usePlayback';
-import { getDiscoverySectionsFn } from '@/functions/recommendations';
-import { useListeningIntelligence } from './useListeningIntelligence';
+import { useState, useEffect, useRef } from "react";
+import { usePlayback } from "./usePlayback";
+import { getDiscoverySectionsFn } from "@/functions/recommendations";
+import { useListeningIntelligence } from "./useListeningIntelligence";
 
 export interface DiscoveryTrack {
   id: string;
@@ -34,19 +34,19 @@ export function useDiscovery() {
   const { currentTrack } = usePlayback();
   const intel = useListeningIntelligence();
 
-  const [sections,  setSections]  = useState<DiscoverySection[]>([]);
+  const [sections, setSections] = useState<DiscoverySection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
 
   const prevKey = useRef<string | null>(null);
 
   useEffect(() => {
-    const trackId  = currentTrack?.youtubeId ?? currentTrack?.id ?? null;
-    const topGenre = intel.getTopGenres(1)[0] ?? 'pop';
-    const vibe     = intel.getVibeQuerySeed();
-    
+    const trackId = currentTrack?.youtubeId ?? currentTrack?.id ?? null;
+    const topGenre = intel.getTopGenres(1)[0] ?? "pop";
+    const vibe = intel.getVibeQuerySeed();
+
     // Cache key includes top genre so re-fetches when taste changes significantly
-    const cacheKey = `${trackId ?? '__default__'}:${topGenre}`;
+    const cacheKey = `${trackId ?? "__default__"}:${topGenre}`;
 
     if (cacheKey === prevKey.current && hasLoaded) return;
     prevKey.current = cacheKey;
@@ -60,14 +60,14 @@ export function useDiscovery() {
     setIsLoading(true);
     getDiscoverySectionsFn({
       data: {
-        trackId:       trackId ?? undefined,
-        title:         currentTrack?.title,
-        artist:        currentTrack?.artist,
-        topGenres:     intel.getTopGenres(5),
-        topArtists:    intel.getTopArtists(5),
+        trackId: trackId ?? undefined,
+        title: currentTrack?.title,
+        artist: currentTrack?.artist,
+        topGenres: intel.getTopGenres(5),
+        topArtists: intel.getTopArtists(5),
         recentArtists: intel.getRecentArtists(3),
         topReplayedTracks: intel.getTopReplayedTracks(3),
-        genre:         vibe.genre,
+        genre: vibe.genre,
         tasteIdentity: intel.getTasteIdentity(),
       },
     })

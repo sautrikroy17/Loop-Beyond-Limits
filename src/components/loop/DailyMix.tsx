@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Loader2, Sparkles } from 'lucide-react';
-import { getDailyMixFn } from '@/functions/profile';
-import { usePlayback, type Track } from '@/hooks/usePlayback';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Play, Loader2, Sparkles } from "lucide-react";
+import { getDailyMixFn } from "@/functions/profile";
+import { usePlayback, type Track } from "@/hooks/usePlayback";
+import { useAuth } from "@/hooks/useAuth";
 
 export function DailyMix() {
   const { user } = useAuth();
@@ -17,23 +17,27 @@ export function DailyMix() {
     let mounted = true;
     setLoading(true);
 
-    getDailyMixFn().then((data) => {
-      if (mounted) {
-        if (data && data.length > 0) {
-          setMix(data as Track[]);
-        } else {
-          setError(true);
+    getDailyMixFn()
+      .then((data) => {
+        if (mounted) {
+          if (data && data.length > 0) {
+            setMix(data as Track[]);
+          } else {
+            setError(true);
+          }
+          setLoading(false);
         }
-        setLoading(false);
-      }
-    }).catch(() => {
-      if (mounted) {
-        setError(true);
-        setLoading(false);
-      }
-    });
+      })
+      .catch(() => {
+        if (mounted) {
+          setError(true);
+          setLoading(false);
+        }
+      });
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   if (!user) return null;
@@ -44,7 +48,7 @@ export function DailyMix() {
     playTrack(mix[0]);
     // For a real app, we might want to replace the queue.
     // For now, let's just queue them up.
-    mix.slice(1).forEach(track => addToQueue(track));
+    mix.slice(1).forEach((track) => addToQueue(track));
   };
 
   return (
@@ -56,7 +60,10 @@ export function DailyMix() {
     >
       <div className="absolute inset-0 z-0">
         <div className="absolute -left-[10%] -top-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-primary/10 blur-[60px] md:blur-[100px]" />
-        <div className="absolute -right-[10%] -bottom-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-blue-500/10 blur-[60px] md:blur-[100px]" style={{ animationDelay: '2s' }} />
+        <div
+          className="absolute -right-[10%] -bottom-[50%] h-[150%] w-[50%] animate-pulse rounded-full bg-blue-500/10 blur-[60px] md:blur-[100px]"
+          style={{ animationDelay: "2s" }}
+        />
       </div>
 
       <div className="relative z-10 flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
@@ -96,14 +103,22 @@ export function DailyMix() {
         <div className="relative mt-8 flex w-full overflow-hidden">
           <div className="flex gap-2">
             {mix.slice(0, 10).map((track, i) => (
-              <div 
-                key={track.id} 
+              <div
+                key={track.id}
                 className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-white/5 bg-white/10 shadow-lg"
-                style={{ zIndex: 10 - i, marginLeft: i === 0 ? 0 : -16, transform: `rotate(${i % 2 === 0 ? i : -i}deg)` }}
+                style={{
+                  zIndex: 10 - i,
+                  marginLeft: i === 0 ? 0 : -16,
+                  transform: `rotate(${i % 2 === 0 ? i : -i}deg)`,
+                }}
                 title={track.title}
               >
                 {track.albumArt ? (
-                  <img src={track.albumArt} alt={track.title} className="h-full w-full object-cover" />
+                  <img
+                    src={track.albumArt}
+                    alt={track.title}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <div className="h-full w-full bg-white/10" />
                 )}

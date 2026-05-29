@@ -49,11 +49,7 @@ export function SectionShell({
   const { glow, accent } = toneMap[tone];
 
   return (
-    <section
-      id={id}
-      ref={ref}
-      className={`relative overflow-hidden ${className}`}
-    >
+    <section id={id} ref={ref} className={`relative overflow-hidden ${className}`}>
       {/* atmospheric gradient that softly blends sections */}
       <motion.div
         aria-hidden
@@ -107,4 +103,3 @@ export function SectionShell({
     </section>
   );
 }
-

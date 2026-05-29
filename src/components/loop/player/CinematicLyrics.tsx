@@ -15,11 +15,11 @@
  *  idle     → play prompt
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic2, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getLyricsFn, type LyricLine } from '@/functions/lyrics';
-import { usePlayback, type Track } from '@/hooks/usePlayback';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Mic2, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { getLyricsFn, type LyricLine } from "@/functions/lyrics";
+import { usePlayback, type Track } from "@/hooks/usePlayback";
 
 interface Props {
   track: Track | null;
@@ -30,7 +30,9 @@ interface Props {
 function Skeleton() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 px-10 py-12">
-      <div className="text-[10px] uppercase tracking-[0.38em] text-white/18 mb-2">Loading lyrics…</div>
+      <div className="text-[10px] uppercase tracking-[0.38em] text-white/18 mb-2">
+        Loading lyrics…
+      </div>
       {[78, 52, 88, 64, 72, 48, 83, 60].map((w, i) => (
         <div
           key={i}
@@ -42,8 +44,13 @@ function Skeleton() {
   );
 }
 
-function EmptyState({ icon, text, action }: {
-  icon: React.ReactNode; text: string;
+function EmptyState({
+  icon,
+  text,
+  action,
+}: {
+  icon: React.ReactNode;
+  text: string;
   action?: { label: string; onClick: () => void };
 }) {
   return (
@@ -65,7 +72,7 @@ function EmptyState({ icon, text, action }: {
 
 function PlainLyrics({ text }: { text: string }) {
   return (
-    <div className="relative h-full overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+    <div className="relative h-full overflow-y-auto" style={{ scrollbarWidth: "none" }}>
       <div className="pointer-events-none sticky top-0 h-16 bg-gradient-to-b from-[oklch(0.06_0.018_262)] to-transparent" />
       <div className="px-8 pb-32 pt-2 text-[13px] leading-[2.1] tracking-wide text-white/32 whitespace-pre-line">
         {text}
@@ -87,12 +94,14 @@ function SyncedLyrics({
   onSeek: (t: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const lineEls      = useRef<(HTMLButtonElement | null)[]>([]);
+  const lineEls = useRef<(HTMLButtonElement | null)[]>([]);
   const lastActiveRef = useRef(-1);
-  const rafRef        = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   // Keep linesRef current
-  useEffect(() => { linesRef.current = lines; }, [lines]);
+  useEffect(() => {
+    linesRef.current = lines;
+  }, [lines]);
 
   useEffect(() => {
     lineEls.current = lineEls.current.slice(0, lines.length);
@@ -106,11 +115,14 @@ function SyncedLyrics({
 
       // Binary search for active line
       let active = -1;
-      let lo = 0, hi = currentLines.length - 1;
+      let lo = 0,
+        hi = currentLines.length - 1;
       while (lo <= hi) {
         const mid = (lo + hi) >> 1;
-        if (currentLines[mid].time <= prog) { active = mid; lo = mid + 1; }
-        else hi = mid - 1;
+        if (currentLines[mid].time <= prog) {
+          active = mid;
+          lo = mid + 1;
+        } else hi = mid - 1;
       }
 
       if (active === lastActiveRef.current) {
@@ -122,22 +134,24 @@ function SyncedLyrics({
       // Update all line elements directly — no React re-render
       lineEls.current.forEach((el, i) => {
         if (!el) return;
-        const span = el.querySelector('span') as HTMLElement | null;
+        const span = el.querySelector("span") as HTMLElement | null;
         if (!span) return;
 
         const isActive = i === active;
-        const isPast   = i < active;
+        const isPast = i < active;
 
-        span.style.fontSize   = isActive ? '1.22rem' : '1.02rem';
-        span.style.fontWeight = isActive ? '700' : '600';
-        span.style.color      = isActive ? 'rgba(255,255,255,1)'
-                              : isPast   ? 'rgba(255,255,255,0.10)'
-                              :            'rgba(255,255,255,0.26)';
+        span.style.fontSize = isActive ? "1.22rem" : "1.02rem";
+        span.style.fontWeight = isActive ? "700" : "600";
+        span.style.color = isActive
+          ? "rgba(255,255,255,1)"
+          : isPast
+            ? "rgba(255,255,255,0.10)"
+            : "rgba(255,255,255,0.26)";
         span.style.textShadow = isActive
-          ? '0 0 50px oklch(0.72 0.26 248 / 0.65), 0 0 20px oklch(0.68 0.24 286 / 0.45)'
-          : 'none';
-        span.style.transform  = isActive ? 'scale(1.03)' : 'scale(1)';
-        span.style.transition = 'all 0.28s cubic-bezier(0.16,1,0.3,1)';
+          ? "0 0 50px oklch(0.72 0.26 248 / 0.65), 0 0 20px oklch(0.68 0.24 286 / 0.45)"
+          : "none";
+        span.style.transform = isActive ? "scale(1.03)" : "scale(1)";
+        span.style.transition = "all 0.28s cubic-bezier(0.16,1,0.3,1)";
       });
 
       // Auto-scroll active line to center
@@ -145,7 +159,7 @@ function SyncedLyrics({
       const container = containerRef.current;
       if (el && container) {
         const target = el.offsetTop - container.offsetHeight / 2 + el.offsetHeight / 2;
-        container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+        container.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
       }
 
       rafRef.current = requestAnimationFrame(tick);
@@ -161,7 +175,7 @@ function SyncedLyrics({
     <div
       ref={containerRef}
       className="relative h-full overflow-y-auto"
-      style={{ scrollbarWidth: 'none' }}
+      style={{ scrollbarWidth: "none" }}
     >
       {/* Top vignette */}
       <div className="pointer-events-none sticky top-0 z-10 h-20 bg-gradient-to-b from-[oklch(0.06_0.018_262)] to-transparent" />
@@ -170,17 +184,19 @@ function SyncedLyrics({
         {lines.map((line, i) => (
           <button
             key={i}
-            ref={(el) => { lineEls.current[i] = el; }}
+            ref={(el) => {
+              lineEls.current[i] = el;
+            }}
             onClick={() => onSeek(line.time)}
             className="block w-full max-w-sm text-center py-2"
           >
             <span
               className="block leading-tight font-semibold"
               style={{
-                fontSize:   '1.02rem',
-                color:      'rgba(255,255,255,0.26)',
-                transition: 'all 0.28s cubic-bezier(0.16,1,0.3,1)',
-                display:    'block',
+                fontSize: "1.02rem",
+                color: "rgba(255,255,255,0.26)",
+                transition: "all 0.28s cubic-bezier(0.16,1,0.3,1)",
+                display: "block",
               }}
             >
               {line.text}
@@ -197,18 +213,18 @@ function SyncedLyrics({
 
 // ── Main ───────────────────────────────────────────────────────────
 
-type Status = 'idle' | 'loading' | 'synced' | 'plain' | 'empty';
+type Status = "idle" | "loading" | "synced" | "plain" | "empty";
 
 export function CinematicLyrics({ track }: Props) {
   const { seekTo } = usePlayback.getState();
-  const [lines,  setLines]  = useState<LyricLine[]>([]);
-  const [plain,  setPlain]  = useState<string | null>(null);
-  const [status, setStatus] = useState<Status>('idle');
-  const prevId   = useRef<string | null>(null);
+  const [lines, setLines] = useState<LyricLine[]>([]);
+  const [plain, setPlain] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const prevId = useRef<string | null>(null);
   const linesRef = useRef<LyricLine[]>([]);
 
   const fetchLyrics = useCallback(async (t: Track) => {
-    setStatus('loading');
+    setStatus("loading");
     setLines([]);
     setPlain(null);
     prevId.current = t.id;
@@ -217,8 +233,8 @@ export function CinematicLyrics({ track }: Props) {
     try {
       const r = await getLyricsFn({
         data: {
-          title:    t.title,
-          artist:   t.artist,
+          title: t.title,
+          artist: t.artist,
           duration: t.durationMs ? t.durationMs / 1000 : undefined,
         },
       });
@@ -227,52 +243,57 @@ export function CinematicLyrics({ track }: Props) {
         setLines(r.lines);
         linesRef.current = r.lines;
         setPlain(r.plain);
-        setStatus('synced');
+        setStatus("synced");
       } else if (r.plain) {
         setPlain(r.plain);
-        setStatus('plain');
+        setStatus("plain");
       } else {
-        setStatus('empty');
+        setStatus("empty");
       }
     } catch {
-      setStatus('empty');
+      setStatus("empty");
     }
   }, []);
 
   useEffect(() => {
-    if (!track) { setStatus('idle'); setLines([]); setPlain(null); return; }
+    if (!track) {
+      setStatus("idle");
+      setLines([]);
+      setPlain(null);
+      return;
+    }
     if (track.id === prevId.current) return;
     fetchLyrics(track);
   }, [track?.id, fetchLyrics]);
 
   return (
     <AnimatePresence mode="wait">
-      {status === 'idle' && (
+      {status === "idle" && (
         <motion.div key="idle" {...fade} className="h-full">
           <EmptyState icon={<Mic2 className="h-10 w-10" />} text="Play a track to see lyrics" />
         </motion.div>
       )}
-      {status === 'loading' && (
+      {status === "loading" && (
         <motion.div key="loading" {...fade} className="h-full">
           <Skeleton />
         </motion.div>
       )}
-      {status === 'synced' && (
+      {status === "synced" && (
         <motion.div key="synced" {...fade} className="h-full">
           <SyncedLyrics lines={lines} linesRef={linesRef} onSeek={seekTo} />
         </motion.div>
       )}
-      {status === 'plain' && plain && (
+      {status === "plain" && plain && (
         <motion.div key="plain" {...fade} className="h-full">
           <PlainLyrics text={plain} />
         </motion.div>
       )}
-      {status === 'empty' && (
+      {status === "empty" && (
         <motion.div key="empty" {...fade} className="h-full">
           <EmptyState
             icon={<Mic2 className="h-8 w-8" />}
             text="Lyrics unavailable for this track"
-            action={track ? { label: 'Retry', onClick: () => fetchLyrics(track) } : undefined}
+            action={track ? { label: "Retry", onClick: () => fetchLyrics(track) } : undefined}
           />
         </motion.div>
       )}
@@ -281,8 +302,8 @@ export function CinematicLyrics({ track }: Props) {
 }
 
 const fade = {
-  initial:    { opacity: 0 },
-  animate:    { opacity: 1 },
-  exit:       { opacity: 0 },
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
   transition: { duration: 0.3 },
 };

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 export function Cursor() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -11,20 +11,24 @@ export function Cursor() {
       setPosition({ x: e.clientX, y: e.clientY });
       setIsVisible(true);
       const target = e.target as HTMLElement;
-      setIsPointer(window.getComputedStyle(target).cursor === 'pointer' || target.tagName === 'A' || target.tagName === 'BUTTON');
+      setIsPointer(
+        window.getComputedStyle(target).cursor === "pointer" ||
+          target.tagName === "A" ||
+          target.tagName === "BUTTON",
+      );
     };
-    
+
     const onMouseLeave = () => setIsVisible(false);
     const onMouseEnter = () => setIsVisible(true);
 
-    window.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseleave', onMouseLeave);
-    document.addEventListener('mouseenter', onMouseEnter);
+    window.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseleave", onMouseLeave);
+    document.addEventListener("mouseenter", onMouseEnter);
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseleave', onMouseLeave);
-      document.removeEventListener('mouseenter', onMouseEnter);
+      window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("mouseenter", onMouseEnter);
     };
   }, []);
 
@@ -39,9 +43,9 @@ export function Cursor() {
           x: position.x,
           y: position.y,
           scale: isPointer ? 1.5 : 1,
-          backgroundColor: isPointer ? 'oklch(0.8 0.18 208)' : 'white'
+          backgroundColor: isPointer ? "oklch(0.8 0.18 208)" : "white",
         }}
-        transition={{ type: 'tween', ease: 'backOut', duration: 0.1 }}
+        transition={{ type: "tween", ease: "backOut", duration: 0.1 }}
       />
       {/* Trailing Glow */}
       <motion.div
@@ -50,10 +54,10 @@ export function Cursor() {
           x: position.x,
           y: position.y,
           scale: isPointer ? 1.2 : 1,
-          backgroundColor: 'oklch(0.72 0.26 248)'
+          backgroundColor: "oklch(0.72 0.26 248)",
         }}
-        transition={{ type: 'spring', stiffness: 100, damping: 25, mass: 0.5 }}
-        style={{ filter: 'blur(8px)' }}
+        transition={{ type: "spring", stiffness: 100, damping: 25, mass: 0.5 }}
+        style={{ filter: "blur(8px)" }}
       />
     </>
   );

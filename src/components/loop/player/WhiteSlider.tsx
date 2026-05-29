@@ -5,7 +5,7 @@ export function WhiteSlider({
   step = 0.5,
   onChange,
   onCommit,
-  className = '',
+  className = "",
 }: {
   value: number;
   min?: number;
@@ -15,7 +15,7 @@ export function WhiteSlider({
   onCommit?: (v: number) => void;
   className?: string;
 }) {
-  let pct = (max - min) > 0 ? ((value - min) / (max - min)) * 100 : 0;
+  let pct = max - min > 0 ? ((value - min) / (max - min)) * 100 : 0;
   pct = Math.max(0, Math.min(100, pct || 0));
 
   return (

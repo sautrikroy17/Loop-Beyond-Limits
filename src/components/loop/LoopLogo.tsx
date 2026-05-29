@@ -15,8 +15,8 @@
  *  3. LoopLogo — canvas + optional wordmark
  */
 
-import { useEffect, useRef } from 'react';
-import { subscribeToAudio } from '@/hooks/useAudioData';
+import { useEffect, useRef } from "react";
+import { subscribeToAudio } from "@/hooks/useAudioData";
 
 interface LogoProps {
   size?: number;
@@ -27,25 +27,25 @@ interface LogoProps {
 
 // Spectral color stops: yellow → orange → red → magenta → violet → blue → cyan
 const SPECTRUM_COLORS = [
-  { r: 255, g: 220, b:  50 },  // 0.00 — yellow
-  { r: 255, g: 160, b:  20 },  // 0.18 — orange
-  { r: 255, g:  60, b:  80 },  // 0.36 — red-pink
-  { r: 200, g:  30, b: 180 },  // 0.52 — magenta
-  { r: 130, g:  40, b: 255 },  // 0.68 — violet
-  { r:  60, g:  90, b: 255 },  // 0.82 — blue
-  { r:  20, g: 210, b: 255 },  // 1.00 — cyan
+  { r: 255, g: 220, b: 50 }, // 0.00 — yellow
+  { r: 255, g: 160, b: 20 }, // 0.18 — orange
+  { r: 255, g: 60, b: 80 }, // 0.36 — red-pink
+  { r: 200, g: 30, b: 180 }, // 0.52 — magenta
+  { r: 130, g: 40, b: 255 }, // 0.68 — violet
+  { r: 60, g: 90, b: 255 }, // 0.82 — blue
+  { r: 20, g: 210, b: 255 }, // 1.00 — cyan
 ];
 
 function spectrumColor(t: number, alpha = 1): string {
   t = Math.max(0, Math.min(1, t));
   const scaled = t * (SPECTRUM_COLORS.length - 1);
-  const idx    = Math.min(Math.floor(scaled), SPECTRUM_COLORS.length - 2);
-  const f      = scaled - idx;
+  const idx = Math.min(Math.floor(scaled), SPECTRUM_COLORS.length - 2);
+  const f = scaled - idx;
   const a = SPECTRUM_COLORS[idx];
   const b = SPECTRUM_COLORS[idx + 1];
   const r = Math.round(a.r + (b.r - a.r) * f);
   const g = Math.round(a.g + (b.g - a.g) * f);
-  const bl= Math.round(a.b + (b.b - a.b) * f);
+  const bl = Math.round(a.b + (b.b - a.b) * f);
   return `rgba(${r},${g},${bl},${alpha})`;
 }
 
@@ -66,13 +66,13 @@ export function LoopLogoSVG({ size = 28 }: { size?: number }) {
       <defs>
         {/* Horizontal spectral gradient */}
         <linearGradient id="lg-spec" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"    stopColor="#ffdc32" />
-          <stop offset="18%"   stopColor="#ffa014" />
-          <stop offset="36%"   stopColor="#ff3c50" />
-          <stop offset="52%"   stopColor="#c81eb4" />
-          <stop offset="68%"   stopColor="#8228ff" />
-          <stop offset="82%"   stopColor="#3c5aff" />
-          <stop offset="100%"  stopColor="#14d2ff" />
+          <stop offset="0%" stopColor="#ffdc32" />
+          <stop offset="18%" stopColor="#ffa014" />
+          <stop offset="36%" stopColor="#ff3c50" />
+          <stop offset="52%" stopColor="#c81eb4" />
+          <stop offset="68%" stopColor="#8228ff" />
+          <stop offset="82%" stopColor="#3c5aff" />
+          <stop offset="100%" stopColor="#14d2ff" />
         </linearGradient>
         {/* Glow filter */}
         <filter id="logo-glow" x="-20%" y="-50%" width="140%" height="200%">
@@ -118,7 +118,15 @@ export function LoopLogoSVG({ size = 28 }: { size?: number }) {
       />
 
       {/* Baseline — horizontal line through center */}
-      <line x1="0" y1="25" x2="100" y2="25" stroke="url(#lg-spec)" strokeWidth="0.8" opacity="0.45" />
+      <line
+        x1="0"
+        y1="25"
+        x2="100"
+        y2="25"
+        stroke="url(#lg-spec)"
+        strokeWidth="0.8"
+        opacity="0.45"
+      />
 
       {/* White core highlight on peaks */}
       <path
@@ -154,31 +162,31 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    canvas.width  = size * dpr;
+    canvas.width = size * dpr;
     canvas.height = size * dpr;
-    canvas.style.width  = `${size}px`;
+    canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
     ctx.scale(dpr, dpr);
 
-    const W   = size;
-    const H   = size;
-    const CY  = H / 2;
+    const W = size;
+    const H = size;
+    const CY = H / 2;
     const maxAmp = H * 0.45;
     const NUM_BARS = 40;
 
     let t = 0;
-    let sBass   = 0;
-    let sBeat   = 0;
-    let rafId   = 0;
+    let sBass = 0;
+    let sBeat = 0;
+    let rafId = 0;
     let freqData: any = new Float32Array(NUM_BARS);
     const smoothed = new Float32Array(NUM_BARS);
 
     const unsub = subscribeToAudio((d) => {
-      sBass   += (d.bass   - sBass)   * 0.15;
-      sBeat   += (d.beat   - sBeat)   * 0.25;
+      sBass += (d.bass - sBass) * 0.15;
+      sBeat += (d.beat - sBeat) * 0.25;
       freqData = d.freqBins;
     });
 
@@ -206,12 +214,12 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
       });
 
       const NUM_STRINGS = 3;
-      
+
       for (let s = 0; s < NUM_STRINGS; s++) {
         const pts: [number, number][] = [];
         const phase = s * Math.PI * 0.8;
         const speed = 1.2 + s * 0.3;
-        const freq  = 1 + s * 0.5;
+        const freq = 1 + s * 0.5;
 
         for (let i = 0; i < NUM_BARS; i++) {
           const xFraction = i / (NUM_BARS - 1);
@@ -220,8 +228,8 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
           const envelope = Math.pow(Math.sin(xFraction * Math.PI), 1.5);
           const amp = (smoothed[i] * maxAmp + surge) * envelope;
           const modulation = Math.sin(t * speed + i * 0.1 * freq + phase);
-          
-          const y = CY - (amp * modulation * (s === 0 ? 1 : 0.65));
+
+          const y = CY - amp * modulation * (s === 0 ? 1 : 0.65);
           pts.push([x, y]);
         }
 
@@ -235,9 +243,9 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
             ctx.bezierCurveTo((px + x) / 2, py, (px + x) / 2, y, x, y);
           }
         });
-        
-        ctx.globalCompositeOperation = 'screen';
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+
+        ctx.globalCompositeOperation = "screen";
+        ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
         ctx.shadowBlur = 4 + sBass * 4;
         ctx.strokeStyle = grad;
         ctx.lineWidth = s === 0 ? 2 : 1;
@@ -246,7 +254,7 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
 
         // White core highlight
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.strokeStyle = "rgba(255,255,255,0.7)";
         ctx.lineWidth = s === 0 ? 1 : 0.5;
         ctx.globalAlpha = 0.8;
         ctx.stroke();
@@ -263,25 +271,22 @@ export function LoopLogoCanvas({ size = 28 }: { size?: number }) {
     };
   }, [size]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-label="Loop"
-      style={{ display: 'block' }}
-    />
-  );
+  return <canvas ref={canvasRef} aria-label="Loop" style={{ display: "block" }} />;
 }
 
 // ── Full logo: canvas + optional wordmark ───────────────────────────
 
-export function LoopLogo({ size = 28, showText = true, textSize = 'text-lg', className = '' }: LogoProps) {
+export function LoopLogo({
+  size = 28,
+  showText = true,
+  textSize = "text-lg",
+  className = "",
+}: LogoProps) {
   return (
     <span className={`flex items-center gap-2 ${className}`}>
       <LoopLogoCanvas size={size} />
       {showText && (
-        <span className={`font-semibold tracking-tight text-white ${textSize}`}>
-          Loop
-        </span>
+        <span className={`font-semibold tracking-tight text-white ${textSize}`}>Loop</span>
       )}
     </span>
   );

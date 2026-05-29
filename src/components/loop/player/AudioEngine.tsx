@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { usePlayback } from '@/hooks/usePlayback';
-import { getPlaybackSourceFn } from '@/functions/search';
-import { getLyricsFn } from '@/functions/lyrics';
+import { useEffect, useRef } from "react";
+import { usePlayback } from "@/hooks/usePlayback";
+import { getPlaybackSourceFn } from "@/functions/search";
+import { getLyricsFn } from "@/functions/lyrics";
 
 declare global {
   interface Window {
@@ -11,13 +11,13 @@ declare global {
 }
 
 export function AudioEngine() {
-  const playerRef          = useRef<any>(null);
-  const trackIdRef         = useRef<string | null>(null);
-  const isReadyRef         = useRef(false);
-  const progressRafRef     = useRef<number | null>(null);
-  const currentYtIdRef     = useRef<string | null>(null);
-  const hasPlayedOnceRef   = useRef(false);
-  const silentAudioRef     = useRef<HTMLAudioElement | null>(null);
+  const playerRef = useRef<any>(null);
+  const trackIdRef = useRef<string | null>(null);
+  const isReadyRef = useRef(false);
+  const progressRafRef = useRef<number | null>(null);
+  const currentYtIdRef = useRef<string | null>(null);
+  const hasPlayedOnceRef = useRef(false);
+  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // KEY FIX: When true, we are mid-transition between tracks.
   // YouTube fires a PAUSED event when loadVideoById() interrupts a playing track.
@@ -37,9 +37,9 @@ export function AudioEngine() {
   // ── 1. Initialize YouTube IFrame API (once) ────────────────────
   useEffect(() => {
     const initPlayer = () => {
-      playerRef.current = new window.YT.Player('youtube-headless-player', {
-        height: '200',
-        width: '200',
+      playerRef.current = new window.YT.Player("youtube-headless-player", {
+        height: "200",
+        width: "200",
         playerVars: {
           autoplay: 1,
           controls: 0,
@@ -106,7 +106,7 @@ export function AudioEngine() {
           },
 
           onError: (e: any) => {
-            console.warn('[AudioEngine] YT error', e.data);
+            console.warn("[AudioEngine] YT error", e.data);
             isTransitioningRef.current = false;
             setLoadingTrack(false);
             stopProgressLoop();
@@ -119,8 +119,8 @@ export function AudioEngine() {
     if (window.YT?.Player) {
       initPlayer();
     } else {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
       document.head.appendChild(tag);
       window.onYouTubeIframeAPIReady = initPlayer;
     }
@@ -135,7 +135,10 @@ export function AudioEngine() {
       if (playerRef.current?.getCurrentTime) {
         const t = playerRef.current.getCurrentTime();
         const d = playerRef.current.getDuration?.() ?? 0;
-        usePlayback.setState({ progress: t, duration: d > 0 ? d : usePlayback.getState().duration });
+        usePlayback.setState({
+          progress: t,
+          duration: d > 0 ? d : usePlayback.getState().duration,
+        });
       }
       progressRafRef.current = requestAnimationFrame(tick);
     };
@@ -150,9 +153,9 @@ export function AudioEngine() {
   }
 
   // ── 2. Load new track when ID changes ──────────────────────────
-  const currentTrackId = usePlayback(s => s.currentTrack?.id);
-  const currentTrack   = usePlayback(s => s.currentTrack);
-  const youtubePlayerReady = usePlayback(s => s.youtubePlayerReady);
+  const currentTrackId = usePlayback((s) => s.currentTrack?.id);
+  const currentTrack = usePlayback((s) => s.currentTrack);
+  const youtubePlayerReady = usePlayback((s) => s.youtubePlayerReady);
 
   useEffect(() => {
     if (!isReadyRef.current || !playerRef.current?.loadVideoById) return;
@@ -206,7 +209,7 @@ export function AudioEngine() {
     // Safety net: if track never reaches PLAYING after 10s, skip
     const stuckTimeout = setTimeout(() => {
       if (usePlayback.getState().isLoadingTrack) {
-        console.warn('[AudioEngine] 10s timeout — skipping stuck track');
+        console.warn("[AudioEngine] 10s timeout — skipping stuck track");
         isTransitioningRef.current = false;
         setLoadingTrack(false);
         nextTrack();
@@ -220,11 +223,11 @@ export function AudioEngine() {
   }, [currentTrackId, youtubePlayerReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 3. Toggle play/pause for SAME track ───────────────────────
-  const isPlaying = usePlayback(s => s.isPlaying);
+  const isPlaying = usePlayback((s) => s.isPlaying);
 
   useEffect(() => {
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
   }, [isPlaying]);
 
@@ -237,7 +240,7 @@ export function AudioEngine() {
     if (isPlaying) {
       const state = playerRef.current.getPlayerState?.();
       const YTState = window.YT?.PlayerState;
-      
+
       // If the player hasn't successfully played yet this session, OR it's stuck in CUED/UNSTARTED,
       // we FORCE a loadVideoById to completely override the background cue and guarantee playback.
       if (!hasPlayedOnceRef.current || state === YTState?.CUED || state === YTState?.UNSTARTED) {
@@ -260,7 +263,7 @@ export function AudioEngine() {
   }, [isPlaying, youtubePlayerReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 4. Seek ───────────────────────────────────────────────────
-  const seekTarget = usePlayback(s => s.seekTarget);
+  const seekTarget = usePlayback((s) => s.seekTarget);
 
   useEffect(() => {
     if (seekTarget !== null && playerRef.current?.seekTo) {
@@ -271,7 +274,7 @@ export function AudioEngine() {
   }, [seekTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 5. Volume sync ────────────────────────────────────────────
-  const volume = usePlayback(s => s.volume);
+  const volume = usePlayback((s) => s.volume);
 
   useEffect(() => {
     if (playerRef.current?.setVolume) playerRef.current.setVolume(volume);
@@ -279,48 +282,50 @@ export function AudioEngine() {
 
   // ── MediaSession Integration (Dynamic Island / Background) ──────
   useEffect(() => {
-    if ('mediaSession' in navigator && currentTrack) {
+    if ("mediaSession" in navigator && currentTrack) {
       navigator.mediaSession.metadata = new window.MediaMetadata({
         title: currentTrack.title,
         artist: currentTrack.artist,
-        artwork: [
-          { src: currentTrack.albumArt, sizes: '512x512', type: 'image/jpeg' }
-        ]
+        artwork: [{ src: currentTrack.albumArt, sizes: "512x512", type: "image/jpeg" }],
       });
 
       try {
-        navigator.mediaSession.setActionHandler('play', () => {
+        navigator.mediaSession.setActionHandler("play", () => {
           playerRef.current?.playVideo?.();
           usePlayback.getState().setPlaying(true);
         });
-        navigator.mediaSession.setActionHandler('pause', () => {
+        navigator.mediaSession.setActionHandler("pause", () => {
           playerRef.current?.pauseVideo?.();
           usePlayback.getState().setPlaying(false);
         });
-        navigator.mediaSession.setActionHandler('previoustrack', () => usePlayback.getState().prevTrack());
-        navigator.mediaSession.setActionHandler('nexttrack', () => usePlayback.getState().nextTrack());
-        navigator.mediaSession.setActionHandler('seekto', (details) => {
+        navigator.mediaSession.setActionHandler("previoustrack", () =>
+          usePlayback.getState().prevTrack(),
+        );
+        navigator.mediaSession.setActionHandler("nexttrack", () =>
+          usePlayback.getState().nextTrack(),
+        );
+        navigator.mediaSession.setActionHandler("seekto", (details) => {
           if (details.seekTime && playerRef.current?.seekTo) {
             playerRef.current.seekTo(details.seekTime, true);
             usePlayback.getState().setProgress(details.seekTime);
           }
         });
-        navigator.mediaSession.setActionHandler('seekbackward', () => {
+        navigator.mediaSession.setActionHandler("seekbackward", () => {
           const t = Math.max((playerRef.current?.getCurrentTime() || 0) - 10, 0);
           playerRef.current?.seekTo(t, true);
         });
-        navigator.mediaSession.setActionHandler('seekforward', () => {
+        navigator.mediaSession.setActionHandler("seekforward", () => {
           const t = (playerRef.current?.getCurrentTime() || 0) + 10;
           playerRef.current?.seekTo(t, true);
         });
       } catch (e) {
-        console.warn('MediaSession action handlers not supported', e);
+        console.warn("MediaSession action handlers not supported", e);
       }
     }
   }, [currentTrack]);
 
   // ── 6. Prefetch Lyrics ────────────────────────────────────────
-  const nextTrackInQueue = usePlayback(s => s.queue[0]);
+  const nextTrackInQueue = usePlayback((s) => s.queue[0]);
 
   useEffect(() => {
     if (currentTrack) {
@@ -329,7 +334,7 @@ export function AudioEngine() {
           title: currentTrack.title,
           artist: currentTrack.artist,
           duration: currentTrack.durationMs ? currentTrack.durationMs / 1000 : undefined,
-        }
+        },
       }).catch(() => {});
     }
   }, [currentTrack?.id]);
@@ -341,7 +346,7 @@ export function AudioEngine() {
           title: nextTrackInQueue.title,
           artist: nextTrackInQueue.artist,
           duration: nextTrackInQueue.durationMs ? nextTrackInQueue.durationMs / 1000 : undefined,
-        }
+        },
       }).catch(() => {});
     }
   }, [nextTrackInQueue?.id]);
@@ -351,7 +356,7 @@ export function AudioEngine() {
       <div
         id="youtube-headless-player"
         className="fixed -z-50 opacity-0 pointer-events-none -left-[2000px] -top-[2000px]"
-        style={{ width: '200px', height: '200px' }}
+        style={{ width: "200px", height: "200px" }}
         aria-hidden="true"
       />
       <audio

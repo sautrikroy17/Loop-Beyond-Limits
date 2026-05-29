@@ -4,9 +4,17 @@ import { Reveal } from "./Reveal";
 import { useTactileHover } from "@/hooks/useTactileHover";
 
 const panels = [
-  { tag: "Atmosphere", title: "Rooms that breathe", desc: "Visual environments tuned to every track." },
+  {
+    tag: "Atmosphere",
+    title: "Rooms that breathe",
+    desc: "Visual environments tuned to every track.",
+  },
   { tag: "Discovery", title: "Curated by feel", desc: "AI that listens with you, not for you." },
-  { tag: "Spatial", title: "Sound in dimensions", desc: "Lossless layers placed around your head." },
+  {
+    tag: "Spatial",
+    title: "Sound in dimensions",
+    desc: "Lossless layers placed around your head.",
+  },
   { tag: "Live", title: "Sessions in real time", desc: "Drop into artist sets as they happen." },
   { tag: "Together", title: "Listen as one", desc: "Synced rooms with friends across the world." },
 ];
@@ -45,13 +53,7 @@ export function Showcase() {
   );
 }
 
-function PanelCard({
-  p,
-  i,
-}: {
-  p: (typeof panels)[number];
-  i: number;
-}) {
+function PanelCard({ p, i }: { p: (typeof panels)[number]; i: number }) {
   const tactile = useTactileHover({
     maxTilt: 8,
     spotlightStrength: 0.28,
@@ -92,9 +94,7 @@ function PanelCard({
       </div>
       <div className="mt-auto" />
       <div className="absolute inset-x-8 bottom-8">
-        <h3 className="font-display text-3xl font-semibold sm:text-4xl">
-          {p.title}
-        </h3>
+        <h3 className="font-display text-3xl font-semibold sm:text-4xl">{p.title}</h3>
         <p className="mt-3 max-w-md text-sm text-muted-foreground">{p.desc}</p>
       </div>
     </motion.div>

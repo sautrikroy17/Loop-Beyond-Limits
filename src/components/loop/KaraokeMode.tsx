@@ -15,12 +15,12 @@
  * Visual feel: Apple Music Sing × Spotify Lyrics × concert backdrop
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic2 } from 'lucide-react';
-import { usePlayback } from '@/hooks/usePlayback';
-import { getLyricsFn, type LyricLine } from '@/functions/lyrics';
-import { subscribeToAudio } from '@/hooks/useAudioData';
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Mic2 } from "lucide-react";
+import { usePlayback } from "@/hooks/usePlayback";
+import { getLyricsFn, type LyricLine } from "@/functions/lyrics";
+import { subscribeToAudio } from "@/hooks/useAudioData";
 
 interface Props {
   isOpen: boolean;
@@ -37,7 +37,7 @@ function MicPulse() {
       const s = 1 + d.beat * 0.35;
       const a = 0.3 + d.beat * 0.5;
       circleRef.current.style.transform = `scale(${s.toFixed(3)})`;
-      circleRef.current.style.opacity   = a.toFixed(3);
+      circleRef.current.style.opacity = a.toFixed(3);
     });
   }, []);
 
@@ -84,8 +84,8 @@ function LyricStage({
             onClick={() => !isActive && onSeek(line.time)}
             animate={{
               opacity: isActive ? 1 : dist === 1 ? 0.35 : 0.14,
-              scale:   isActive ? 1 : dist === 1 ? 0.88 : 0.76,
-              filter:  isActive ? 'blur(0px)' : dist === 1 ? 'blur(1px)' : 'blur(2px)',
+              scale: isActive ? 1 : dist === 1 ? 0.88 : 0.76,
+              filter: isActive ? "blur(0px)" : dist === 1 ? "blur(1px)" : "blur(2px)",
             }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="block max-w-2xl cursor-pointer select-none"
@@ -94,12 +94,12 @@ function LyricStage({
               className="block font-semibold leading-tight"
               style={{
                 fontSize: isActive
-                  ? 'clamp(1.6rem, 4.5vw, 2.8rem)'
-                  : 'clamp(1.1rem, 2.5vw, 1.6rem)',
-                color: 'white',
+                  ? "clamp(1.6rem, 4.5vw, 2.8rem)"
+                  : "clamp(1.1rem, 2.5vw, 1.6rem)",
+                color: "white",
                 textShadow: isActive
-                  ? '0 0 60px rgba(200,160,255,0.6), 0 2px 30px rgba(0,0,0,0.8)'
-                  : 'none',
+                  ? "0 0 60px rgba(200,160,255,0.6), 0 2px 30px rgba(0,0,0,0.8)"
+                  : "none",
               }}
             >
               {line.text}
@@ -122,12 +122,17 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
 
   // Fetch lyrics on track change
   useEffect(() => {
-    if (!currentTrack) { setLines([]); setPlain(null); return; }
+    if (!currentTrack) {
+      setLines([]);
+      setPlain(null);
+      return;
+    }
     if (currentTrack.id === prevTrackId.current) return;
     prevTrackId.current = currentTrack.id;
 
     setLoading(true);
-    setLines([]); setPlain(null);
+    setLines([]);
+    setPlain(null);
     getLyricsFn({
       data: {
         title: currentTrack.title,
@@ -135,7 +140,10 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
         duration: currentTrack.durationMs ? currentTrack.durationMs / 1000 : undefined,
       },
     })
-      .then((r) => { setLines(r.lines); setPlain(r.plain ?? null); })
+      .then((r) => {
+        setLines(r.lines);
+        setPlain(r.plain ?? null);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [currentTrack?.id]);
@@ -143,13 +151,18 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
   // K shortcut
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'k' && !e.metaKey && !e.ctrlKey && !(e.target instanceof HTMLInputElement)) {
+      if (
+        e.key.toLowerCase() === "k" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !(e.target instanceof HTMLInputElement)
+      ) {
         isOpen ? onClose() : null; // only close via shortcut (open via PlayerBar)
       }
-      if (e.key === 'Escape' && isOpen) onClose();
+      if (e.key === "Escape" && isOpen) onClose();
     };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [isOpen, onClose]);
 
   const activeIdx = lines.reduce<number>((acc, l, i) => (l.time <= progress ? i : acc), -1);
@@ -177,10 +190,10 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
                 className="absolute inset-0"
                 style={{
                   backgroundImage: `url(${currentTrack.albumArt})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: 'blur(80px) saturate(160%) brightness(0.5)',
-                  transform: 'scale(1.1)',
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  filter: "blur(80px) saturate(160%) brightness(0.5)",
+                  transform: "scale(1.1)",
                 }}
               />
             )}
@@ -202,7 +215,9 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
             <div className="flex items-center gap-3">
               <MicPulse />
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.35em] text-white/35">Karaoke</p>
+                <p className="text-[11px] font-medium uppercase tracking-[0.35em] text-white/35">
+                  Karaoke
+                </p>
                 {currentTrack && (
                   <p className="mt-0.5 text-[13px] font-medium text-white/70">
                     {currentTrack.title} — {currentTrack.artist}
@@ -220,17 +235,10 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
 
           {/* Lyric stage */}
           <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center px-6">
-            {loading && (
-              <p className="animate-pulse text-white/30 text-sm">Loading lyrics…</p>
-            )}
+            {loading && <p className="animate-pulse text-white/30 text-sm">Loading lyrics…</p>}
 
             {!loading && hasTimedLyrics && (
-              <LyricStage
-                lines={lines}
-                activeIdx={activeIdx}
-                progress={progress}
-                onSeek={seekTo}
-              />
+              <LyricStage lines={lines} activeIdx={activeIdx} progress={progress} onSeek={seekTo} />
             )}
 
             {!loading && !hasTimedLyrics && plain && (
@@ -254,10 +262,12 @@ export function KaraokeMode({ isOpen, onClose }: Props) {
               <div
                 className="h-full rounded-full transition-none"
                 style={{
-                  width: `${progress > 0 && currentTrack?.durationMs
-                    ? (progress / (currentTrack.durationMs / 1000)) * 100
-                    : 0}%`,
-                  background: 'linear-gradient(90deg, oklch(0.75 0.22 290), oklch(0.72 0.20 240))',
+                  width: `${
+                    progress > 0 && currentTrack?.durationMs
+                      ? (progress / (currentTrack.durationMs / 1000)) * 100
+                      : 0
+                  }%`,
+                  background: "linear-gradient(90deg, oklch(0.75 0.22 290), oklch(0.72 0.20 240))",
                 }}
               />
             </div>

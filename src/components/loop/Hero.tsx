@@ -1,9 +1,9 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef, useEffect } from 'react';
-import { ArrowDown } from 'lucide-react';
-import { usePlayback } from '@/hooks/usePlayback';
-import { subscribeToAudio } from '@/hooks/useAudioData';
-import { LoopLogoCanvas } from '@/components/loop/LoopLogo';
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useEffect } from "react";
+import { ArrowDown } from "lucide-react";
+import { usePlayback } from "@/hooks/usePlayback";
+import { subscribeToAudio } from "@/hooks/useAudioData";
+import { LoopLogoCanvas } from "@/components/loop/LoopLogo";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -14,9 +14,9 @@ function AmbientLight() {
     return subscribeToAudio((d) => {
       if (!ref.current) return;
       const scale = 1 + d.bass * 0.22;
-      const op    = 0.30 + d.bass * 0.18;
+      const op = 0.3 + d.bass * 0.18;
       ref.current.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(3)})`;
-      ref.current.style.opacity   = op.toFixed(3);
+      ref.current.style.opacity = op.toFixed(3);
     });
   }, []);
 
@@ -26,15 +26,15 @@ function AmbientLight() {
       aria-hidden
       className="pointer-events-none absolute left-1/2 top-1/2 will-change-transform"
       style={{
-        width: '70vmax',
-        height: '70vmax',
-        transform: 'translate(-50%, -50%)',
-        borderRadius: '50%',
+        width: "70vmax",
+        height: "70vmax",
+        transform: "translate(-50%, -50%)",
+        borderRadius: "50%",
         background: `radial-gradient(ellipse at center,
           oklch(0.68 0.24 286 / 0.22) 0%,
           oklch(0.72 0.26 248 / 0.14) 40%,
           transparent 72%)`,
-        filter: 'blur(40px)',
+        filter: "blur(40px)",
       }}
     />
   );
@@ -43,8 +43,8 @@ function AmbientLight() {
 export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const { currentTrack, isPlaying } = usePlayback();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const y       = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const arrowOp = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
 
@@ -66,8 +66,8 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
         style={{
           backgroundImage: `linear-gradient(oklch(1 0 0 / 0.025) 1px, transparent 1px),
                             linear-gradient(90deg, oklch(1 0 0 / 0.025) 1px, transparent 1px)`,
-          backgroundSize: '80px 80px',
-          maskImage: 'radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 75%)',
+          backgroundSize: "80px 80px",
+          maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 75%)",
         }}
       />
 
@@ -100,8 +100,8 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
         {/* Main headline */}
         <h1 className="font-display font-bold leading-[0.88] tracking-[-0.03em]">
           <motion.span
-            initial={{ opacity: 0, y: 70, filter: 'blur(20px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 70, filter: "blur(20px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 1.1, delay: 0.04, ease }}
             className="block text-[clamp(4.5rem,12vw,10rem)] text-white"
           >
@@ -109,18 +109,19 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
           </motion.span>
 
           <motion.span
-            initial={{ opacity: 0, y: 70, filter: 'blur(20px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 70, filter: "blur(20px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 1.1, delay: 0.14, ease }}
             className="block text-[clamp(4.5rem,12vw,10rem)]"
             style={{
-              background: 'linear-gradient(118deg, oklch(0.88 0.16 248) 0%, oklch(0.76 0.26 270) 38%, oklch(0.68 0.24 290) 68%, oklch(0.80 0.20 210) 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
+              background:
+                "linear-gradient(118deg, oklch(0.88 0.16 248) 0%, oklch(0.76 0.26 270) 38%, oklch(0.68 0.24 290) 68%, oklch(0.80 0.20 210) 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
             }}
           >
-          Drop
+            Drop
           </motion.span>
         </h1>
 
@@ -129,7 +130,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
           <motion.div
             initial={{ opacity: 0, y: 18, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.50, ease }}
+            transition={{ duration: 0.5, delay: 0.5, ease }}
             className="mx-auto mt-10 inline-flex items-center gap-3.5 rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-3 backdrop-blur-xl"
           >
             {currentTrack.albumArt && (
@@ -141,7 +142,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
             )}
             <div className="text-left">
               <div className="text-[9px] uppercase tracking-[0.3em] text-white/28">
-                {isPlaying ? 'Now Playing' : 'Paused'}
+                {isPlaying ? "Now Playing" : "Paused"}
               </div>
               <div className="mt-0.5 max-w-[200px] truncate text-sm font-medium text-white/80">
                 {currentTrack.title}
@@ -165,8 +166,8 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
             id="hero-search-btn"
             className="group relative flex items-center gap-3 overflow-hidden rounded-full px-8 py-3.5 text-sm font-medium text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
             style={{
-              background: 'linear-gradient(135deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286))',
-              boxShadow: '0 0 50px -8px oklch(0.72 0.26 248 / 0.60)',
+              background: "linear-gradient(135deg, oklch(0.72 0.26 248), oklch(0.68 0.24 286))",
+              boxShadow: "0 0 50px -8px oklch(0.72 0.26 248 / 0.60)",
             }}
           >
             <span
@@ -197,7 +198,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
           <ArrowDown className="h-5 w-5 text-white/15" />
         </motion.div>
@@ -212,12 +213,7 @@ function LiveEQBars({ isPlaying }: { isPlaying: boolean }) {
   useEffect(() => {
     if (!isPlaying) return;
     return subscribeToAudio((d) => {
-      const heights = [
-        3 + d.bass   * 11,
-        3 + d.mid    * 9,
-        3 + d.treble * 8,
-        3 + d.bass   * 7,
-      ];
+      const heights = [3 + d.bass * 11, 3 + d.mid * 9, 3 + d.treble * 8, 3 + d.bass * 7];
       barsRef.current.forEach((el, i) => {
         if (el) el.style.height = `${heights[i].toFixed(1)}px`;
       });
@@ -229,15 +225,17 @@ function LiveEQBars({ isPlaying }: { isPlaying: boolean }) {
       {[0, 1, 2, 3].map((i) => (
         <div
           key={i}
-          ref={(el) => { barsRef.current[i] = el; }}
+          ref={(el) => {
+            barsRef.current[i] = el;
+          }}
           className="w-[3px] rounded-full"
           style={{
-            background: 'linear-gradient(to top, oklch(0.72 0.26 248), oklch(0.80 0.18 208))',
-            height: isPlaying ? '3px' : `${[8, 12, 6, 10][i]}px`,
+            background: "linear-gradient(to top, oklch(0.72 0.26 248), oklch(0.80 0.18 208))",
+            height: isPlaying ? "3px" : `${[8, 12, 6, 10][i]}px`,
             minHeight: 3,
             maxHeight: 14,
             opacity: isPlaying ? 1 : 0.3,
-            transition: isPlaying ? 'none' : 'height 0.3s',
+            transition: isPlaying ? "none" : "height 0.3s",
           }}
         />
       ))}
@@ -249,7 +247,12 @@ function SearchIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
       <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M10.5 10.5L13.5 13.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

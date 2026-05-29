@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { signInWithGoogle } from '@/lib/supabase/auth';
-import { useAuth } from '@/hooks/useAuth';
-import { LoopLogo } from '@/components/loop/LoopLogo';
-import { LogIn } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { signInWithGoogle } from "@/lib/supabase/auth";
+import { useAuth } from "@/hooks/useAuth";
+import { LoopLogo } from "@/components/loop/LoopLogo";
+import { LogIn } from "lucide-react";
+import { useEffect, useState } from "react";
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
@@ -16,7 +16,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isLoggedIn) {
-      navigate({ to: '/' });
+      navigate({ to: "/" });
     }
   }, [isLoading, isLoggedIn, navigate]);
 
@@ -25,7 +25,7 @@ function LoginPage() {
       setIsSigningIn(true);
       await signInWithGoogle();
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error("Error signing in with Google:", error);
       setIsSigningIn(false);
     }
   };
@@ -37,13 +37,15 @@ function LoginPage() {
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute -left-[20%] -top-[20%] h-[70%] w-[70%] animate-pulse rounded-full bg-primary/20 blur-[120px] filter" />
-        <div className="absolute -bottom-[20%] -right-[20%] h-[70%] w-[70%] animate-pulse rounded-full bg-blue-600/20 blur-[120px] filter" style={{ animationDelay: '2s' }} />
+        <div
+          className="absolute -bottom-[20%] -right-[20%] h-[70%] w-[70%] animate-pulse rounded-full bg-blue-600/20 blur-[120px] filter"
+          style={{ animationDelay: "2s" }}
+        />
       </div>
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center justify-center p-6">
         {/* Glassmorphism Card */}
         <div className="flex w-full flex-col items-center justify-center gap-8 rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl shadow-2xl">
-          
           <div className="flex flex-col items-center gap-4 text-center">
             <LoopLogo size={50} />
             <div>
@@ -86,7 +88,7 @@ function LoginPage() {
               )}
               <span className="relative z-10">Continue with Google</span>
             </button>
-            
+
             <div className="relative my-2 flex items-center gap-4">
               <div className="h-px flex-1 bg-white/10" />
               <span className="text-xs text-gray-500 uppercase tracking-widest">or</span>
@@ -94,14 +96,14 @@ function LoginPage() {
             </div>
 
             <button
-              onClick={() => navigate({ to: '/' })}
+              onClick={() => navigate({ to: "/" })}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-3 font-medium text-white transition-all hover:bg-white/10 hover:text-primary active:scale-95"
             >
               <LogIn className="h-4 w-4" />
               Listen as Guest
             </button>
           </div>
-          
+
           <p className="text-center text-xs text-gray-500">
             By signing in, you agree to our Terms of Service and Privacy Policy.
           </p>

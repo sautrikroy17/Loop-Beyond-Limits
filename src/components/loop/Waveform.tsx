@@ -13,10 +13,7 @@ export function Waveform({
   isPlaying?: boolean;
 }) {
   return (
-    <div
-      className={`flex items-center justify-center gap-[3px] ${className}`}
-      style={{ height }}
-    >
+    <div className={`flex items-center justify-center gap-[3px] ${className}`} style={{ height }}>
       {Array.from({ length: bars }).map((_, i) => {
         const seed = (Math.sin(i * 1.3) + 1) / 2;
         const base = 0.25 + seed * 0.75;
@@ -25,8 +22,7 @@ export function Waveform({
             key={i}
             className="w-[3px] rounded-full"
             style={{
-              background:
-                "linear-gradient(180deg, oklch(0.85 0.18 290), oklch(0.65 0.22 240))",
+              background: "linear-gradient(180deg, oklch(0.85 0.18 290), oklch(0.65 0.22 240))",
               boxShadow: "0 0 8px oklch(0.7 0.22 290 / 0.6)",
             }}
             animate={

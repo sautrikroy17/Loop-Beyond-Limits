@@ -5,28 +5,28 @@
  * powered by useDiscovery (YTM InnerTube + session history).
  */
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Plus, Music2, Lock, LogIn, Activity } from 'lucide-react';
-import { usePlayback, type Track } from '@/hooks/usePlayback';
-import { useDiscovery, type DiscoverySection } from '@/hooks/useDiscovery';
-import { useAuth } from '@/hooks/useAuth';
-import { LikeButton } from './LikeButton';
-import { Reveal } from './Reveal';
-import { DailyMix } from './DailyMix';
-import { AlbumModal } from './AlbumModal';
-import { AIHeroMix } from './AIHeroMix';
-import { TrendingNowHero } from './TrendingNowHero';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Play, Plus, Music2, Lock, LogIn, Activity } from "lucide-react";
+import { usePlayback, type Track } from "@/hooks/usePlayback";
+import { useDiscovery, type DiscoverySection } from "@/hooks/useDiscovery";
+import { useAuth } from "@/hooks/useAuth";
+import { LikeButton } from "./LikeButton";
+import { Reveal } from "./Reveal";
+import { DailyMix } from "./DailyMix";
+import { AlbumModal } from "./AlbumModal";
+import { AIHeroMix } from "./AIHeroMix";
+import { TrendingNowHero } from "./TrendingNowHero";
 
 // ─── Section icon map ─────────────────────────────────────────────
 
 const SECTION_META: Record<string, { emoji: string; sub: string }> = {
-  'for-you':     { emoji: '✦',  sub: 'Picks based on what you\'re playing' },
-  'similar':     { emoji: '◈',  sub: 'Sounds like your current track' },
-  'late-night':  { emoji: '◐',  sub: 'For dark rooms and headphones' },
-  'trending':    { emoji: '↑',  sub: 'What\'s moving right now' },
-  'underground': { emoji: '⬡',  sub: 'Overlooked and underrated' },
-  'based-on':    { emoji: '⊕',  sub: 'Rooted in your listening session' },
+  "for-you": { emoji: "✦", sub: "Picks based on what you're playing" },
+  similar: { emoji: "◈", sub: "Sounds like your current track" },
+  "late-night": { emoji: "◐", sub: "For dark rooms and headphones" },
+  trending: { emoji: "↑", sub: "What's moving right now" },
+  underground: { emoji: "⬡", sub: "Overlooked and underrated" },
+  "based-on": { emoji: "⊕", sub: "Rooted in your listening session" },
 };
 
 // ─── Track Card ───────────────────────────────────────────────────
@@ -36,19 +36,22 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
   const isActive = currentTrack?.id === track.id;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ rotateX: -80, opacity: 0, y: -40, transformPerspective: 1200 }}
       whileInView={{ rotateX: 0, opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-20px' }}
+      viewport={{ once: true, margin: "-20px" }}
       transition={{ duration: 0.8, type: "spring", bounce: 0.35, delay: index * 0.05 }}
       className="group relative w-44 shrink-0 select-none"
-      style={{ transformStyle: 'preserve-3d' }}
+      style={{ transformStyle: "preserve-3d" }}
     >
       <div
         className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]"
         style={
           isActive
-            ? { boxShadow: '0 0 0 1.5px oklch(0.72 0.23 290 / 0.65), 0 8px 28px -8px oklch(0.72 0.23 290 / 0.35)' }
+            ? {
+                boxShadow:
+                  "0 0 0 1.5px oklch(0.72 0.23 290 / 0.65), 0 8px 28px -8px oklch(0.72 0.23 290 / 0.35)",
+              }
             : {}
         }
       >
@@ -60,8 +63,8 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
             loading="lazy"
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement;
-              if (target.src.includes('maxresdefault.jpg')) {
-                target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+              if (target.src.includes("maxresdefault.jpg")) {
+                target.src = target.src.replace("maxresdefault.jpg", "hqdefault.jpg");
               }
             }}
           />
@@ -74,7 +77,10 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
         {/* Hover actions */}
         <div className="absolute inset-0 flex items-end justify-end gap-1.5 bg-gradient-to-t from-black/70 via-transparent to-transparent p-2.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
-            onClick={(e) => { e.stopPropagation(); addToQueue(track); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToQueue(track);
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-colors hover:bg-white/30"
           >
             <Plus className="h-4 w-4 text-white" />
@@ -82,7 +88,9 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
           <button
             onClick={() => playTrack(track)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-transform hover:scale-105 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.70 0.20 242))' }}
+            style={{
+              background: "linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.70 0.20 242))",
+            }}
           >
             <Play className="ml-0.5 h-4 w-4 fill-current" />
           </button>
@@ -95,7 +103,11 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
               <div
                 key={i}
                 className="w-[2px] rounded-full bg-[oklch(0.80_0.22_290)]"
-                style={{ animation: `loop-eq ${0.5 + i * 0.2}s ease-in-out ${i * 0.08}s infinite alternate`, minHeight: 3, maxHeight: 10 }}
+                style={{
+                  animation: `loop-eq ${0.5 + i * 0.2}s ease-in-out ${i * 0.08}s infinite alternate`,
+                  minHeight: 3,
+                  maxHeight: 10,
+                }}
               />
             ))}
           </div>
@@ -103,10 +115,7 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
       </div>
 
       <div className="mt-3">
-        <button
-          className="w-full text-left"
-          onClick={() => playTrack(track)}
-        >
+        <button className="w-full text-left" onClick={() => playTrack(track)}>
           <div className="truncate text-[13px] font-medium text-white/85 transition-colors group-hover:text-white">
             {track.title}
           </div>
@@ -131,15 +140,23 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
 
 // ─── Album Card ───────────────────────────────────────────────────
 
-function AlbumCard({ album, index = 0, onClick }: { album: any; index?: number; onClick: () => void }) {
+function AlbumCard({
+  album,
+  index = 0,
+  onClick,
+}: {
+  album: any;
+  index?: number;
+  onClick: () => void;
+}) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ rotateX: -80, opacity: 0, y: -40, transformPerspective: 1200 }}
       whileInView={{ rotateX: 0, opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-20px' }}
+      viewport={{ once: true, margin: "-20px" }}
       transition={{ duration: 0.8, type: "spring", bounce: 0.35, delay: index * 0.05 }}
       className="group relative w-48 shrink-0 select-none cursor-pointer"
-      style={{ transformStyle: 'preserve-3d' }}
+      style={{ transformStyle: "preserve-3d" }}
       onClick={onClick}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]">
@@ -151,8 +168,8 @@ function AlbumCard({ album, index = 0, onClick }: { album: any; index?: number; 
             loading="lazy"
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement;
-              if (target.src.includes('maxresdefault.jpg')) {
-                target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+              if (target.src.includes("maxresdefault.jpg")) {
+                target.src = target.src.replace("maxresdefault.jpg", "hqdefault.jpg");
               }
             }}
           />
@@ -165,10 +182,12 @@ function AlbumCard({ album, index = 0, onClick }: { album: any; index?: number; 
         {/* Hover actions */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2">
-             <div className="rounded-full bg-white/10 p-3 backdrop-blur-md">
-               <Play className="ml-1 h-6 w-6 text-white" />
-             </div>
-             <span className="text-xs font-semibold text-white tracking-widest uppercase">View Tracks</span>
+            <div className="rounded-full bg-white/10 p-3 backdrop-blur-md">
+              <Play className="ml-1 h-6 w-6 text-white" />
+            </div>
+            <span className="text-xs font-semibold text-white tracking-widest uppercase">
+              View Tracks
+            </span>
           </div>
         </div>
       </div>
@@ -196,8 +215,14 @@ function SkeletonRow() {
             className="aspect-square w-full animate-pulse rounded-xl bg-white/[0.04]"
             style={{ animationDelay: `${i * 60}ms` }}
           />
-          <div className="mt-3 h-3 w-3/4 animate-pulse rounded-full bg-white/[0.04]" style={{ animationDelay: `${i * 60}ms` }} />
-          <div className="mt-2 h-2.5 w-1/2 animate-pulse rounded-full bg-white/[0.04]" style={{ animationDelay: `${i * 60}ms` }} />
+          <div
+            className="mt-3 h-3 w-3/4 animate-pulse rounded-full bg-white/[0.04]"
+            style={{ animationDelay: `${i * 60}ms` }}
+          />
+          <div
+            className="mt-2 h-2.5 w-1/2 animate-pulse rounded-full bg-white/[0.04]"
+            style={{ animationDelay: `${i * 60}ms` }}
+          />
         </div>
       ))}
     </div>
@@ -206,8 +231,16 @@ function SkeletonRow() {
 
 // ─── Section row ──────────────────────────────────────────────────
 
-function SectionRow({ section, delay = 0, onAlbumClick }: { section: DiscoverySection; delay?: number; onAlbumClick: (album: any) => void }) {
-  const meta = SECTION_META[section.id] ?? { emoji: '○', sub: '' };
+function SectionRow({
+  section,
+  delay = 0,
+  onAlbumClick,
+}: {
+  section: DiscoverySection;
+  delay?: number;
+  onAlbumClick: (album: any) => void;
+}) {
+  const meta = SECTION_META[section.id] ?? { emoji: "○", sub: "" };
 
   return (
     <Reveal delay={delay}>
@@ -219,22 +252,25 @@ function SectionRow({ section, delay = 0, onAlbumClick }: { section: DiscoverySe
               <span className="font-mono text-[13px] text-white/30">{meta.emoji}</span>
               <h3 className="text-base font-semibold text-white/90">{section.title}</h3>
             </div>
-            {meta.sub && (
-              <p className="mt-0.5 pl-5 text-[11px] text-white/28">{meta.sub}</p>
-            )}
+            {meta.sub && <p className="mt-0.5 pl-5 text-[11px] text-white/28">{meta.sub}</p>}
           </div>
         </div>
 
         {/* Horizontal scroll */}
-        <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-4 pb-2">
-            {section.tracks.map((track, i) => (
-              (section.type === 'albums' || section.type === 'playlists') ? (
-                <AlbumCard key={track.id} album={track} index={i} onClick={() => onAlbumClick(track)} />
+            {section.tracks.map((track, i) =>
+              section.type === "albums" || section.type === "playlists" ? (
+                <AlbumCard
+                  key={track.id}
+                  album={track}
+                  index={i}
+                  onClick={() => onAlbumClick(track)}
+                />
               ) : (
                 <TrackCard key={track.id} track={track as Track} index={i} />
-              )
-            ))}
+              ),
+            )}
           </div>
         </div>
       </div>
@@ -250,7 +286,7 @@ function Divider() {
       className="h-px w-full"
       style={{
         background:
-          'linear-gradient(90deg, transparent, oklch(1 0 0 / 0.055) 20%, oklch(1 0 0 / 0.055) 80%, transparent)',
+          "linear-gradient(90deg, transparent, oklch(1 0 0 / 0.055) 20%, oklch(1 0 0 / 0.055) 80%, transparent)",
       }}
     />
   );
@@ -261,12 +297,22 @@ function Divider() {
 function GuestGate() {
   return (
     <Reveal>
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] p-8 sm:p-12 text-center"
-        style={{ background: 'linear-gradient(135deg, oklch(0.09 0.025 265 / 0.9), oklch(0.06 0.020 255 / 0.95))' }}
+      <div
+        className="relative overflow-hidden rounded-3xl border border-white/[0.07] p-8 sm:p-12 text-center"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.09 0.025 265 / 0.9), oklch(0.06 0.020 255 / 0.95))",
+        }}
       >
         {/* Ambient glow */}
-        <div className="absolute inset-0 -z-0 opacity-30" style={{ background: 'radial-gradient(ellipse at 50% 0%, oklch(0.65 0.22 290 / 0.4) 0%, transparent 70%)' }} />
-        
+        <div
+          className="absolute inset-0 -z-0 opacity-30"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 0%, oklch(0.65 0.22 290 / 0.4) 0%, transparent 70%)",
+          }}
+        />
+
         <div className="relative z-10">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]">
             <Lock className="h-7 w-7 text-white/60" />
@@ -278,7 +324,9 @@ function GuestGate() {
           <a
             href="/login"
             className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.65 0.21 244))' }}
+            style={{
+              background: "linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.65 0.21 244))",
+            }}
           >
             <LogIn className="h-4 w-4" />
             Log in to Loop
@@ -297,14 +345,13 @@ export function RecommendationFeed() {
   const { isLoggedIn, isLoading: authLoading } = useAuth();
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
 
-  const aiMixSection = sections.find(s => s.id === 'ai-mix');
-  const trendingSection = sections.find(s => s.id === 'chart-0');
-  const otherSections = sections.filter(s => s.id !== 'ai-mix' && s.id !== 'chart-0');
+  const aiMixSection = sections.find((s) => s.id === "ai-mix");
+  const trendingSection = sections.find((s) => s.id === "chart-0");
+  const otherSections = sections.filter((s) => s.id !== "ai-mix" && s.id !== "chart-0");
 
   return (
     <section id="discover" className="relative px-4 sm:px-6 py-16 sm:py-28">
       <div className="mx-auto max-w-6xl space-y-14 sm:space-y-20">
-
         {/* Header */}
         <Reveal>
           <div>
@@ -318,8 +365,8 @@ export function RecommendationFeed() {
             </h2>
             <p className="mt-3 text-[13px] text-white/28 font-normal max-w-md">
               {currentTrack
-                ? 'Tracks that share the same energy, texture, and late-night feel.'
-                : 'From underground selectors to cinematic drops — curated for your state of mind.'}
+                ? "Tracks that share the same energy, texture, and late-night feel."
+                : "From underground selectors to cinematic drops — curated for your state of mind."}
             </p>
           </div>
         </Reveal>
@@ -329,7 +376,7 @@ export function RecommendationFeed() {
 
         {/* Logged-in personalised sections */}
         {!authLoading && isLoggedIn && aiMixSection && <AIHeroMix section={aiMixSection as any} />}
-        
+
         {trendingSection && <TrendingNowHero section={trendingSection as any} />}
 
         {isLoggedIn && <DailyMix />}
@@ -354,9 +401,7 @@ export function RecommendationFeed() {
         {/* Empty state */}
         {!isLoading && hasLoaded && sections.length === 0 && (
           <div className="py-20 text-center">
-            <p className="text-sm text-white/25">
-              Search for a track to start discovering music
-            </p>
+            <p className="text-sm text-white/25">Search for a track to start discovering music</p>
           </div>
         )}
 
@@ -364,7 +409,7 @@ export function RecommendationFeed() {
         <AnimatePresence mode="wait">
           {otherSections.length > 0 && (
             <motion.div
-              key={currentTrack?.id ?? 'default'}
+              key={currentTrack?.id ?? "default"}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
@@ -373,18 +418,19 @@ export function RecommendationFeed() {
               {otherSections.map((section, i) => (
                 <div key={section.id}>
                   <SectionRow section={section} delay={i * 0.06} onAlbumClick={setSelectedAlbum} />
-                  {i < otherSections.length - 1 && <div className="mt-20"><Divider /></div>}
+                  {i < otherSections.length - 1 && (
+                    <div className="mt-20">
+                      <Divider />
+                    </div>
+                  )}
                 </div>
               ))}
             </motion.div>
           )}
         </AnimatePresence>
-
       </div>
-      
-      {selectedAlbum && (
-        <AlbumModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />
-      )}
+
+      {selectedAlbum && <AlbumModal album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
     </section>
   );
 }

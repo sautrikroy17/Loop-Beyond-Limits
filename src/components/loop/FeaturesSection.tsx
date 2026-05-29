@@ -54,12 +54,7 @@ export function FeaturesSection() {
   );
 }
 
-function FeatureCard({
-  title,
-  body,
-  icon: Icon,
-  glow,
-}: (typeof features)[number]) {
+function FeatureCard({ title, body, icon: Icon, glow }: (typeof features)[number]) {
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -98,8 +93,7 @@ function FeatureCard({
       <div
         className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl"
         style={{
-          background:
-            "linear-gradient(135deg, oklch(0.22 0.05 280), oklch(0.18 0.05 260))",
+          background: "linear-gradient(135deg, oklch(0.22 0.05 280), oklch(0.18 0.05 260))",
           boxShadow: `inset 0 0 0 1px oklch(1 0 0 / 0.08), 0 0 30px -10px ${glow}`,
         }}
       >
@@ -127,14 +121,25 @@ function SpatialIcon() {
 function SparkIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M12 3v6M12 15v6M3 12h6M15 12h6M6 6l4 4M14 14l4 4M18 6l-4 4M10 14l-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M12 3v6M12 15v6M3 12h6M15 12h6M6 6l4 4M14 14l4 4M18 6l-4 4M10 14l-4 4"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 function WaveIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path
+        d="M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   );
 }

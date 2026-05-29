@@ -1,13 +1,13 @@
 export function renderErrorPage(error?: unknown): string {
-  let errorHtml = '';
+  let errorHtml = "";
   if (error !== undefined && error !== null) {
     const message = error instanceof Error ? error.message : String(error);
-    const stack = error instanceof Error ? error.stack : '';
+    const stack = error instanceof Error ? error.stack : "";
     errorHtml = `
       <div class="error-details" style="text-align: left; margin-top: 1.5rem; background: #fff5f5; border: 1px solid #feb2b2; padding: 1rem; border-radius: 0.375rem; max-width: 100%; overflow-x: auto;">
         <h2 style="color: #c53030; font-size: 1rem; margin: 0 0 0.5rem; font-family: monospace;">SSR Render Error</h2>
         <div style="font-family: monospace; font-size: 0.875rem; color: #9b2c2c; white-space: pre-wrap; word-break: break-all;"><strong>Message:</strong> ${message}</div>
-        ${stack ? `<pre style="font-family: monospace; font-size: 0.75rem; color: #742a2a; margin: 0.5rem 0 0; white-space: pre-wrap; word-break: break-all; overflow-x: auto;">${stack}</pre>` : ''}
+        ${stack ? `<pre style="font-family: monospace; font-size: 0.75rem; color: #742a2a; margin: 0.5rem 0 0; white-space: pre-wrap; word-break: break-all; overflow-x: auto;">${stack}</pre>` : ""}
       </div>
     `;
   }

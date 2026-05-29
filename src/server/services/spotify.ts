@@ -2,9 +2,10 @@
 // and retrieves rich metadata for the Loop app.
 
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || import.meta.env?.VITE_SPOTIFY_CLIENT_ID;
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || import.meta.env?.VITE_SPOTIFY_CLIENT_SECRET;
+const SPOTIFY_CLIENT_SECRET =
+  process.env.SPOTIFY_CLIENT_SECRET || import.meta.env?.VITE_SPOTIFY_CLIENT_SECRET;
 
-let accessToken = '';
+let accessToken = "";
 let tokenExpiration = 0;
 
 /**
@@ -12,24 +13,26 @@ let tokenExpiration = 0;
  */
 async function getAccessToken() {
   if (accessToken && Date.now() < tokenExpiration) return accessToken;
-  
+
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error("Missing Spotify credentials");
   }
 
-  const credentials = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64');
-  const response = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
+  const credentials = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString(
+    "base64",
+  );
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${credentials}`
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${credentials}`,
     },
-    body: 'grant_type=client_credentials'
+    body: "grant_type=client_credentials",
   });
-  
+
   const data = await response.json();
   if (data.error) throw new Error(data.error_description);
-  
+
   accessToken = data.access_token;
   // Expire 1 minute early to be safe
   tokenExpiration = Date.now() + (data.expires_in - 60) * 1000;
@@ -41,9 +44,12 @@ async function getAccessToken() {
  */
 export async function searchSpotifyTracks(query: string, limit = 20) {
   const token = await getAccessToken();
-  const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  const res = await fetch(
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   return data.tracks?.items || [];
 }
@@ -54,7 +60,7 @@ export async function searchSpotifyTracks(query: string, limit = 20) {
 export async function getTrackDetails(trackId: string) {
   const token = await getAccessToken();
   const res = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
   return res.json();
 }
@@ -65,9 +71,12 @@ export async function getTrackDetails(trackId: string) {
  */
 export async function getRecommendations(seedTrackId: string, limit = 10) {
   const token = await getAccessToken();
-  const res = await fetch(`https://api.spotify.com/v1/recommendations?seed_tracks=${seedTrackId}&limit=${limit}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  const res = await fetch(
+    `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTrackId}&limit=${limit}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   return data.tracks || [];
 }

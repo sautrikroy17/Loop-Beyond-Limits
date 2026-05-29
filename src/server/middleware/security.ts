@@ -8,8 +8,8 @@
  */
 
 // ── Rate Limiter ─────────────────────────────────────────────────
-const WINDOW_MS  = 60_000; // 1 minute
-const MAX_CALLS  = 60;     // max requests per IP per window
+const WINDOW_MS = 60_000; // 1 minute
+const MAX_CALLS = 60; // max requests per IP per window
 
 interface WindowEntry {
   count: number;
@@ -41,15 +41,15 @@ export function checkRateLimit(key: string, maxCalls = MAX_CALLS): void {
 
   entry.count += 1;
   if (entry.count > maxCalls) {
-    throw Object.assign(new Error('Rate limit exceeded. Please slow down.'), { status: 429 });
+    throw Object.assign(new Error("Rate limit exceeded. Please slow down."), { status: 429 });
   }
 }
 
 // ── Input Sanitisation ───────────────────────────────────────────
 
 const CONTROL_CHAR_REGEX = /[\x00-\x1F\x7F]/g;
-const SCRIPT_TAG_REGEX   = /<\s*script[\s\S]*?>[\s\S]*?<\s*\/\s*script\s*>/gi;
-const HTML_TAG_REGEX     = /<[^>]*>/g;
+const SCRIPT_TAG_REGEX = /<\s*script[\s\S]*?>[\s\S]*?<\s*\/\s*script\s*>/gi;
+const HTML_TAG_REGEX = /<[^>]*>/g;
 
 /**
  * Sanitise a free-text search query:
@@ -59,11 +59,11 @@ const HTML_TAG_REGEX     = /<[^>]*>/g;
  * - Clamp to a safe maximum length
  */
 export function sanitiseQuery(raw: unknown, maxLength = 200): string {
-  if (raw === null || raw === undefined) return '';
+  if (raw === null || raw === undefined) return "";
   const str = String(raw)
-    .replace(SCRIPT_TAG_REGEX, '')
-    .replace(HTML_TAG_REGEX, '')
-    .replace(CONTROL_CHAR_REGEX, '')
+    .replace(SCRIPT_TAG_REGEX, "")
+    .replace(HTML_TAG_REGEX, "")
+    .replace(CONTROL_CHAR_REGEX, "")
     .trim()
     .slice(0, maxLength);
   return str;
@@ -74,11 +74,11 @@ export function sanitiseQuery(raw: unknown, maxLength = 200): string {
  * Rejects anything that looks like a path traversal or injection attempt.
  */
 export function sanitiseId(raw: unknown, maxLength = 64): string {
-  if (raw === null || raw === undefined) return '';
+  if (raw === null || raw === undefined) return "";
   const str = String(raw).trim().slice(0, maxLength);
   // Allow: letters, digits, hyphens, underscores — nothing else
   if (!/^[\w\-]+$/.test(str)) {
-    throw Object.assign(new Error('Invalid identifier format.'), { status: 400 });
+    throw Object.assign(new Error("Invalid identifier format."), { status: 400 });
   }
   return str;
 }
@@ -87,7 +87,7 @@ export function sanitiseId(raw: unknown, maxLength = 64): string {
  * Assert a value is a non-empty string within a length budget.
  */
 export function requireString(val: unknown, name: string, maxLength = 200): string {
-  if (typeof val !== 'string' || val.trim() === '') {
+  if (typeof val !== "string" || val.trim() === "") {
     throw Object.assign(new Error(`${name} must be a non-empty string.`), { status: 400 });
   }
   return val.trim().slice(0, maxLength);

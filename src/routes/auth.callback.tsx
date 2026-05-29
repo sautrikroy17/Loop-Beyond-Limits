@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
-export const Route = createFileRoute('/auth/callback')({
+export const Route = createFileRoute("/auth/callback")({
   component: AuthCallbackComponent,
 });
 
@@ -14,11 +14,11 @@ function AuthCallbackComponent() {
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
+      if (event === "SIGNED_IN") {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        navigate({ to: '/' });
+        navigate({ to: "/" });
       }
     });
 
@@ -28,7 +28,7 @@ function AuthCallbackComponent() {
         setSession(session);
         setUser(session.user);
         setLoading(false);
-        navigate({ to: '/' });
+        navigate({ to: "/" });
       }
     });
   }, [navigate]);

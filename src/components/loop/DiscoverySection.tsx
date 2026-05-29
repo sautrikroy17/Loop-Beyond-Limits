@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Plus, Loader2, Music2 } from 'lucide-react';
-import { usePlayback, type Track } from '@/hooks/usePlayback';
-import { hybridSearchFn } from '@/functions/search';
-import { Reveal } from './Reveal';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Play, Plus, Loader2, Music2 } from "lucide-react";
+import { usePlayback, type Track } from "@/hooks/usePlayback";
+import { hybridSearchFn } from "@/functions/search";
+import { Reveal } from "./Reveal";
 
 const GENRES = [
-  { label: 'Phonk',          query: 'phonk drift 2024' },
-  { label: 'Slowed + Reverb',query: 'slowed reverb trending' },
-  { label: 'Lofi',           query: 'lofi hip hop chill beats' },
-  { label: 'Rap',            query: 'rap 2024 top hits' },
-  { label: 'R&B',            query: 'rnb soul 2024' },
-  { label: 'Electronic',     query: 'electronic music 2024' },
-  { label: 'Indie',          query: 'indie alternative 2024' },
-  { label: 'Jazz',           query: 'jazz vibes nocturnal' },
-  { label: 'Trending',       query: 'trending songs 2024' },
+  { label: "Phonk", query: "phonk drift 2024" },
+  { label: "Slowed + Reverb", query: "slowed reverb trending" },
+  { label: "Lofi", query: "lofi hip hop chill beats" },
+  { label: "Rap", query: "rap 2024 top hits" },
+  { label: "R&B", query: "rnb soul 2024" },
+  { label: "Electronic", query: "electronic music 2024" },
+  { label: "Indie", query: "indie alternative 2024" },
+  { label: "Jazz", query: "jazz vibes nocturnal" },
+  { label: "Trending", query: "trending songs 2024" },
 ];
 
 // ─── Track Card ───────────────────────────────────────────────────
@@ -30,7 +30,10 @@ function TrackCard({ track }: { track: Track }) {
         className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]"
         style={
           isActive
-            ? { boxShadow: '0 0 0 1.5px oklch(0.72 0.23 290 / 0.7), 0 8px 32px -8px oklch(0.72 0.23 290 / 0.4)' }
+            ? {
+                boxShadow:
+                  "0 0 0 1.5px oklch(0.72 0.23 290 / 0.7), 0 8px 32px -8px oklch(0.72 0.23 290 / 0.4)",
+              }
             : {}
         }
       >
@@ -50,7 +53,10 @@ function TrackCard({ track }: { track: Track }) {
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-end justify-end gap-2 bg-gradient-to-t from-black/70 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
-            onClick={(e) => { e.stopPropagation(); addToQueue(track); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToQueue(track);
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-colors hover:bg-white/30"
           >
             <Plus className="h-4 w-4 text-white" />
@@ -58,7 +64,9 @@ function TrackCard({ track }: { track: Track }) {
           <button
             onClick={() => playTrack(track)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-transform hover:scale-105 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.70 0.20 242))' }}
+            style={{
+              background: "linear-gradient(135deg, oklch(0.72 0.23 290), oklch(0.70 0.20 242))",
+            }}
           >
             <Play className="ml-0.5 h-4 w-4 fill-current" />
           </button>
@@ -71,7 +79,11 @@ function TrackCard({ track }: { track: Track }) {
               <div
                 key={i}
                 className="w-[2px] rounded-full bg-[oklch(0.80_0.22_290)]"
-                style={{ animation: `loop-eq ${0.5 + i * 0.2}s ease-in-out ${i * 0.08}s infinite alternate`, minHeight: 3, maxHeight: 10 }}
+                style={{
+                  animation: `loop-eq ${0.5 + i * 0.2}s ease-in-out ${i * 0.08}s infinite alternate`,
+                  minHeight: 3,
+                  maxHeight: 10,
+                }}
               />
             ))}
           </div>
@@ -116,10 +128,16 @@ function TrackRow({ title, query, showDot }: { title: string; query: string; sho
     setLoading(true);
     setTracks([]);
     hybridSearchFn({ data: query })
-      .then((res) => { if (!cancelled) setTracks((res as Track[]).slice(0, 14)); })
+      .then((res) => {
+        if (!cancelled) setTracks((res as Track[]).slice(0, 14));
+      })
       .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [query]);
 
   return (
@@ -137,7 +155,7 @@ function TrackRow({ title, query, showDot }: { title: string; query: string; sho
       ) : tracks.length === 0 ? (
         <div className="py-4 text-sm text-white/20">No tracks found</div>
       ) : (
-        <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-4 pb-2">
             {tracks.map((track) => (
               <TrackCard key={track.id} track={track} />
@@ -155,7 +173,10 @@ function Divider() {
   return (
     <div
       className="h-px w-full"
-      style={{ background: 'linear-gradient(90deg, transparent, oklch(1 0 0 / 0.06) 20%, oklch(1 0 0 / 0.06) 80%, transparent)' }}
+      style={{
+        background:
+          "linear-gradient(90deg, transparent, oklch(1 0 0 / 0.06) 20%, oklch(1 0 0 / 0.06) 80%, transparent)",
+      }}
     />
   );
 }
@@ -169,7 +190,6 @@ export function DiscoverySection() {
   return (
     <section id="discover" className="relative px-6 py-28">
       <div className="mx-auto max-w-6xl space-y-20">
-
         {/* ── Header ── */}
         <Reveal>
           <div className="flex items-end justify-between">
@@ -203,14 +223,15 @@ export function DiscoverySection() {
                     style={
                       active
                         ? {
-                            background: 'linear-gradient(135deg, oklch(0.68 0.23 290), oklch(0.65 0.21 244))',
-                            color: 'white',
-                            boxShadow: '0 0 24px -4px oklch(0.68 0.23 290 / 0.55)',
+                            background:
+                              "linear-gradient(135deg, oklch(0.68 0.23 290), oklch(0.65 0.21 244))",
+                            color: "white",
+                            boxShadow: "0 0 24px -4px oklch(0.68 0.23 290 / 0.55)",
                           }
                         : {
-                            border: '1px solid oklch(1 0 0 / 0.08)',
-                            background: 'oklch(1 0 0 / 0.03)',
-                            color: 'oklch(1 0 0 / 0.42)',
+                            border: "1px solid oklch(1 0 0 / 0.08)",
+                            background: "oklch(1 0 0 / 0.03)",
+                            color: "oklch(1 0 0 / 0.42)",
                           }
                     }
                   >
@@ -263,7 +284,6 @@ export function DiscoverySection() {
             </motion.div>
           )}
         </AnimatePresence>
-
       </div>
     </section>
   );

@@ -28,18 +28,15 @@ export function VisualizationSection() {
         </Reveal>
         <Reveal delay={0.2}>
           <p className="mx-auto mt-6 max-w-xl text-muted-foreground">
-            Every track becomes a space. Light bends with the melody, layers
-            breathe with the rhythm, and the room moves with you.
+            Every track becomes a space. Light bends with the melody, layers breathe with the
+            rhythm, and the room moves with you.
           </p>
         </Reveal>
       </div>
 
       {/* Layered SVG wave system that bridges into the next section */}
       <div className="relative mt-20 h-[420px] w-full">
-        <motion.div
-          style={{ y: y1, rotate: rot }}
-          className="absolute inset-0"
-        >
+        <motion.div style={{ y: y1, rotate: rot }} className="absolute inset-0">
           <WaveLayer color="oklch(0.7 0.22 290 / 0.55)" amp={60} freq={0.6} dy={120} />
         </motion.div>
         <motion.div style={{ y: y2 }} className="absolute inset-0">
@@ -96,11 +93,7 @@ function WaveLayer({
   const d = `M0,${dy} L${points} L${w},420 L0,420 Z`;
   const path = `M0,200 L${points}`;
   return (
-    <svg
-      viewBox="0 0 1200 420"
-      preserveAspectRatio="none"
-      className="h-full w-full"
-    >
+    <svg viewBox="0 0 1200 420" preserveAspectRatio="none" className="h-full w-full">
       <defs>
         <linearGradient id={`g-${dy}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} />

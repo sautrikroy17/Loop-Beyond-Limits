@@ -13,17 +13,13 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 function formatDuration(ms?: number) {
   if (!ms) return "";
   const s = Math.floor(ms / 1000);
-  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 }
 
 const lyrics = [
@@ -35,16 +31,19 @@ const lyrics = [
 
 // ── Drag-and-drop queue item ───────────────────────────────────────
 
-function SortableQueueItem({ track, index, uniqueId }: { track: any; index: number; uniqueId: string }) {
+function SortableQueueItem({
+  track,
+  index,
+  uniqueId,
+}: {
+  track: any;
+  index: number;
+  uniqueId: string;
+}) {
   const { removeFromQueue } = usePlayback();
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: uniqueId });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: uniqueId,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -109,15 +108,21 @@ function SortableQueueItem({ track, index, uniqueId }: { track: any; index: numb
 
 export function PlayerSection() {
   const {
-    currentTrack, queue, isPlaying, isAutoplay,
-    isShuffle, repeatMode,
-    togglePlayPause, nextTrack, prevTrack, toggleShuffle, toggleRepeat,
+    currentTrack,
+    queue,
+    isPlaying,
+    isAutoplay,
+    isShuffle,
+    repeatMode,
+    togglePlayPause,
+    nextTrack,
+    prevTrack,
+    toggleShuffle,
+    toggleRepeat,
     reorderQueue,
   } = usePlayback();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   // Build stable unique IDs for sortable
   const sortableIds = queue.map((t, i) => `${t.id}-${i}`);
@@ -149,8 +154,10 @@ export function PlayerSection() {
         <Reveal>
           <div className="glass-strong relative overflow-hidden rounded-[2rem] p-6 shadow-[0_40px_120px_-30px_oklch(0_0_0_/_0.8),0_0_120px_-40px_oklch(0.7_0.22_290_/_0.4)] sm:p-10">
             {/* ambient glow inside player */}
-            <div className="pointer-events-none absolute -top-40 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2 rounded-full blur-[120px]"
-              style={{ background: "oklch(0.55 0.22 290 / 0.4)" }} />
+            <div
+              className="pointer-events-none absolute -top-40 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2 rounded-full blur-[120px]"
+              style={{ background: "oklch(0.55 0.22 290 / 0.4)" }}
+            />
 
             <div className="relative grid gap-10 lg:grid-cols-[1.1fr_1fr]">
               {/* album + waveform */}
@@ -163,7 +170,8 @@ export function PlayerSection() {
                   <div
                     className="absolute inset-0 rounded-[2rem] blur-2xl opacity-80"
                     style={{
-                      background: "conic-gradient(from 0deg, oklch(0.7 0.22 290), oklch(0.72 0.2 240), oklch(0.82 0.15 200), oklch(0.7 0.22 290))",
+                      background:
+                        "conic-gradient(from 0deg, oklch(0.7 0.22 290), oklch(0.72 0.2 240), oklch(0.82 0.15 200), oklch(0.7 0.22 290))",
                     }}
                   />
                   <AnimatePresence mode="popLayout">
@@ -200,10 +208,12 @@ export function PlayerSection() {
 
                 <div className="mt-6 flex items-center justify-between">
                   <Ctrl onClick={prevTrack}>⏮</Ctrl>
-                  <Ctrl onClick={toggleShuffle} active={isShuffle}>🔀</Ctrl>
+                  <Ctrl onClick={toggleShuffle} active={isShuffle}>
+                    🔀
+                  </Ctrl>
                   <PlayBtn isPlaying={isPlaying} onClick={togglePlayPause} />
-                  <Ctrl onClick={toggleRepeat} active={repeatMode !== 'none'}>
-                    {repeatMode === 'one' ? '🔂' : '🔁'}
+                  <Ctrl onClick={toggleRepeat} active={repeatMode !== "none"}>
+                    {repeatMode === "one" ? "🔂" : "🔁"}
                   </Ctrl>
                   <Ctrl onClick={nextTrack}>⏭</Ctrl>
                 </div>
@@ -222,7 +232,9 @@ export function PlayerSection() {
                         animate={{ opacity: i === 1 ? 1 : 0.35, x: i === 1 ? 6 : 0 }}
                         transition={{ duration: 0.8 }}
                         className={`font-display text-lg ${i === 1 ? "text-foreground" : "text-muted-foreground"}`}
-                        style={i === 1 ? { textShadow: "0 0 24px oklch(0.7 0.22 290 / 0.6)" } : undefined}
+                        style={
+                          i === 1 ? { textShadow: "0 0 24px oklch(0.7 0.22 290 / 0.6)" } : undefined
+                        }
                       >
                         {l}
                       </motion.div>
@@ -260,7 +272,10 @@ export function PlayerSection() {
                       onDragEnd={handleDragEnd}
                     >
                       <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-                        <div className="max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                        <div
+                          className="max-h-64 overflow-y-auto"
+                          style={{ scrollbarWidth: "none" }}
+                        >
                           {queue.slice(0, 20).map((track, i) => (
                             <SortableQueueItem
                               key={sortableIds[i]}
@@ -283,8 +298,21 @@ export function PlayerSection() {
   );
 }
 
-function Ctrl({ children, onClick, active }: { children: React.ReactNode; onClick?: () => void; active?: boolean }) {
-  const tactile = useTactileHover({ maxTilt: 8, spotlightStrength: 0.28, stiffness: 260, damping: 20 });
+function Ctrl({
+  children,
+  onClick,
+  active,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  active?: boolean;
+}) {
+  const tactile = useTactileHover({
+    maxTilt: 8,
+    spotlightStrength: 0.28,
+    stiffness: 260,
+    damping: 20,
+  });
   return (
     <motion.button
       onClick={onClick}
@@ -293,7 +321,7 @@ function Ctrl({ children, onClick, active }: { children: React.ReactNode; onClic
       whileHover={{ scale: 1.12, y: -3 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
-      className={`glass flex h-11 min-w-11 items-center justify-center rounded-full px-3 text-xs relative overflow-hidden transition-colors ${active ? 'text-white bg-white/10' : 'text-foreground/80'}`}
+      className={`glass flex h-11 min-w-11 items-center justify-center rounded-full px-3 text-xs relative overflow-hidden transition-colors ${active ? "text-white bg-white/10" : "text-foreground/80"}`}
     >
       <motion.span
         aria-hidden
@@ -306,13 +334,20 @@ function Ctrl({ children, onClick, active }: { children: React.ReactNode; onClic
 }
 
 function PlayBtn({ isPlaying, onClick }: { isPlaying?: boolean; onClick?: () => void }) {
-  const tactile = useTactileHover({ maxTilt: 9, spotlightStrength: 0.34, stiffness: 260, damping: 20 });
+  const tactile = useTactileHover({
+    maxTilt: 9,
+    spotlightStrength: 0.34,
+    stiffness: 260,
+    damping: 20,
+  });
   return (
     <motion.button
       onClick={onClick}
       {...tactile.bind}
       style={{
-        ...tactile.transformStyle, rotateX: tactile.rx, rotateY: tactile.ry,
+        ...tactile.transformStyle,
+        rotateX: tactile.rx,
+        rotateY: tactile.ry,
         background: "linear-gradient(135deg, oklch(0.78 0.22 290), oklch(0.72 0.2 240))",
         boxShadow: "0 0 60px -5px oklch(0.7 0.22 290 / 0.85)",
       }}
@@ -326,8 +361,12 @@ function PlayBtn({ isPlaying, onClick }: { isPlaying?: boolean; onClick?: () => 
         className="pointer-events-none absolute inset-0 -z-10 rounded-full"
         style={{ background: tactile.spotlightBg, opacity: tactile.spotlightOpacity }}
       />
-      <span className={isPlaying ? "text-xl text-primary-foreground" : "ml-1 text-xl text-primary-foreground"}>
-        {isPlaying ? '⏸' : '▶'}
+      <span
+        className={
+          isPlaying ? "text-xl text-primary-foreground" : "ml-1 text-xl text-primary-foreground"
+        }
+      >
+        {isPlaying ? "⏸" : "▶"}
       </span>
     </motion.button>
   );

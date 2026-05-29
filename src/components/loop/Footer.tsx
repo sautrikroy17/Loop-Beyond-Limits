@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { LoopLogoCanvas } from './LoopLogo';
+import { motion } from "framer-motion";
+import { LoopLogoCanvas } from "./LoopLogo";
 
 export function Footer() {
   return (
@@ -14,7 +14,7 @@ export function Footer() {
           className="mx-auto mb-14 h-px w-full origin-center"
           style={{
             background:
-              'linear-gradient(90deg, transparent, oklch(0.72 0.23 290 / 0.5), oklch(0.72 0.20 242 / 0.5), transparent)',
+              "linear-gradient(90deg, transparent, oklch(0.72 0.23 290 / 0.5), oklch(0.72 0.20 242 / 0.5), transparent)",
           }}
         />
 
@@ -26,10 +26,10 @@ export function Footer() {
               className="font-display text-[clamp(1.8rem,6vw,4rem)] font-semibold leading-none tracking-tight"
               style={{
                 background:
-                  'linear-gradient(135deg, oklch(0.90 0.08 290) 0%, oklch(0.60 0.06 290) 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                  "linear-gradient(135deg, oklch(0.90 0.08 290) 0%, oklch(0.60 0.06 290) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
             >
               LOOP
@@ -51,10 +51,19 @@ export function Footer() {
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-white/35 transition-all hover:border-white/14 hover:bg-white/[0.07] hover:text-white/70"
               aria-label="Instagram"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                <circle cx="12" cy="12" r="4"/>
-                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
               </svg>
             </a>
           </div>
@@ -65,8 +74,12 @@ export function Footer() {
               Created by Sautrik Roy ©
             </span>
             <div className="flex items-center gap-5 text-[11px]">
-              <a href="#" className="transition-colors hover:text-white/50">Privacy</a>
-              <a href="#" className="transition-colors hover:text-white/50">Terms</a>
+              <a href="#" className="transition-colors hover:text-white/50">
+                Privacy
+              </a>
+              <a href="#" className="transition-colors hover:text-white/50">
+                Terms
+              </a>
             </div>
           </div>
         </div>

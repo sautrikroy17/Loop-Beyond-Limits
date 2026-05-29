@@ -1,33 +1,34 @@
-import { useState, useEffect } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { AudioEngine } from '@/components/loop/player/AudioEngine';
-import { AmbientBackground } from '@/components/loop/AmbientBackground';
-import { ReactiveBackground } from '@/components/loop/visualizer/ReactiveBackground';
-import { TrackCanvas } from '@/components/loop/TrackCanvas';
-import { Navbar } from '@/components/loop/Navbar';
-import { Hero } from '@/components/loop/Hero';
-import { RecommendationFeed } from '@/components/loop/RecommendationFeed';
-import { Footer } from '@/components/loop/Footer';
-import { PlayerBar } from '@/components/loop/player/PlayerBar';
-import { FullPlayer } from '@/components/loop/player/FullPlayer';
-import { KaraokeMode } from '@/components/loop/KaraokeMode';
-import { SearchModal } from '@/components/loop/SearchModal';
-import { SettingsPanel } from '@/components/loop/SettingsPanel';
-import { ProfileModal } from '@/components/loop/ProfileModal';
-import { usePlayback } from '@/hooks/usePlayback';
-import { useAudioEngine } from '@/hooks/useAudioData';
-import { initProfileSync } from '@/hooks/useUserProfile';
-import { initSettings, useSettings } from '@/hooks/useSettings';
-import { initListeningIntelligence } from '@/hooks/useListeningIntelligence';
-import { PlaylistQuickAccess } from '@/components/loop/PlaylistQuickAccess';
+import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { AudioEngine } from "@/components/loop/player/AudioEngine";
+import { AmbientBackground } from "@/components/loop/AmbientBackground";
+import { ReactiveBackground } from "@/components/loop/visualizer/ReactiveBackground";
+import { TrackCanvas } from "@/components/loop/TrackCanvas";
+import { Navbar } from "@/components/loop/Navbar";
+import { Hero } from "@/components/loop/Hero";
+import { RecommendationFeed } from "@/components/loop/RecommendationFeed";
+import { Footer } from "@/components/loop/Footer";
+import { PlayerBar } from "@/components/loop/player/PlayerBar";
+import { FullPlayer } from "@/components/loop/player/FullPlayer";
+import { KaraokeMode } from "@/components/loop/KaraokeMode";
+import { SearchModal } from "@/components/loop/SearchModal";
+import { SettingsPanel } from "@/components/loop/SettingsPanel";
+import { ProfileModal } from "@/components/loop/ProfileModal";
+import { usePlayback } from "@/hooks/usePlayback";
+import { useAudioEngine } from "@/hooks/useAudioData";
+import { initProfileSync } from "@/hooks/useUserProfile";
+import { initSettings, useSettings } from "@/hooks/useSettings";
+import { initListeningIntelligence } from "@/hooks/useListeningIntelligence";
+import { PlaylistQuickAccess } from "@/components/loop/PlaylistQuickAccess";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: 'Loop — Beyond Limits' },
+      { title: "Loop — Beyond Limits" },
       {
-        name: 'description',
-        content: 'Search and stream any song. Synced lyrics, real playback, and algorithmic discovery.',
+        name: "description",
+        content:
+          "Search and stream any song. Synced lyrics, real playback, and algorithmic discovery.",
       },
     ],
   }),
@@ -40,12 +41,12 @@ initSettings();
 initListeningIntelligence();
 
 function Index() {
-  const [searchOpen,   setSearchOpen]   = useState(false);
-  const [playerOpen,   setPlayerOpen]   = useState(false);
-  const [karaokeOpen,  setKaraokeOpen]  = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [karaokeOpen, setKaraokeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [profileOpen,  setProfileOpen]  = useState(false);
-  const [libraryOpen,  setLibraryOpen]  = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const { currentTrack } = usePlayback();
 
@@ -56,18 +57,21 @@ function Index() {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); }
-      if (e.key.toLowerCase() === 'k' && !e.metaKey && !e.ctrlKey) setKaraokeOpen((o) => !o);
-      if (e.key.toLowerCase() === ',') setSettingsOpen((o) => !o);
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key.toLowerCase() === "k" && !e.metaKey && !e.ctrlKey) setKaraokeOpen((o) => !o);
+      if (e.key.toLowerCase() === ",") setSettingsOpen((o) => !o);
     };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, []);
 
-  const karaokeAutoOpen = useSettings(state => state.karaokeAutoOpen);
-  const sleepTimerTarget = useSettings(state => state.sleepTimerTarget);
-  const setSleepTimer = useSettings(state => state.setSleepTimer);
-  const pause = usePlayback(state => state.pause);
+  const karaokeAutoOpen = useSettings((state) => state.karaokeAutoOpen);
+  const sleepTimerTarget = useSettings((state) => state.sleepTimerTarget);
+  const setSleepTimer = useSettings((state) => state.setSleepTimer);
+  const pause = usePlayback((state) => state.pause);
 
   // ── Karaoke Auto-Open Engine ──
   useEffect(() => {
@@ -79,14 +83,14 @@ function Index() {
   // ── Sleep Timer Engine ──
   useEffect(() => {
     if (!sleepTimerTarget) return;
-    
+
     const interval = setInterval(() => {
       if (Date.now() >= sleepTimerTarget) {
         pause();
         setSleepTimer(null); // Reset timer
       }
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, [sleepTimerTarget, pause, setSleepTimer]);
 
@@ -112,17 +116,14 @@ function Index() {
       <PlaylistQuickAccess />
 
       {/* Page content — pb accounts for fixed player bar at bottom */}
-      <div className={currentTrack ? 'pb-28' : 'pb-0'}>
+      <div className={currentTrack ? "pb-28" : "pb-0"}>
         <Hero onSearchOpen={() => setSearchOpen(true)} />
         <RecommendationFeed />
         <Footer />
       </div>
 
       {/* ── Player layer ─────────────────────────────────────────── */}
-      <PlayerBar
-        onExpand={() => setPlayerOpen(true)}
-        onKaraoke={() => setKaraokeOpen(true)}
-      />
+      <PlayerBar onExpand={() => setPlayerOpen(true)} onKaraoke={() => setKaraokeOpen(true)} />
       <FullPlayer isOpen={playerOpen} onClose={() => setPlayerOpen(false)} />
 
       {/* ── Overlay layer ────────────────────────────────────────── */}

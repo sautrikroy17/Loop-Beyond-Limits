@@ -16,7 +16,7 @@
  *   "Love Story - Taylor's Version"  → "Love Story"
  */
 
-import { createServerFn } from '@tanstack/react-start';
+import { createServerFn } from "@tanstack/react-start";
 
 export interface LyricLine {
   time: number; // seconds
@@ -28,15 +28,18 @@ type LyricResult = { lines: LyricLine[]; plain: string | null };
 // ── Server-side LRU cache ──────────────────────────────────────────
 
 const _cache = new Map<string, { result: LyricResult; ts: number; negative: boolean }>();
-const CACHE_MAX      = 300;
-const CACHE_TTL      = 45 * 60 * 1000; // 45 min for positive results
-const CACHE_NEG_TTL  = 3  * 60 * 1000; //  3 min for negative (retry sooner)
+const CACHE_MAX = 300;
+const CACHE_TTL = 45 * 60 * 1000; // 45 min for positive results
+const CACHE_NEG_TTL = 3 * 60 * 1000; //  3 min for negative (retry sooner)
 
 function cacheGet(key: string): LyricResult | null {
   const entry = _cache.get(key);
   if (!entry) return null;
   const ttl = entry.negative ? CACHE_NEG_TTL : CACHE_TTL;
-  if (Date.now() - entry.ts > ttl) { _cache.delete(key); return null; }
+  if (Date.now() - entry.ts > ttl) {
+    _cache.delete(key);
+    return null;
+  }
   return entry.result;
 }
 
@@ -57,9 +60,9 @@ function parseLrc(lrc: string): LyricLine[] {
   const regex = /\[(\d{1,2}):(\d{2})[.:](\d{2,3})\]([^\[]*)/g;
   let match;
   while ((match = regex.exec(lrc)) !== null) {
-    const min  = parseInt(match[1], 10);
-    const sec  = parseInt(match[2], 10);
-    const frac = parseInt(match[3].padEnd(3, '0'), 10);
+    const min = parseInt(match[1], 10);
+    const sec = parseInt(match[2], 10);
+    const frac = parseInt(match[3].padEnd(3, "0"), 10);
     const time = min * 60 + sec + frac / 1000;
     const text = match[4].trim();
     if (text) lines.push({ time, text });
@@ -81,11 +84,14 @@ function parseLrc(lrc: string): LyricLine[] {
  */
 function sanitizeTitle(raw: string): string {
   return raw
-    .replace(/\(.*?\)/g, '')                                   // strip ALL (...)
-    .replace(/\[.*?\]/g, '')                                   // strip ALL [...]
-    .replace(/\s*[-–—]\s*(official|lyrics?|audio|video|hd|4k|live|remix|edit|cover|version|ft\.?|feat\.?|prod\.?|from\b|acoustic|slowed|reverb|sped\s*up|nightcore|extended).*/gi, '')
-    .replace(/\b(lyrics?|official|audio|video|hd|4k)\b/gi, '') // trailing noise words
-    .replace(/\s{2,}/g, ' ')
+    .replace(/\(.*?\)/g, "") // strip ALL (...)
+    .replace(/\[.*?\]/g, "") // strip ALL [...]
+    .replace(
+      /\s*[-–—]\s*(official|lyrics?|audio|video|hd|4k|live|remix|edit|cover|version|ft\.?|feat\.?|prod\.?|from\b|acoustic|slowed|reverb|sped\s*up|nightcore|extended).*/gi,
+      "",
+    )
+    .replace(/\b(lyrics?|official|audio|video|hd|4k)\b/gi, "") // trailing noise words
+    .replace(/\s{2,}/g, " ")
     .trim();
 }
 
@@ -97,32 +103,34 @@ function sanitizeTitle(raw: string): string {
  *  - Parenthetical content
  */
 function primaryArtist(raw: string): string {
-  return raw
-    // Split camelCase merged names (e.g. 'The WeekndJENNIE' -> 'The Weeknd JENNIE')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    // Remove duration patterns like "2:51" or "3:05:12"
-    .replace(/\b\d{1,2}:\d{2}(:\d{2})?\b/g, '')
-    // Remove feat./ft. and everything after
-    .replace(/\s*(feat\.?|ft\.?|x|with|and|&)\s+.*/i, '')
-    // Split on comma/semicolon, keep first segment
-    .split(/[,;]/)[0]
-    // Remove parenthetical content
-    .replace(/\s*\(.*?\)\s*/g, '')
-    .replace(/\s*\[.*?\]\s*/g, '')
-    // Remove isolated numbers / isolated capital words that look like album names
-    // (e.g., "Justice" after "Justin Bieber Justice")
-    // Strategy: keep only the first 2–3 words if the string is long
-    .split(/\s+/)
-    .filter(w => w.length > 0)
-    .slice(0, 3) // max 3 words for an artist name
-    .join(' ')
-    .trim();
+  return (
+    raw
+      // Split camelCase merged names (e.g. 'The WeekndJENNIE' -> 'The Weeknd JENNIE')
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      // Remove duration patterns like "2:51" or "3:05:12"
+      .replace(/\b\d{1,2}:\d{2}(:\d{2})?\b/g, "")
+      // Remove feat./ft. and everything after
+      .replace(/\s*(feat\.?|ft\.?|x|with|and|&)\s+.*/i, "")
+      // Split on comma/semicolon, keep first segment
+      .split(/[,;]/)[0]
+      // Remove parenthetical content
+      .replace(/\s*\(.*?\)\s*/g, "")
+      .replace(/\s*\[.*?\]\s*/g, "")
+      // Remove isolated numbers / isolated capital words that look like album names
+      // (e.g., "Justice" after "Justin Bieber Justice")
+      // Strategy: keep only the first 2–3 words if the string is long
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
+      .slice(0, 3) // max 3 words for an artist name
+      .join(" ")
+      .trim()
+  );
 }
 
 // ── Similarity scorer (trigram-based) ─────────────────────────────
 
 function trigrams(s: string): Set<string> {
-  const n = s.toLowerCase().replace(/\s+/g, ' ');
+  const n = s.toLowerCase().replace(/\s+/g, " ");
   const g = new Set<string>();
   for (let i = 0; i < n.length - 2; i++) g.add(n.slice(i, i + 3));
   return g;
@@ -139,12 +147,12 @@ function similarity(a: string, b: string): number {
 
 // ── HTTP helpers ──────────────────────────────────────────────────
 
-const LRCLIB_HEADERS = { 'Lrclib-Client': 'Loop/2.0 (https://loop.fm)' };
+const LRCLIB_HEADERS = { "Lrclib-Client": "Loop/2.0 (https://loop.fm)" };
 const TIMEOUT = 1500; // ms — strict timeout to prevent cascade hangs
 
 async function lrclibGet(title: string, artist: string, duration?: number): Promise<any> {
   const p = new URLSearchParams({ track_name: title, artist_name: artist });
-  if (duration) p.set('duration', String(Math.round(duration)));
+  if (duration) p.set("duration", String(Math.round(duration)));
   const res = await fetch(`https://lrclib.net/api/get?${p}`, {
     headers: LRCLIB_HEADERS,
     signal: AbortSignal.timeout(TIMEOUT),
@@ -154,10 +162,10 @@ async function lrclibGet(title: string, artist: string, duration?: number): Prom
 }
 
 async function lrclibSearch(q: string): Promise<any[]> {
-  const res = await fetch(
-    `https://lrclib.net/api/search?q=${encodeURIComponent(q)}`,
-    { headers: LRCLIB_HEADERS, signal: AbortSignal.timeout(TIMEOUT) }
-  );
+  const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(q)}`, {
+    headers: LRCLIB_HEADERS,
+    signal: AbortSignal.timeout(TIMEOUT),
+  });
   if (!res.ok) return [];
   const data = await res.json().catch(() => []);
   return Array.isArray(data) ? data : [];
@@ -177,11 +185,11 @@ async function lrclibSearchByFields(title: string, artist: string): Promise<any[
 async function fetchOvhLyrics(artist: string, title: string): Promise<string | null> {
   const res = await fetch(
     `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`,
-    { signal: AbortSignal.timeout(TIMEOUT) }
+    { signal: AbortSignal.timeout(TIMEOUT) },
   );
   if (!res.ok) return null;
   const json = await res.json().catch(() => null);
-  return typeof json?.lyrics === 'string' && json.lyrics.trim() ? json.lyrics : null;
+  return typeof json?.lyrics === "string" && json.lyrics.trim() ? json.lyrics : null;
 }
 
 async function fetchChartLyrics(artist: string, title: string): Promise<string | null> {
@@ -192,7 +200,9 @@ async function fetchChartLyrics(artist: string, title: string): Promise<string |
     const xml = await res.text();
     const m = xml.match(/<Lyric>([\s\S]*?)<\/Lyric>/);
     return m?.[1]?.trim() || null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 // ── Helpers to extract a clean result from an lrclib item ──────────
@@ -210,20 +220,22 @@ function extractItem(item: any): LyricResult | null {
 /** Pick the best-matching item from a search result array */
 function pickBest(items: any[], targetTitle: string, targetArtist: string): LyricResult | null {
   const tArtistLower = targetArtist.toLowerCase();
-  
+
   const scored = items
     .map((item) => {
-      const itemTitle = (item.trackName ?? '').toLowerCase();
-      const itemArtist = (item.artistName ?? '').toLowerCase();
-      
+      const itemTitle = (item.trackName ?? "").toLowerCase();
+      const itemArtist = (item.artistName ?? "").toLowerCase();
+
       const titleScore = similarity(itemTitle, targetTitle.toLowerCase());
-      
+
       // Much more forgiving artist score: if any word matches, it's a huge boost
       let artistScore = similarity(itemArtist, tArtistLower);
-      const tWords = tArtistLower.split(/[\s,;&]+/).filter(w => w.length > 2);
-      const iWords = itemArtist.split(/[\s,;&]+/).filter(w => w.length > 2);
-      
-      const sharesWord = tWords.some(tw => iWords.some(iw => tw.includes(iw) || iw.includes(tw)));
+      const tWords = tArtistLower.split(/[\s,;&]+/).filter((w) => w.length > 2);
+      const iWords = itemArtist.split(/[\s,;&]+/).filter((w) => w.length > 2);
+
+      const sharesWord = tWords.some((tw) =>
+        iWords.some((iw) => tw.includes(iw) || iw.includes(tw)),
+      );
       if (sharesWord) artistScore = Math.max(artistScore, 0.8);
 
       return {
@@ -243,14 +255,14 @@ function pickBest(items: any[], targetTitle: string, targetArtist: string): Lyri
 
 // ── Main server function ───────────────────────────────────────────
 
-export const getLyricsFn = createServerFn({ method: 'GET' })
+export const getLyricsFn = createServerFn({ method: "GET" })
   .inputValidator((data: { title: string; artist: string; duration?: number }) => data)
   .handler(async ({ data }): Promise<LyricResult> => {
-    const rawTitle  = data.title;
+    const rawTitle = data.title;
     const rawArtist = data.artist;
-    const dur       = data.duration;
+    const dur = data.duration;
 
-    const cleanTitle  = sanitizeTitle(rawTitle);
+    const cleanTitle = sanitizeTitle(rawTitle);
     const cleanArtist = primaryArtist(rawArtist);
 
     // Cache key: v2 busts the cache for failed mobile requests
@@ -259,7 +271,10 @@ export const getLyricsFn = createServerFn({ method: 'GET' })
     if (cached) return cached;
 
     // Helper: store and return
-    const finish = (r: LyricResult): LyricResult => { cacheSet(cacheKey, r); return r; };
+    const finish = (r: LyricResult): LyricResult => {
+      cacheSet(cacheKey, r);
+      return r;
+    };
     const EMPTY: LyricResult = { lines: [], plain: null };
 
     // ── Fast path: exact /get with raw values ──────────────────────
@@ -267,14 +282,18 @@ export const getLyricsFn = createServerFn({ method: 'GET' })
       const j = await lrclibGet(rawTitle, rawArtist, dur);
       const r = extractItem(j);
       if (r) return finish(r);
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     // ── Exact /get with sanitized values ──────────────────────────
     try {
       const j = await lrclibGet(cleanTitle, cleanArtist, dur);
       const r = extractItem(j);
       if (r) return finish(r);
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     // ── Parallel search: 3 query variants + field search ──────────
     try {
@@ -286,26 +305,30 @@ export const getLyricsFn = createServerFn({ method: 'GET' })
       ];
       const results = await Promise.allSettled(variants);
       // Merge all result arrays
-      const allItems = results.flatMap((r) =>
-        r.status === 'fulfilled' ? r.value : []
-      );
+      const allItems = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
       if (allItems.length > 0) {
         const r = pickBest(allItems, cleanTitle, cleanArtist);
         if (r) return finish(r);
       }
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     // ── lyrics.ovh plain fallback ──────────────────────────────────
     try {
       const plain = await fetchOvhLyrics(cleanArtist, cleanTitle);
       if (plain) return finish({ lines: [], plain });
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     // ── chartlyrics.com XML fallback ───────────────────────────────
     try {
       const plain = await fetchChartLyrics(cleanArtist, cleanTitle);
       if (plain) return finish({ lines: [], plain });
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     // All sources exhausted — negative cache with short TTL so user can retry
     cacheSet(cacheKey, EMPTY, /* negative= */ true);

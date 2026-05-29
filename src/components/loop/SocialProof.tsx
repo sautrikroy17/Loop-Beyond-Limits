@@ -4,12 +4,36 @@ import { SectionShell } from "./SectionShell";
 import { useTactileHover } from "@/hooks/useTactileHover";
 
 const testimonials = [
-  { name: "Maya R.", role: "Producer · Berlin", quote: "Loop doesn't play music — it stages it. I hear every layer." },
-  { name: "Kenji A.", role: "DJ · Tokyo", quote: "The interface moves like sound. It feels emotional, not technical." },
-  { name: "Ava L.", role: "Listener · NYC", quote: "I forgot I was using an app. I was just inside the song." },
-  { name: "Theo M.", role: "Artist · Lagos", quote: "Spatial mixes feel alive. Loop made my own tracks new again." },
-  { name: "Sora K.", role: "Composer · Seoul", quote: "Discovery that finally understands texture, not just genre." },
-  { name: "Iris D.", role: "Curator · Paris", quote: "The most cinematic listening experience on any device." },
+  {
+    name: "Maya R.",
+    role: "Producer · Berlin",
+    quote: "Loop doesn't play music — it stages it. I hear every layer.",
+  },
+  {
+    name: "Kenji A.",
+    role: "DJ · Tokyo",
+    quote: "The interface moves like sound. It feels emotional, not technical.",
+  },
+  {
+    name: "Ava L.",
+    role: "Listener · NYC",
+    quote: "I forgot I was using an app. I was just inside the song.",
+  },
+  {
+    name: "Theo M.",
+    role: "Artist · Lagos",
+    quote: "Spatial mixes feel alive. Loop made my own tracks new again.",
+  },
+  {
+    name: "Sora K.",
+    role: "Composer · Seoul",
+    quote: "Discovery that finally understands texture, not just genre.",
+  },
+  {
+    name: "Iris D.",
+    role: "Curator · Paris",
+    quote: "The most cinematic listening experience on any device.",
+  },
 ];
 
 const stats = [
@@ -40,9 +64,7 @@ export function SocialProof() {
           <div className="glass mb-16 grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/5 md:grid-cols-4">
             {stats.map((s) => (
               <div key={s.l} className="bg-background/60 p-8 text-center">
-                <div className="text-gradient font-display text-4xl font-semibold">
-                  {s.v}
-                </div>
+                <div className="text-gradient font-display text-4xl font-semibold">{s.v}</div>
                 <div className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
                   {s.l}
                 </div>
@@ -70,13 +92,7 @@ export function SocialProof() {
   );
 }
 
-function TestimonialCard({
-  t,
-  i,
-}: {
-  t: (typeof testimonials)[number];
-  i: number;
-}) {
+function TestimonialCard({ t, i }: { t: (typeof testimonials)[number]; i: number }) {
   const tactile = useTactileHover({
     maxTilt: 7,
     spotlightStrength: 0.28,
@@ -104,9 +120,7 @@ function TestimonialCard({
           opacity: tactile.spotlightOpacity,
         }}
       />
-      <div className="text-sm leading-relaxed text-foreground/90">
-        "{t.quote}"
-      </div>
+      <div className="text-sm leading-relaxed text-foreground/90">"{t.quote}"</div>
       <div className="mt-5 flex items-center gap-3">
         <div
           className="h-9 w-9 rounded-full"

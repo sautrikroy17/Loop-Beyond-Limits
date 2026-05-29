@@ -1,10 +1,5 @@
 import { useMemo } from "react";
-import {
-  useMotionTemplate,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { useMotionTemplate, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 const defaultEase = [0.16, 1, 0.3, 1] as const;
 
@@ -26,14 +21,8 @@ export function useTactileHover({
 
   const hoverSpring = useSpring(hover, { stiffness, damping });
 
-  const rx = useSpring(
-    useTransform(py, [0, 100], [maxTilt, -maxTilt]),
-    { stiffness, damping },
-  );
-  const ry = useSpring(
-    useTransform(px, [0, 100], [-maxTilt, maxTilt]),
-    { stiffness, damping },
-  );
+  const rx = useSpring(useTransform(py, [0, 100], [maxTilt, -maxTilt]), { stiffness, damping });
+  const ry = useSpring(useTransform(px, [0, 100], [-maxTilt, maxTilt]), { stiffness, damping });
 
   const spotlightOpacity = useTransform(hoverSpring, [0, 1], [0, 1]);
 
@@ -78,4 +67,3 @@ export function useTactileHover({
     transition: { type: "spring", stiffness, damping, ease: defaultEase },
   };
 }
-

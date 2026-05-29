@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { supabase } from '@/lib/supabase/client';
-import type { Session, User } from '@supabase/supabase-js';
+import { create } from "zustand";
+import { supabase } from "@/lib/supabase/client";
+import type { Session, User } from "@supabase/supabase-js";
 
 interface AuthState {
   user: User | null;
@@ -33,18 +33,17 @@ export const initAuthListener = () => {
 
     if (session?.user) {
       // Load profile (avatar, display name)
-      import('./useUserProfile').then(({ useUserProfile }) => {
-        useUserProfile.getState().loadFromCloud(
-          session.user.id,
-          session.user.user_metadata?.avatar_url,
-        );
+      import("./useUserProfile").then(({ useUserProfile }) => {
+        useUserProfile
+          .getState()
+          .loadFromCloud(session.user.id, session.user.user_metadata?.avatar_url);
       });
       // Load listening intelligence
-      import('@/functions/profile').then(({ loadProfileFn }) => {
+      import("@/functions/profile").then(({ loadProfileFn }) => {
         loadProfileFn();
       });
       // Restore last played track from cloud (runs once, idempotent)
-      import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
+      import("@/lib/supabase/playbackSync").then(({ initPlaybackSync }) => {
         initPlaybackSync(session.user.id);
       });
     }
@@ -57,27 +56,26 @@ export const initAuthListener = () => {
     setUser(session?.user ?? null);
     setLoading(false);
 
-    if (event === 'SIGNED_IN' && session?.user) {
-      import('./useUserProfile').then(({ useUserProfile }) => {
-        useUserProfile.getState().loadFromCloud(
-          session.user.id,
-          session.user.user_metadata?.avatar_url,
-        );
+    if (event === "SIGNED_IN" && session?.user) {
+      import("./useUserProfile").then(({ useUserProfile }) => {
+        useUserProfile
+          .getState()
+          .loadFromCloud(session.user.id, session.user.user_metadata?.avatar_url);
       });
-      import('@/functions/profile').then(({ loadProfileFn }) => {
+      import("@/functions/profile").then(({ loadProfileFn }) => {
         loadProfileFn();
       });
-      import('@/lib/supabase/playbackSync').then(({ initPlaybackSync }) => {
+      import("@/lib/supabase/playbackSync").then(({ initPlaybackSync }) => {
         initPlaybackSync(session.user.id);
       });
     }
 
-    if (event === 'SIGNED_OUT') {
+    if (event === "SIGNED_OUT") {
       // Clear local data so next user starts fresh
-      import('./useUserProfile').then(({ useUserProfile }) => {
+      import("./useUserProfile").then(({ useUserProfile }) => {
         useUserProfile.getState().clearLocalData();
       });
-      import('@/lib/supabase/playbackSync').then(({ stopPlaybackSync }) => {
+      import("@/lib/supabase/playbackSync").then(({ stopPlaybackSync }) => {
         stopPlaybackSync();
       });
     }
