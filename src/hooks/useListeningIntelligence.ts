@@ -91,10 +91,24 @@ const GENRE_PATTERNS: [RegExp, string][] = [
   [/\b(pop|viral)\b/i, "Viral Insta"],
 ];
 
+const MOOD_PATTERNS: [RegExp, string][] = [
+  [/chill|relax|peace|calm|breeze|sunset/i, "Chill Vibes"],
+  [/workout|gym|pump|energy|hype/i, "High Energy"],
+  [/sad|cry|tears|broken|alone|lonely/i, "Midnight Melancholy"],
+  [/love|heart|romance|forever/i, "Romantic Soul"],
+  [/dance|club|party|groove/i, "Party Starter"],
+];
+
 export function inferGenres(title: string, artist: string): string[] {
   const s = `${title} ${artist}`;
-  const found = GENRE_PATTERNS.filter(([re]) => re.test(s)).map(([, g]) => g);
-  return found.length > 0 ? found : ["Viral Insta"];
+  let found = GENRE_PATTERNS.filter(([re]) => re.test(s)).map(([, g]) => g);
+  
+  if (found.length === 0) {
+    // Backup plan: try to guess mood from track title
+    found = MOOD_PATTERNS.filter(([re]) => re.test(title)).map(([, g]) => g);
+  }
+  
+  return found.length > 0 ? found : ["Sonic Explorer"];
 }
 
 // ── Zustand store ─────────────────────────────────────────────────
@@ -396,6 +410,15 @@ export const useListeningIntelligence = create<IntelligenceState>()(
         if (genreBase === "Global Pop") return "Pop Icon";
         if (genreBase === "K-Pop Energy") return "K-Pop Stan";
         if (genreBase === "Afro Beats") return "Afro Beats Vibe";
+        
+        // Backup moods
+        if (genreBase === "Sonic Explorer") return "Uncharted Vibes";
+        if (genreBase === "Chill Vibes") return "Chill Seeker";
+        if (genreBase === "High Energy") return "Adrenaline Junkie";
+        if (genreBase === "Midnight Melancholy") return "Midnight Thinker";
+        if (genreBase === "Romantic Soul") return "Hopeless Romantic";
+        if (genreBase === "Party Starter") return "Life of the Party";
+
         if (isHighSkip) return `${genreBase} Explorer`;
         if (isHighRepeat) return `${genreBase} Addict`;
 
