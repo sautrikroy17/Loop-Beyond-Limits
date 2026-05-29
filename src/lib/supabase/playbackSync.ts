@@ -82,43 +82,39 @@ export function stopPlaybackSync() {
 // ── Incoming ──────────────────────────────────────────────────────
 
 function handleRemoteEvent(data: PlaybackSyncEvent) {
-  isApplyingSync = true;
-
   if (data.type === "SYNC_REQUEST") {
-    // Another device woke up. If we are playing, tell them what's playing.
+    // Another device woke up. If we are playing or have a track, tell them our state.
     const state = usePlayback.getState();
-    if (state.isPlaying && state.currentTrack) {
-      broadcastEvent({ type: "SYNC_STATE" });
+    if (state.currentTrack) {
+      // Force broadcast bypassing the lock
+      _forceBroadcast({ type: "SYNC_STATE" });
     }
   } else if (data.type === "SYNC_STATE") {
+    isApplyingSync = true;
     usePlayback.setState((state) => {
       const isNewTrack = state.currentTrack?.id !== data.track?.id;
 
       return {
         currentTrack: data.track ?? state.currentTrack,
         queue: data.queue || state.queue,
-        // Only force progress if it's a new track to avoid jumping
         progress: isNewTrack ? data.progress || 0 : state.progress,
-        // If the OTHER device is playing, we MUST pause to prevent double-audio
         isPlaying: data.isPlaying ? false : state.isPlaying,
         youtubePlayerReady: isNewTrack ? false : state.youtubePlayerReady,
       };
     });
-  }
 
-  // Ensure Zustand listeners that fire synchronously have time to run before unblocking
-  setTimeout(() => {
-    isApplyingSync = false;
-  }, 100);
+    // Ensure Zustand listeners that fire synchronously have time to run before unblocking
+    setTimeout(() => {
+      isApplyingSync = false;
+    }, 100);
+  }
 }
 
 // ── Outgoing ──────────────────────────────────────────────────────
 
-export function broadcastEvent(eventOverride: Partial<PlaybackSyncEvent>) {
-  if (!syncChannel || isApplyingSync) return;
-
+function _forceBroadcast(eventOverride: Partial<PlaybackSyncEvent>) {
+  if (!syncChannel) return;
   const state = usePlayback.getState();
-
   const event: PlaybackSyncEvent = {
     type: "SYNC_STATE",
     deviceId: localDeviceId,
@@ -128,12 +124,11 @@ export function broadcastEvent(eventOverride: Partial<PlaybackSyncEvent>) {
     isPlaying: state.isPlaying,
     ...eventOverride,
   };
-
-  syncChannel
-    .send({
-      type: "broadcast",
-      event: "playback-update",
-      payload: event,
-    })
-    .catch(console.error);
+  syncChannel.send({ type: "broadcast", event: "playback-update", payload: event }).catch(console.error);
 }
+
+export function broadcastEvent(eventOverride: Partial<PlaybackSyncEvent>) {
+  if (!syncChannel || isApplyingSync) return;
+  _forceBroadcast(eventOverride);
+}
+
