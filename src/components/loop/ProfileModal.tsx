@@ -598,30 +598,69 @@ function PlaylistEditor({ playlistId, onBack }: { playlistId: string; onBack: ()
   );
 }
 
-// ── Profile Tab ───────────────────────────────────────────────────
-
 function ProfileTab({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
   const { recentlyPlayed, customAvatarUrl, setCustomAvatarUrl } = useUserProfile();
   const { playTrack } = usePlayback();
-  const { getTopGenres, getTasteIdentity } = useListeningIntelligence();
+  const { events, getTopGenres, getTasteIdentity } = useListeningIntelligence();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  // ── Stats derived from synced recentlyPlayed ──────────────────────
-  // Top Artists: count occurrences across recently played
-  const artistCounts = recentlyPlayed.reduce((acc, t) => {
-    if (t.artist) acc[t.artist] = (acc[t.artist] || 0) + 1;
+  // ── Top Tracks: ranked by play count from intelligence events ──────
+  const trackPlayCounts = events.reduce((acc, e) => {
+    const key = e.trackId;
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  const topArtists = Object.entries(artistCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => name);
 
-  // Top Tracks: most recently played (deduplicated, LIFO order)
-  const topTracks = recentlyPlayed.slice(0, 5);
-  // Use the advanced AI intelligence engine for real taste profiling
+  // Build a map of trackId → full Track object from recentlyPlayed
+  const trackMap = recentlyPlayed.reduce((acc, t) => {
+    if (!acc[t.id]) acc[t.id] = t;
+    return acc;
+  }, {} as Record<string, typeof recentlyPlayed[0]>);
+
+  // Sort by play count, fall back to recently played order
+  const topTracks = Object.keys(trackPlayCounts).length > 0
+    ? Object.entries(trackPlayCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([id]) => trackMap[id])
+        .filter(Boolean)
+    : recentlyPlayed.slice(0, 5);
+
+  // ── Top Artists: ranked by play count, with cover art from their most played track ─
+  const artistData: Record<string, { count: number; coverArt?: string; displayName: string }> = {};
+  for (const e of events) {
+    const key = e.artist.split(/[,&]/)[0].trim().toLowerCase();
+    const displayName = e.artist.split(/[,&]/)[0].trim();
+    if (!artistData[key]) {
+      artistData[key] = { count: 0, displayName };
+    }
+    artistData[key].count += 1;
+    // Grab cover art from the matching track in recentlyPlayed
+    if (!artistData[key].coverArt) {
+      const match = recentlyPlayed.find(
+        t => t.artist.toLowerCase().startsWith(key) && t.albumArt
+      );
+      if (match) artistData[key].coverArt = match.albumArt;
+    }
+  }
+
+  // If no intelligence events yet, fall back to recentlyPlayed artist counting
+  if (Object.keys(artistData).length === 0) {
+    for (const t of recentlyPlayed) {
+      const key = t.artist.split(/[,&]/)[0].trim().toLowerCase();
+      const displayName = t.artist.split(/[,&]/)[0].trim();
+      if (!artistData[key]) artistData[key] = { count: 0, displayName, coverArt: t.albumArt };
+      artistData[key].count += 1;
+    }
+  }
+
+  const topArtists = Object.entries(artistData)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5)
+    .map(([, data]) => data);
+
   const topGenre = getTopGenres(1)[0] || 'Unknown';
   const vibe = getTasteIdentity() || '🎵 Balanced';
 
@@ -636,7 +675,6 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
     setUploading(true);
     try {
       // Compress image using canvas → max 240×240px JPEG at 80% quality
-      // Keeps file size ~20-50KB, safe for Postgres text column
       const compressed = await compressImageToBase64(file, 240, 0.80);
 
       // Save to user_profiles table (syncs across all browsers)
@@ -730,13 +768,30 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
       {topArtists.length > 0 && (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-4">
           <div className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-3">Top Artists</div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {topArtists.map((artist, i) => (
-              <div key={artist} className="flex items-center gap-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: `linear-gradient(135deg, oklch(0.72 0.26 ${248 + i * 15}), oklch(0.68 0.24 ${286 + i * 10}))` }}>
-                  {i + 1}
+              <div key={artist.displayName} className="flex items-center gap-3">
+                {/* Artist cover art — album art from their most played track */}
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
+                  {artist.coverArt ? (
+                    <img src={artist.coverArt} alt={artist.displayName} className="h-full w-full object-cover" />
+                  ) : (
+                    <div
+                      className="flex h-full w-full items-center justify-center text-[11px] font-bold text-white"
+                      style={{ background: `linear-gradient(135deg, oklch(0.72 0.26 ${248 + i * 15}), oklch(0.68 0.24 ${286 + i * 10}))` }}
+                    >
+                      {artist.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {/* Rank badge */}
+                  <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-black/40 bg-black/70 text-[8px] font-black text-white">
+                    {i + 1}
+                  </div>
                 </div>
-                <span className="text-[13px] text-white/75 capitalize">{artist}</span>
+                <div>
+                  <div className="text-[13px] font-semibold text-white/85">{artist.displayName}</div>
+                  <div className="text-[10px] text-white/35">{artist.count} {artist.count === 1 ? 'play' : 'plays'}</div>
+                </div>
               </div>
             ))}
           </div>

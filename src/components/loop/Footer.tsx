@@ -44,17 +44,19 @@ export function Footer() {
 
           {/* Social links */}
           <div className="flex items-center gap-3">
-            {[{name: 'IG', url: 'https://www.instagram.com/__krishh17__/'}].map((s) => (
-              <a
-                key={s.name}
-                href={s.url}
-                target={s.url !== '#' ? '_blank' : undefined}
-                rel={s.url !== '#' ? 'noopener noreferrer' : undefined}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-[11px] font-medium tracking-wide text-white/35 transition-all hover:border-white/14 hover:bg-white/[0.07] hover:text-white/70"
-              >
-                {s.name}
-              </a>
-            ))}
+            <a
+              href="https://www.instagram.com/__krishh17__/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-white/35 transition-all hover:border-white/14 hover:bg-white/[0.07] hover:text-white/70"
+              aria-label="Instagram"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+            </a>
           </div>
 
           {/* Legal */}
