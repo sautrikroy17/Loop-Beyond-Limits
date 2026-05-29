@@ -1,41 +1,48 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart } from 'lucide-react';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useAuth } from '@/hooks/useAuth';
-import type { Track } from '@/hooks/usePlayback';
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart } from "lucide-react";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useListeningIntelligence } from "@/hooks/useListeningIntelligence";
+import { useAuth } from "@/hooks/useAuth";
+import type { Track } from "@/hooks/usePlayback";
 
 interface Props {
   track: Track;
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
   className?: string;
 }
 
-export function LikeButton({ track, size = 'sm', className = '' }: Props) {
+export function LikeButton({ track, size = "sm", className = "" }: Props) {
   const { likedTrackIds, likeTrack, unlikeTrack } = useUserProfile();
+  const { markLiked } = useListeningIntelligence();
   const { user } = useAuth();
   const liked = likedTrackIds.includes(track.id);
-  const iconSize = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
+  const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
 
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
-        liked ? unlikeTrack(track.id, user?.id) : likeTrack(track, user?.id);
+        if (liked) {
+          unlikeTrack(track.id, user?.id);
+        } else {
+          likeTrack(track, user?.id);
+          markLiked(track.id);
+        }
       }}
       className={`relative flex items-center justify-center rounded-full transition-colors ${
-        size === 'sm' ? 'h-8 w-8' : 'h-9 w-9'
-      } ${liked ? 'text-pink-400' : 'text-white/30 hover:text-white/70'} ${className}`}
-      title={liked ? 'Unlike' : 'Like'}
+        size === "sm" ? "h-8 w-8" : "h-9 w-9"
+      } ${liked ? "text-pink-400" : "text-white/30 hover:text-white/70"} ${className}`}
+      title={liked ? "Unlike" : "Like"}
     >
       <AnimatePresence mode="wait">
         <motion.span
-          key={liked ? 'liked' : 'unliked'}
+          key={liked ? "liked" : "unliked"}
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.6, opacity: 0 }}
           transition={{ duration: 0.15 }}
         >
-          <Heart className={iconSize} style={liked ? { fill: 'currentColor' } : {}} />
+          <Heart className={iconSize} style={liked ? { fill: "currentColor" } : {}} />
         </motion.span>
       </AnimatePresence>
 

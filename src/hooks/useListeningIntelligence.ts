@@ -89,6 +89,7 @@ interface IntelligenceState {
 
   // Actions
   recordPlay: (event: Omit<PlayEvent, "genres"> & { title: string; artist: string }) => void;
+  markLiked: (trackId: string) => void;
   markSkip: (trackId: string) => void;
   markRepeat: (trackId: string) => void;
   markCompleted: (trackId: string) => void;
@@ -141,6 +142,28 @@ export const useListeningIntelligence = create<IntelligenceState>()(
           return { events, genreWeights: gw, artistWeights: aw };
         });
       },
+
+      markLiked: (trackId) =>
+        set((s) => {
+          const track = s.events.find((e) => e.trackId === trackId);
+          if (!track) return s;
+
+          const gw = { ...s.genreWeights };
+          const aw = { ...s.artistWeights };
+
+          // Massive +5 multiplier for actively liking a track
+          for (const g of track.genres) {
+            gw[g] = (gw[g] ?? 0) + 5;
+          }
+          const artistKey = track.artist.split(/[,&]/)[0].trim().toLowerCase();
+          aw[artistKey] = (aw[artistKey] ?? 0) + 5;
+
+          return {
+            events: s.events.map((e) => (e.trackId === trackId ? { ...e, liked: true } : e)),
+            genreWeights: gw,
+            artistWeights: aw,
+          };
+        }),
 
       markSkip: (trackId) =>
         set((s) => ({
