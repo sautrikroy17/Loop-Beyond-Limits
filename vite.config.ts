@@ -12,9 +12,15 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  // Override lovable config's hardcoded output paths so Nitro uses Cloudflare Pages
+  // Override lovable config's hardcoded output paths so Nitro vercel preset
+  // outputs to .vercel/output/ which Vercel auto-detects as serverless functions
   nitro: {
-    preset: "cloudflare-pages",
+    preset: "vercel",
+    output: {
+      dir: ".vercel/output",
+      serverDir: ".vercel/output/functions/__server.func",
+      publicDir: ".vercel/output/static",
+    },
   },
   vite: {
     // Disable source maps in production — keeps compiled code minified and unreadable in DevTools
