@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/loop-icon.png" alt="Loop Logo" width="100" height="100" />
+  <img src="public/logo.png" alt="Loop Logo" width="100" height="100" />
   <h1>Loop — Feel the Waves 🎵</h1>
   <p><strong>A production-grade, mood-driven music streaming platform built for the next generation of listeners.</strong></p>
 
@@ -7,12 +7,12 @@
   [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
   [![TanStack](https://img.shields.io/badge/TanStack_Start-SSR-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/start)
   [![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-  [![Vercel](https://img.shields.io/badge/Live_App-loop--feel.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://loop-feel.vercel.app)
+  [![Vercel](https://img.shields.io/badge/Live_App-loop--feel--the--beat.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://loop-feel-the-beat.vercel.app)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
 
   <br />
 
-  **[🚀 Open Live App](https://loop-feel.vercel.app)** &nbsp;|&nbsp; **[👤 Portfolio](https://sautrikroy.me)** &nbsp;|&nbsp; **[📂 GitHub](https://github.com/sautrikroy17/Loop-Feel-the-waves)**
+  **[🚀 Open Live App](https://loop-feel-the-beat.vercel.app)** &nbsp;|&nbsp; **[👤 Portfolio](https://sautrikroy.me)** &nbsp;|&nbsp; **[📂 GitHub](https://github.com/sautrikroy17/Loop-Feel-the-waves)**
 </div>
 
 ---
@@ -113,7 +113,7 @@ Loop is hardened to production standards:
 
 ## 🌐 Live App
 
-**[https://loop-feel.vercel.app](https://loop-feel.vercel.app)**
+**[https://loop-feel-the-beat.vercel.app](https://loop-feel-the-beat.vercel.app)**
 
 ---
 
