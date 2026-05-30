@@ -419,7 +419,7 @@ export const useListeningIntelligence = create<IntelligenceState>()(
         if (genreBase === "Global Pop") return "Pop Icon";
         if (genreBase === "K-Pop Energy") return "K-Pop Stan";
         if (genreBase === "Afro Beats") return "Afro Beats Vibe";
-        if (genreBase === "Dark Pop / Alt") return "Midnight Alt Vibes";
+        if (genreBase === "Dark Pop / Alt") return "Dark Pop";
         if (genreBase === "Baddie / Pop Rap") return "Baddie Energy";
         if (genreBase === "Bengali Vibes") return "Bangla Soul";
         

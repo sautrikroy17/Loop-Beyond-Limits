@@ -767,11 +767,18 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  // ── Top Tracks: ranked by play count from intelligence events ──────
-  const trackPlayCounts = events.reduce(
+  // ── Top Tracks: ranked by smart AI listening score ──────
+  const trackScores = events.reduce(
     (acc, e) => {
       const key = e.trackId;
-      acc[key] = (acc[key] || 0) + 1;
+      let score = 0;
+      if (e.completed) score += 3;
+      else if (e.listenMs > 30000) score += 1;
+      if (e.liked) score += 5;
+      if (e.repeated) score += 2;
+      if (e.skipped) score -= 1;
+      
+      acc[key] = (acc[key] || 0) + score;
       return acc;
     },
     {} as Record<string, number>,
@@ -787,23 +794,32 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
   );
 
   const topTracks =
-    Object.keys(trackPlayCounts).length > 0
-      ? Object.entries(trackPlayCounts)
+    Object.keys(trackScores).length > 0
+      ? Object.entries(trackScores)
+          .filter(([, score]) => score > 0)
           .sort((a, b) => b[1] - a[1])
           .map(([id]) => trackMap[id])
           .filter(Boolean)
           .slice(0, 5)
       : recentlyPlayed.slice(0, 5);
 
-  // ── Top Artists: ranked by play count, with cover art from their most played track ─
-  const artistData: Record<string, { count: number; coverArt?: string; displayName: string }> = {};
+  // ── Top Artists: ranked by smart AI score, with cover art from their most played track ─
+  const artistData: Record<string, { score: number; coverArt?: string; displayName: string }> = {};
   for (const e of events) {
     const key = e.artist.split(/[,&]/)[0].trim().toLowerCase();
     const displayName = e.artist.split(/[,&]/)[0].trim();
     if (!artistData[key]) {
-      artistData[key] = { count: 0, displayName };
+      artistData[key] = { score: 0, displayName };
     }
-    artistData[key].count += 1;
+    
+    let score = 0;
+    if (e.completed) score += 3;
+    else if (e.listenMs > 30000) score += 1;
+    if (e.liked) score += 5;
+    if (e.repeated) score += 2;
+    if (e.skipped) score -= 1;
+
+    artistData[key].score += score;
     // Grab cover art from the matching track in recentlyPlayed
     if (!artistData[key].coverArt) {
       const match = recentlyPlayed.find(
@@ -818,13 +834,14 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
     for (const t of recentlyPlayed) {
       const key = t.artist.split(/[,&]/)[0].trim().toLowerCase();
       const displayName = t.artist.split(/[,&]/)[0].trim();
-      if (!artistData[key]) artistData[key] = { count: 0, displayName, coverArt: t.albumArt };
-      artistData[key].count += 1;
+      if (!artistData[key]) artistData[key] = { score: 0, displayName, coverArt: t.albumArt };
+      artistData[key].score += 1;
     }
   }
 
   const topArtists = Object.entries(artistData)
-    .sort((a, b) => b[1].count - a[1].count)
+    .filter(([, data]) => data.score > 0)
+    .sort((a, b) => b[1].score - a[1].score)
     .slice(0, 5)
     .map(([, data]) => data);
 
