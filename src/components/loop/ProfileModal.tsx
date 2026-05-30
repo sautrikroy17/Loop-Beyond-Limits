@@ -786,14 +786,13 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
     {} as Record<string, (typeof recentlyPlayed)[0]>,
   );
 
-  // Sort by play count, fall back to recently played order
   const topTracks =
     Object.keys(trackPlayCounts).length > 0
       ? Object.entries(trackPlayCounts)
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
           .map(([id]) => trackMap[id])
           .filter(Boolean)
+          .slice(0, 5)
       : recentlyPlayed.slice(0, 5);
 
   // ── Top Artists: ranked by play count, with cover art from their most played track ─
@@ -1006,9 +1005,6 @@ function ProfileTab({ onClose }: { onClose: () => void }) {
                 <div>
                   <div className="text-[13px] font-semibold text-white/85">
                     {artist.displayName}
-                  </div>
-                  <div className="text-[10px] text-white/35">
-                    {artist.count} {artist.count === 1 ? "play" : "plays"}
                   </div>
                 </div>
               </div>
