@@ -66,6 +66,7 @@ export function Navbar({
   else if (identity.includes("Dark R&B") || identity.includes("Addict")) vibeIcon = "🖤";
   else if (identity.includes("Sad Girl")) vibeIcon = "💧";
   else if (identity.includes("Trap") || identity.includes("Drill")) vibeIcon = "🔥";
+  else if (identity.includes("Dark Pop")) vibeIcon = "🦇";
   else if (identity.includes("Midnight") || identity.includes("Dreamer")) vibeIcon = "🌌";
   else if (identity.includes("K-Pop") || identity.includes("Viral")) vibeIcon = "✨";
   
