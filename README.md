@@ -7,8 +7,9 @@
   [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
   [![TanStack](https://img.shields.io/badge/TanStack_Start-SSR-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/start)
   [![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-  [![Vercel](https://img.shields.io/badge/Live_App-loop--feel.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://loop-feel.vercel.app)
-  [![GSSoC'26](https://img.shields.io/badge/GSSoC'26-Open_Source-orange?style=for-the-badge&logo=girlscript)](https://gssoc.girlscript.tech/)
+  [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
+  [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/sautrikroy17/Loop-Feel-the-waves/graphs/commit-activity)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
 
   <br />
@@ -115,7 +116,7 @@ Loop is hardened to production standards:
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! If you are a participant in **GirlScript Summer of Code (GSSoC)**, this project is open for you to showcase your skills.
+We welcome contributions from the community! This project is open for you to showcase your skills.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
