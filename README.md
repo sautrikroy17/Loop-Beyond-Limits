@@ -14,7 +14,11 @@
 
   <br />
 
-  **[🚀 Open Live App](https://loop-feel.vercel.app)** &nbsp;|&nbsp; **[👤 Portfolio](https://sautrikroy.me)** &nbsp;|&nbsp; **[📂 GitHub](https://github.com/sautrikroy17/Loop-Feel-the-waves)**
+![Loop Screenshot](public/loop_screenshot.png)
+
+## 📖 Overview
+
+**[🚀 Open Live App](https://loop-feel.vercel.app)** &nbsp;|&nbsp; **[👤 Portfolio](https://sautrikroy.me)** &nbsp;|&nbsp; **[📂 GitHub](https://github.com/sautrikroy17/Loop-Feel-the-waves)**
 </div>
 
 ---
