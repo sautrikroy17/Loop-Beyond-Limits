@@ -8,6 +8,7 @@
   [![TanStack](https://img.shields.io/badge/TanStack_Start-SSR-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/start)
   [![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
   [![Vercel](https://img.shields.io/badge/Live_App-loop--feel.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://loop-feel.vercel.app)
+  [![GSSoC'26](https://img.shields.io/badge/GSSoC'26-Open_Source-orange?style=for-the-badge&logo=girlscript)](https://gssoc.girlscript.tech/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
 
   <br />
@@ -23,6 +24,7 @@
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Security](#-security)
+- [Contributing](#-contributing)
 - [Author](#-author)
 - [License](#-license)
 
@@ -108,6 +110,18 @@ Loop is hardened to production standards:
 | **Input Sanitisation** | All user-supplied strings stripped of HTML/script tags and control characters before reaching any backend service |
 | **Source Map Removal** | Production bundles built with `sourcemap: false` — compiled code is fully minified and unreadable in DevTools |
 | **Permissions Policy** | Camera, microphone, geolocation, and payment APIs all blocked at header level |
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community! If you are a participant in **GirlScript Summer of Code (GSSoC)**, this project is open for you to showcase your skills.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
