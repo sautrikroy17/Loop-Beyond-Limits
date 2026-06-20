@@ -12,9 +12,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Plus, Loader2, Play, Music2, User, Clock, ArrowUpRight } from "lucide-react";
+import { Search, X, Plus, Loader2, Play, Music2, User, Clock, ArrowUpRight, Download, CheckCircle2 } from "lucide-react";
 import { usePlayback, type Track } from "@/hooks/usePlayback";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useDownloadTrack } from "@/hooks/useDownloadTrack";
 import { AlbumModal } from "./AlbumModal";
 import { omniSearchFn, getAlbumDetailsFn, getPlaylistDetailsFn } from "@/functions/search";
 import { LikeButton } from "./LikeButton";
@@ -65,6 +66,8 @@ function TrackRow({
   onPlay: () => void;
   onQueue: () => void;
 }) {
+  const { isDownloaded, isDownloading, toggleDownload } = useDownloadTrack(track);
+
   return (
     <div
       className={`group flex items-center gap-3 rounded-xl p-2.5 transition-colors ${
@@ -91,9 +94,28 @@ function TrackRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleDownload();
+          }}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+          title="Download for offline"
+        >
+          {isDownloading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isDownloaded ? (
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+        </button>
         <LikeButton track={track} size="sm" />
         <button
-          onClick={onQueue}
+          onClick={(e) => {
+            e.stopPropagation();
+            onQueue();
+          }}
           className="flex h-8 w-8 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/[0.06] hover:text-white/70"
           title="Add to queue"
         >

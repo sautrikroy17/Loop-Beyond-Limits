@@ -27,6 +27,8 @@ import {
   Check,
   Heart,
   Plus,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { WhiteSlider } from "./WhiteSlider";
@@ -34,6 +36,7 @@ import { usePlayback } from "@/hooks/usePlayback";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { subscribeToAudio } from "@/hooks/useAudioData";
 import { useAuth } from "@/hooks/useAuth";
+import { useDownloadTrack } from "@/hooks/useDownloadTrack";
 
 function fmt(s: number): string {
   if (!s || isNaN(s)) return "0:00";
@@ -314,6 +317,7 @@ export function PlayerBar({
   const [queueAdded, setQueueAdded] = useState(false);
 
   const { isLiked, likeTrack, unlikeTrack } = useUserProfile();
+  const { isDownloaded, isDownloading, toggleDownload } = useDownloadTrack(currentTrack || {} as any);
 
   const pct = duration > 0 ? (progress / duration) * 100 : 0;
   const displayTime = seekDrag ? seekVal : progress;
@@ -483,6 +487,25 @@ export function PlayerBar({
                     {showPlaylistPicker && <PlaylistPickerPopup onClose={() => setPicker(false)} />}
                   </AnimatePresence>
                 </div>
+
+                {/* Download Button (Desktop Only) */}
+                <button
+                  onClick={toggleDownload}
+                  title="Download for Offline"
+                  className={`hidden md:flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all hover:bg-white/[0.07] ${
+                    isDownloaded
+                      ? "text-green-500"
+                      : "text-white/30 hover:text-white/70"
+                  }`}
+                >
+                  {isDownloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isDownloaded ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </button>
 
                 {/* Mobile Essential Controls (Hidden on Desktop) */}
                 <div className="flex items-center gap-1 md:hidden ml-auto">
