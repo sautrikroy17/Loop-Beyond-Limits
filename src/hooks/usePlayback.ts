@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getRecommendationsFn } from "@/functions/search";
+import { toast } from "sonner";
 
 export interface Track {
   id: string;
@@ -157,8 +158,13 @@ export const usePlayback = create<PlaybackState>()(
       setYoutubePlayerReady: (r) => set({ youtubePlayerReady: r }),
       setLoadingTrack: (loading) => set({ isLoadingTrack: loading }),
 
-      addToQueue: (track) => set((s) => ({ queue: [...s.queue, track] })),
-      removeFromQueue: (index) => set((s) => ({ queue: s.queue.filter((_, i) => i !== index) })),
+      addToQueue: (track) => {
+        set((s) => ({ queue: [...s.queue, track] }));
+        toast.success(`Added ${track.title} to queue`);
+      },
+      removeFromQueue: (index) => {
+        set((s) => ({ queue: s.queue.filter((_, i) => i !== index) }));
+      },
       reorderQueue: (oldIndex, newIndex) =>
         set((s) => {
           const q = [...s.queue];

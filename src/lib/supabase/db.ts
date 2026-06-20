@@ -198,6 +198,30 @@ export async function removeTrackFromPlaylistDB(
   if (error) console.error("[db] removeTrackFromPlaylist:", error.message);
 }
 
+export async function reorderPlaylistTracksDB(
+  playlistId: string,
+  tracks: Track[],
+): Promise<void> {
+  // 1. Delete all existing tracks for this playlist
+  await supabase.from("playlist_tracks").delete().eq("playlist_id", playlistId);
+  // 2. Insert new tracks in perfectly synced order
+  if (tracks.length > 0) {
+    const payload = tracks.map((track, idx) => ({
+      playlist_id: playlistId,
+      track_id: track.id,
+      track_data: track,
+      position: idx,
+    }));
+    const { error } = await supabase.from("playlist_tracks").insert(payload);
+    if (error) console.error("[db] reorderPlaylistTracksDB:", error.message);
+  }
+  // bump updated_at
+  await supabase
+    .from("playlists")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", playlistId);
+}
+
 // ── Recently Played ─────────────────────────────────────────────────
 
 export async function fetchRecentlyPlayed(userId: string): Promise<Track[]> {

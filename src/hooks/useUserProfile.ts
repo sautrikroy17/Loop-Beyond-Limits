@@ -24,6 +24,7 @@ import {
   deletePlaylistDB,
   addTrackToPlaylistDB,
   removeTrackFromPlaylistDB,
+  reorderPlaylistTracksDB,
   fetchRecentlyPlayed,
   insertRecentlyPlayed,
   fetchUserProfile,
@@ -33,6 +34,7 @@ import {
   deleteSavedAlbum,
   type SavedAlbum,
 } from "@/lib/supabase/db";
+import { toast } from "sonner";
 
 export interface Playlist {
   id: string;
@@ -143,7 +145,10 @@ export const useUserProfile = create<UserProfileState>()(
             likedTracks: [track, ...s.likedTracks],
           };
         });
-        if (userId) insertLikedSong(userId, track).catch(console.error);
+        if (userId) {
+          insertLikedSong(userId, track).catch(console.error);
+        }
+        toast.success(`Saved to Liked Songs`);
       },
 
       unlikeTrack: (id, userId) => {
@@ -151,7 +156,10 @@ export const useUserProfile = create<UserProfileState>()(
           likedTrackIds: s.likedTrackIds.filter((i) => i !== id),
           likedTracks: s.likedTracks.filter((t) => t.id !== id),
         }));
-        if (userId) deleteLikedSong(userId, id).catch(console.error);
+        if (userId) {
+          deleteLikedSong(userId, id).catch(console.error);
+        }
+        toast.info(`Removed from Liked Songs`);
       },
 
       isLiked: (id) => get().likedTrackIds.includes(id),
@@ -215,9 +223,12 @@ export const useUserProfile = create<UserProfileState>()(
         import("@/hooks/useAuth").then(({ useAuth }) => {
           const uid = userId || useAuth.getState().user?.id;
           if (uid) {
-            // Get the position AFTER the set (track is now in local state)
             const updatedPl = get().playlists.find((p) => p.id === playlistId);
             const position = (updatedPl?.tracks.length ?? 1) - 1;
+            const pl = get().playlists.find((p) => p.id === playlistId);
+            if (pl) {
+              toast.success(`Added ${track.title} to ${pl.name}`);
+            }
             addTrackToPlaylistDB(playlistId, track, position).catch(console.error);
           }
         });
@@ -249,7 +260,7 @@ export const useUserProfile = create<UserProfileState>()(
         if (userId) updatePlaylistDB(id, { cover_art: coverArt }).catch(console.error);
       },
 
-      reorderPlaylist: (id, startIndex, endIndex) =>
+      reorderPlaylist: (id, startIndex, endIndex) => {
         set((s) => ({
           playlists: s.playlists.map((p) => {
             if (p.id !== id) return p;
@@ -258,7 +269,18 @@ export const useUserProfile = create<UserProfileState>()(
             result.splice(endIndex, 0, removed);
             return { ...p, tracks: result };
           }),
-        })),
+        }));
+        
+        import("@/hooks/useAuth").then(({ useAuth }) => {
+          const uid = useAuth.getState().user?.id;
+          if (uid) {
+            const updatedPlaylist = get().playlists.find((p) => p.id === id);
+            if (updatedPlaylist) {
+              reorderPlaylistTracksDB(id, updatedPlaylist.tracks).catch(console.error);
+            }
+          }
+        });
+      },
 
       clearHistory: () => set({ recentlyPlayed: [] }),
 

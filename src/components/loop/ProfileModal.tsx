@@ -29,8 +29,11 @@ import {
   Pencil,
   Loader2,
   Disc,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useDownloadTrack } from "@/hooks/useDownloadTrack";
 import { usePlayback, type Track } from "@/hooks/usePlayback";
 import { useListeningIntelligence } from "@/hooks/useListeningIntelligence";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,7 +59,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Link } from "@tanstack/react-router";
 
-type ProfileTab = "liked" | "recent" | "playlists" | "albums" | "stats";
+import { getAllOfflineTracks, type OfflineTrack } from "@/lib/offlineDB";
+import { Download } from "lucide-react";
+
+type ProfileTab = "liked" | "recent" | "playlists" | "albums" | "stats" | "downloads";
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -140,6 +146,7 @@ export function TrackRow({
   const { user } = useAuth();
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const { isDownloaded, isDownloading, toggleDownload } = useDownloadTrack(track);
 
   useEffect(() => {
     if (!showPicker) return;
@@ -191,6 +198,22 @@ export function TrackRow({
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleDownload();
+          }}
+          className="p-1.5 rounded-full text-white/20 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:bg-white/[0.06] transition-all"
+          title="Download for offline"
+        >
+          {isDownloading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : isDownloaded ? (
+            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+          ) : (
+            <Download className="h-3.5 w-3.5" />
+          )}
+        </button>
         <div className="relative" ref={pickerRef}>
           <button
             onClick={(e) => {
@@ -1078,12 +1101,15 @@ export function ProfileModal({
   } = useUserProfile();
   const { user } = useAuth();
   const { playTrack } = usePlayback();
+  
+  const [offlineTracks, setOfflineTracks] = useState<OfflineTrack[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       setTab(mode === "profile" ? "stats" : "liked");
       setActivePlaylistId(null);
       setShowCreatePlaylist(false);
+      getAllOfflineTracks().then(setOfflineTracks);
     }
   }, [isOpen, mode]);
 
@@ -1113,6 +1139,12 @@ export function ProfileModal({
       label: "Albums",
       icon: <Disc className="h-3.5 w-3.5" />,
       count: savedAlbums.length,
+    },
+    {
+      id: "downloads" as ProfileTab,
+      label: "Downloads",
+      icon: <Download className="h-3.5 w-3.5" />,
+      count: offlineTracks.length,
     },
     { id: "stats" as ProfileTab, label: "Profile", icon: <User className="h-3.5 w-3.5" /> },
   ];
@@ -1339,14 +1371,19 @@ export function ProfileModal({
 
                     {/* Albums */}
                     {tab === "albums" && (
-                      <div>
-                        {savedAlbums.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {savedAlbums.length === 0 ? (
+                          <EmptyState
+                            icon={<Disc className="h-8 w-8" />}
+                            text="No saved albums yet"
+                          />
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                             {savedAlbums.map((album) => (
                               <div
                                 key={album.id}
+                                className="group cursor-pointer relative"
                                 onClick={() => setSelectedAlbum(album)}
-                                className="group relative rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.06] transition-colors cursor-pointer"
                               >
                                 <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-white/5">
                                   <img
@@ -1374,11 +1411,6 @@ export function ProfileModal({
                               </div>
                             ))}
                           </div>
-                        ) : (
-                          <EmptyState
-                            icon={<Disc className="h-8 w-8" />}
-                            text="Save albums to view them here"
-                          />
                         )}
                       </div>
                     )}

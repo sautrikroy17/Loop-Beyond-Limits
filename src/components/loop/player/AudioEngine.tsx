@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { usePlayback } from "@/hooks/usePlayback";
 import { getPlaybackSourceFn } from "@/functions/search";
 import { getLyricsFn } from "@/functions/lyrics";
+import { getOfflineTrack } from "@/lib/offlineDB";
 
 declare global {
   interface Window {
@@ -18,6 +19,11 @@ export function AudioEngine() {
   const currentYtIdRef = useRef<string | null>(null);
   const hasPlayedOnceRef = useRef(false);
   const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Offline playback refs
+  const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingOfflineRef = useRef(false);
 
   // KEY FIX: When true, we are mid-transition between tracks.
   // YouTube fires a PAUSED event when loadVideoById() interrupts a playing track.
@@ -33,6 +39,33 @@ export function AudioEngine() {
     clearSeekTarget,
     nextTrack,
   } = usePlayback.getState();
+
+  const fadeAudio = (targetVolume: number, onComplete?: () => void) => {
+    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+    if (!playerRef.current?.getVolume || !playerRef.current?.setVolume) {
+      onComplete?.();
+      return;
+    }
+    const startVol = playerRef.current.getVolume();
+    const diff = targetVolume - startVol;
+    if (Math.abs(diff) < 2) {
+      playerRef.current.setVolume(targetVolume);
+      onComplete?.();
+      return;
+    }
+    const steps = 15;
+    const stepVal = diff / steps;
+    let currentStep = 0;
+    fadeIntervalRef.current = setInterval(() => {
+      currentStep++;
+      playerRef.current?.setVolume?.(startVol + stepVal * currentStep);
+      if (currentStep >= steps) {
+        if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+        playerRef.current?.setVolume?.(targetVolume);
+        onComplete?.();
+      }
+    }, 20); // 300ms total fade
+  };
 
   // ── 1. Initialize YouTube IFrame API (once) ────────────────────
   useEffect(() => {
@@ -67,6 +100,11 @@ export function AudioEngine() {
               const dur = playerRef.current?.getDuration?.() ?? 0;
               if (dur > 0) setDuration(dur);
               startProgressLoop();
+              
+              // Fade in if starting from 0 (e.g. new track or resuming)
+              if (playerRef.current?.getVolume?.() === 0 || usePlayback.getState().isPlaying) {
+                fadeAudio(usePlayback.getState().volume);
+              }
             }
 
             if (event.data === YTState.PAUSED) {
@@ -152,6 +190,34 @@ export function AudioEngine() {
     }
   }
 
+  // Handle native audio events
+  useEffect(() => {
+    const audio = offlineAudioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => {
+      if (isPlayingOfflineRef.current) {
+        usePlayback.setState({
+          progress: audio.currentTime,
+          duration: audio.duration || usePlayback.getState().duration,
+        });
+      }
+    };
+    
+    const onEnded = () => {
+      if (isPlayingOfflineRef.current) {
+        nextTrack();
+      }
+    };
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("ended", onEnded);
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, [nextTrack]);
+
   // ── 2. Load new track when ID changes ──────────────────────────
   const currentTrackId = usePlayback((s) => s.currentTrack?.id);
   const currentTrack = usePlayback((s) => s.currentTrack);
@@ -180,6 +246,39 @@ export function AudioEngine() {
     let cancelled = false;
 
     (async () => {
+      // 1. Check Offline DB First
+      const offlineData = await getOfflineTrack(currentTrack.id);
+      if (cancelled) return;
+
+      if (offlineData) {
+        isPlayingOfflineRef.current = true;
+        // Stop YouTube player
+        playerRef.current?.stopVideo?.();
+        isTransitioningRef.current = false;
+        
+        if (offlineAudioRef.current) {
+          // If we had a previous blob url, revoke it to avoid memory leaks
+          if (offlineAudioRef.current.src.startsWith("blob:")) {
+            URL.revokeObjectURL(offlineAudioRef.current.src);
+          }
+          offlineAudioRef.current.src = URL.createObjectURL(offlineData.audioBlob);
+          offlineAudioRef.current.currentTime = 0;
+          offlineAudioRef.current.volume = usePlayback.getState().volume / 100;
+          
+          setDuration(currentTrack.durationMs ? currentTrack.durationMs / 1000 : 0);
+          setLoadingTrack(false);
+          
+          if (usePlayback.getState().isPlaying) {
+             offlineAudioRef.current.play().catch(console.error);
+          }
+        }
+        return;
+      }
+
+      // 2. Fallback to YouTube
+      isPlayingOfflineRef.current = false;
+      offlineAudioRef.current?.pause();
+
       let ytId = currentTrack.youtubeId;
       if (!ytId) {
         ytId = await getPlaybackSourceFn({
@@ -208,7 +307,7 @@ export function AudioEngine() {
 
     // Safety net: if track never reaches PLAYING after 10s, skip
     const stuckTimeout = setTimeout(() => {
-      if (usePlayback.getState().isLoadingTrack) {
+      if (usePlayback.getState().isLoadingTrack && !isPlayingOfflineRef.current) {
         console.warn("[AudioEngine] 10s timeout — skipping stuck track");
         isTransitioningRef.current = false;
         setLoadingTrack(false);
@@ -238,27 +337,40 @@ export function AudioEngine() {
     if (!currentTrackId || currentTrackId !== trackIdRef.current) return;
 
     if (isPlaying) {
+      if (isPlayingOfflineRef.current) {
+         offlineAudioRef.current?.play().catch(console.error);
+         return;
+      }
+
       const state = playerRef.current.getPlayerState?.();
       const YTState = window.YT?.PlayerState;
 
-      // If the player hasn't successfully played yet this session, OR it's stuck in CUED/UNSTARTED,
-      // we FORCE a loadVideoById to completely override the background cue and guarantee playback.
+      // Start volume at 0 for fade in
+      playerRef.current.setVolume?.(0);
+
       if (!hasPlayedOnceRef.current || state === YTState?.CUED || state === YTState?.UNSTARTED) {
         const videoId = playerRef.current.getVideoData?.()?.video_id || currentYtIdRef.current;
         if (videoId) {
           hasPlayedOnceRef.current = true;
-          const startSeconds = 0;
-          playerRef.current.loadVideoById?.({ videoId, startSeconds });
+          playerRef.current.loadVideoById?.({ videoId, startSeconds: 0 });
         } else {
           playerRef.current.playVideo?.();
         }
       } else {
         playerRef.current.playVideo?.();
       }
+      fadeAudio(usePlayback.getState().volume);
       silentAudioRef.current?.play().catch(() => {});
     } else {
-      playerRef.current.pauseVideo?.();
-      silentAudioRef.current?.pause();
+      if (isPlayingOfflineRef.current) {
+         offlineAudioRef.current?.pause();
+         return;
+      }
+
+      fadeAudio(0, () => {
+        playerRef.current?.pauseVideo?.();
+        silentAudioRef.current?.pause();
+      });
     }
   }, [isPlaying, youtubePlayerReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -266,18 +378,31 @@ export function AudioEngine() {
   const seekTarget = usePlayback((s) => s.seekTarget);
 
   useEffect(() => {
-    if (seekTarget !== null && playerRef.current?.seekTo) {
-      playerRef.current.seekTo(seekTarget, true);
-      usePlayback.setState({ progress: seekTarget });
-      clearSeekTarget();
+    if (seekTarget !== null) {
+      if (isPlayingOfflineRef.current && offlineAudioRef.current) {
+        offlineAudioRef.current.currentTime = seekTarget;
+        usePlayback.setState({ progress: seekTarget });
+        clearSeekTarget();
+      } else if (playerRef.current?.seekTo) {
+        playerRef.current.seekTo(seekTarget, true);
+        usePlayback.setState({ progress: seekTarget });
+        clearSeekTarget();
+      }
     }
   }, [seekTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 5. Volume sync ────────────────────────────────────────────
+  // ── 5. Volume sync (Immediate if playing) ─────────────────────
   const volume = usePlayback((s) => s.volume);
 
   useEffect(() => {
-    if (playerRef.current?.setVolume) playerRef.current.setVolume(volume);
+    if (isPlayingOfflineRef.current && offlineAudioRef.current) {
+      offlineAudioRef.current.volume = volume / 100;
+      return;
+    }
+    
+    if (usePlayback.getState().isPlaying) {
+      fadeAudio(volume);
+    }
   }, [volume]);
 
   // ── MediaSession Integration (Dynamic Island / Background) ──────
@@ -358,6 +483,10 @@ export function AudioEngine() {
         className="fixed -z-50 opacity-0 pointer-events-none -left-[2000px] -top-[2000px]"
         style={{ width: "200px", height: "200px" }}
         aria-hidden="true"
+      />
+      <audio
+        ref={offlineAudioRef}
+        className="hidden"
       />
       <audio
         ref={silentAudioRef}
