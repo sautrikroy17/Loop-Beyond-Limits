@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Track } from "./usePlayback";
 import { getOfflineTrack, saveOfflineTrack, removeOfflineTrack } from "@/lib/offlineDB";
+import { downloadAudioFn } from "@/functions/download";
 import { toast } from "sonner";
 
 export function useDownloadTrack(track: Track) {
@@ -26,10 +27,17 @@ export function useDownloadTrack(track: Track) {
          throw new Error("Track not found on YouTube");
       }
       
-      const res = await fetch(`/api/download?id=${ytId}`);
-      if (!res.ok) throw new Error("Download failed");
+      const base64Data = await downloadAudioFn({ data: { id: ytId } });
       
-      const blob = await res.blob();
+      // Convert base64 to Blob
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "audio/mp4" });
+      
       await saveOfflineTrack(track, blob);
       setIsDownloaded(true);
       toast.success(`Downloaded ${track.title} for offline playback`);
