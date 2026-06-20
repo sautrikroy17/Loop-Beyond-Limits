@@ -46,6 +46,10 @@ export const initAuthListener = () => {
       import("@/lib/supabase/playbackSync").then(({ initPlaybackSync }) => {
         initPlaybackSync(session.user.id);
       });
+      // Start Supabase Realtime — instant cross-device liked songs / playlist sync
+      import("@/lib/supabase/realtimeSync").then(({ initRealtimeSync }) => {
+        initRealtimeSync(session.user.id);
+      });
     }
   });
 
@@ -68,6 +72,10 @@ export const initAuthListener = () => {
       import("@/lib/supabase/playbackSync").then(({ initPlaybackSync }) => {
         initPlaybackSync(session.user.id);
       });
+      // Start Supabase Realtime — instant cross-device sync
+      import("@/lib/supabase/realtimeSync").then(({ initRealtimeSync }) => {
+        initRealtimeSync(session.user.id);
+      });
     }
 
     if (event === "SIGNED_OUT") {
@@ -77,6 +85,10 @@ export const initAuthListener = () => {
       });
       import("@/lib/supabase/playbackSync").then(({ stopPlaybackSync }) => {
         stopPlaybackSync();
+      });
+      // Stop Realtime sync
+      import("@/lib/supabase/realtimeSync").then(({ stopRealtimeSync }) => {
+        stopRealtimeSync();
       });
     }
   });

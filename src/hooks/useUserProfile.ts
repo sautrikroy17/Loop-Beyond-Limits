@@ -258,9 +258,11 @@ export const useUserProfile = create<UserProfileState>()(
       // ── Cloud Sync ───────────────────────────────────────────────────
 
       /**
-       * Fetch all user data from Supabase and replace local state.
-       * Called on every login / page load (no stale-sync guard so data
-       * is always fresh).
+       * Fetch all user data from Supabase and MERGE with local state.
+       * Strategy: "Merge wins" — never discard data that exists locally
+       * but hasn't synced to cloud yet (e.g. liked while offline).
+       *
+       * Called on every login / page load.
        * Also runs a one-time migration to push existing local data first.
        */
       loadFromCloud: async (userId: string, googleAvatarUrl?: string) => {
@@ -282,7 +284,24 @@ export const useUserProfile = create<UserProfileState>()(
             fetchSavedAlbums(userId),
           ]);
 
-          // Map cloud playlists to local Playlist shape
+          // ── Step 3: MERGE liked songs (local + cloud) ────────────────
+          // Cloud is authoritative, but add any local tracks missing from cloud
+          const cloudLikedIds = new Set(dbLiked.map((t) => t.id));
+          const localOnlyLiked = s.likedTracks.filter((t) => !cloudLikedIds.has(t.id));
+
+          // Re-push any locally-liked tracks that never made it to cloud
+          if (localOnlyLiked.length > 0) {
+            console.log(`[sync] Re-pushing ${localOnlyLiked.length} local-only liked tracks to Supabase`);
+            localOnlyLiked.forEach((t) => insertLikedSong(userId, t).catch(() => {}));
+          }
+
+          // Final merged list: cloud first (newest), then local-only additions
+          const mergedLiked = [...dbLiked, ...localOnlyLiked];
+          const mergedLikedIds = mergedLiked.map((t) => t.id);
+
+          // ── Step 4: MERGE playlists ───────────────────────────────────
+          // Cloud playlists are authoritative for existing playlists.
+          // Add any local-only playlists (created offline / not yet synced).
           const playlists: Playlist[] = dbPlaylists.map((p) => ({
             id: p.id,
             name: p.name,
@@ -290,6 +309,20 @@ export const useUserProfile = create<UserProfileState>()(
             createdAt: p.created_at,
             coverArt: p.cover_art,
           }));
+
+          const cloudPlaylistIds = new Set(playlists.map((p) => p.id));
+          const localOnlyPlaylists = s.playlists.filter((p) => !cloudPlaylistIds.has(p.id));
+
+          // Re-push any local-only playlists to cloud
+          if (localOnlyPlaylists.length > 0) {
+            console.log(`[sync] Re-pushing ${localOnlyPlaylists.length} local-only playlists to Supabase`);
+            localOnlyPlaylists.forEach((pl) => {
+              createPlaylistDB(userId, pl.id, pl.name, pl.coverArt).catch(() => {});
+              pl.tracks.forEach((t, i) => addTrackToPlaylistDB(pl.id, t, i).catch(() => {}));
+            });
+          }
+
+          const mergedPlaylists = [...playlists, ...localOnlyPlaylists];
 
           // Avatar priority:
           // 1. Existing locally cached customAvatarUrl (this is what the user just set, completely bulletproof)
@@ -302,10 +335,10 @@ export const useUserProfile = create<UserProfileState>()(
           }
 
           set({
-            likedTracks: dbLiked,
-            likedTrackIds: dbLiked.map((t) => t.id),
-            playlists,
-            recentlyPlayed: dbRecent.slice(0, 10),
+            likedTracks: mergedLiked,
+            likedTrackIds: mergedLikedIds,
+            playlists: mergedPlaylists,
+            recentlyPlayed: dbRecent.slice(0, 50), // Keep up to 50 from cloud (DB trigger keeps 50)
             savedAlbums: dbAlbums,
             customAvatarUrl: avatarUrl,
           });

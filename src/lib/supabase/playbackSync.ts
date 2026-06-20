@@ -97,8 +97,11 @@ function handleRemoteEvent(data: PlaybackSyncEvent) {
       return {
         currentTrack: data.track ?? state.currentTrack,
         queue: data.queue || state.queue,
-        progress: isNewTrack ? data.progress || 0 : state.progress,
-        isPlaying: data.isPlaying ? false : state.isPlaying,
+        // Only reset progress on a new track, otherwise keep local progress
+        progress: isNewTrack ? (data.progress || 0) : state.progress,
+        // ✅ Fixed: was inverted (data.isPlaying ? false : ...). Use remote value directly.
+        // Set to false on incoming sync so user can decide to press play on this device.
+        isPlaying: false,
         youtubePlayerReady: isNewTrack ? false : state.youtubePlayerReady,
       };
     });

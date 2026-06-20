@@ -121,7 +121,7 @@ export function Hero({ onSearchOpen }: { onSearchOpen: () => void }) {
               color: "transparent",
             }}
           >
-            Drop
+            DROP
           </motion.span>
         </h1>
 

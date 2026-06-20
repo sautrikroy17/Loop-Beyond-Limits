@@ -137,3 +137,23 @@ CREATE POLICY "own_recently_played" ON public.recently_played
 
 -- CREATE POLICY "avatar_read" ON storage.objects
 --   FOR SELECT USING (bucket_id = 'avatars');
+
+-- ── Supabase Realtime — REQUIRED for instant cross-device sync ────────
+-- Run these in Supabase Dashboard → SQL Editor to enable real-time
+-- postgres_changes on these tables (including DELETE events).
+--
+-- REPLICA IDENTITY FULL is required so DELETE events include the full
+-- old row (otherwise you only get the PK, which we need for filtering).
+
+ALTER TABLE public.liked_songs       REPLICA IDENTITY FULL;
+ALTER TABLE public.playlists         REPLICA IDENTITY FULL;
+ALTER TABLE public.playlist_tracks   REPLICA IDENTITY FULL;
+ALTER TABLE public.saved_albums      REPLICA IDENTITY FULL;
+
+-- Add tables to the Supabase Realtime publication
+-- (supabase_realtime is the default publication Supabase uses)
+ALTER PUBLICATION supabase_realtime ADD TABLE
+  public.liked_songs,
+  public.playlists,
+  public.playlist_tracks,
+  public.saved_albums;
