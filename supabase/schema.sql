@@ -148,12 +148,10 @@ CREATE POLICY "own_recently_played" ON public.recently_played
 ALTER TABLE public.liked_songs       REPLICA IDENTITY FULL;
 ALTER TABLE public.playlists         REPLICA IDENTITY FULL;
 ALTER TABLE public.playlist_tracks   REPLICA IDENTITY FULL;
-ALTER TABLE public.saved_albums      REPLICA IDENTITY FULL;
 
 -- Add tables to the Supabase Realtime publication
 -- (supabase_realtime is the default publication Supabase uses)
 ALTER PUBLICATION supabase_realtime ADD TABLE
   public.liked_songs,
   public.playlists,
-  public.playlist_tracks,
-  public.saved_albums;
+  public.playlist_tracks;
