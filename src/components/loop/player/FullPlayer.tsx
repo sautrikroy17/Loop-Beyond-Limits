@@ -18,9 +18,12 @@ import {
   Music2,
   FolderPlus,
   Check,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 import { usePlayback, type Track } from "@/hooks/usePlayback";
 import { subscribeToAudio } from "@/hooks/useAudioData";
+import { useDownloadTrack } from "@/hooks/useDownloadTrack";
 
 import { CinematicLyrics } from "./CinematicLyrics";
 import { WhiteSlider } from "./WhiteSlider";
@@ -313,6 +316,8 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     removeFromQueue,
   } = usePlayback();
 
+  const { isDownloaded, isDownloading, toggleDownload } = useDownloadTrack(currentTrack || {} as any);
+
   const [tab, setTab] = useState<Tab>("lyrics");
   const [showPlaylistPicker, setPicker] = useState(false);
   const REPEAT_ICON = repeatMode === "one" ? Repeat1 : Repeat;
@@ -409,6 +414,18 @@ export function FullPlayer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                       )}
                     </AnimatePresence>
                   </div>
+                  <button
+                    onClick={toggleDownload}
+                    className={`rounded-full p-2 transition-colors ${isDownloaded ? "text-green-500" : "text-white/30 hover:text-white/70"}`}
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : isDownloaded ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : (
+                      <Download className="h-5 w-5" />
+                    )}
+                  </button>
                   {currentTrack && <LikeButton track={currentTrack} size="md" />}
                 </div>
               </div>
