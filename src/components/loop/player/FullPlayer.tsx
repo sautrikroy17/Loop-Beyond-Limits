@@ -27,6 +27,7 @@ import { WhiteSlider } from "./WhiteSlider";
 import { LikeButton } from "@/components/loop/LikeButton";
 import { LoopLogoCanvas } from "@/components/loop/LoopLogo";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/hooks/useAuth";
 
 import { SpotifyCanvas } from "@/components/loop/visualizer/SpotifyCanvas";
 
@@ -175,8 +176,10 @@ function PlaylistPickerPopup({ onClose, track }: { onClose: () => void; track: T
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
+  const { user } = useAuth();
+
   const handleAdd = (playlistId: string) => {
-    addTrackToPlaylist(playlistId, track);
+    addTrackToPlaylist(playlistId, track, user?.id);
     setAdded(playlistId);
     setTimeout(() => onClose(), 800);
   };
@@ -184,8 +187,8 @@ function PlaylistPickerPopup({ onClose, track }: { onClose: () => void; track: T
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPlaylistName.trim()) return;
-    const newPl = createPlaylist(newPlaylistName.trim());
-    addTrackToPlaylist(newPl.id, track);
+    const newPl = createPlaylist(newPlaylistName.trim(), undefined, user?.id);
+    addTrackToPlaylist(newPl.id, track, user?.id);
     setAdded(newPl.id);
     setNewPlaylistName("");
     setTimeout(() => onClose(), 800);

@@ -33,6 +33,7 @@ import { WhiteSlider } from "./WhiteSlider";
 import { usePlayback } from "@/hooks/usePlayback";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { subscribeToAudio } from "@/hooks/useAudioData";
+import { useAuth } from "@/hooks/useAuth";
 
 function fmt(s: number): string {
   if (!s || isNaN(s)) return "0:00";
@@ -192,9 +193,11 @@ function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
+  const { user } = useAuth();
+
   const handleAdd = (playlistId: string) => {
     if (!currentTrack) return;
-    addTrackToPlaylist(playlistId, currentTrack);
+    addTrackToPlaylist(playlistId, currentTrack, user?.id);
     setAdded(playlistId);
     setTimeout(() => onClose(), 800);
   };
@@ -202,8 +205,8 @@ function PlaylistPickerPopup({ onClose }: { onClose: () => void }) {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPlaylistName.trim() || !currentTrack) return;
-    const newPl = createPlaylist(newPlaylistName.trim());
-    addTrackToPlaylist(newPl.id, currentTrack);
+    const newPl = createPlaylist(newPlaylistName.trim(), undefined, user?.id);
+    addTrackToPlaylist(newPl.id, currentTrack, user?.id);
     setAdded(newPl.id);
     setNewPlaylistName("");
     setTimeout(() => onClose(), 800);

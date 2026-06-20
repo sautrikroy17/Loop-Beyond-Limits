@@ -310,6 +310,28 @@ export const useUserProfile = create<UserProfileState>()(
             coverArt: p.cover_art,
           }));
 
+          // Merge tracks for playlists that exist in both cloud and local
+          const mergedPlaylistsWithTracks = playlists.map((cloudPl) => {
+            const localPl = s.playlists.find((p) => p.id === cloudPl.id);
+            if (!localPl) return cloudPl;
+
+            const cloudTrackIds = new Set(cloudPl.tracks.map((t) => t.id));
+            const localOnlyTracks = localPl.tracks.filter((t) => !cloudTrackIds.has(t.id));
+
+            if (localOnlyTracks.length > 0) {
+              console.log(`[sync] Re-pushing ${localOnlyTracks.length} local-only tracks for playlist ${cloudPl.name} to Supabase`);
+              let position = cloudPl.tracks.length;
+              localOnlyTracks.forEach((t) => {
+                addTrackToPlaylistDB(cloudPl.id, t, position++).catch(() => {});
+              });
+            }
+
+            return {
+              ...cloudPl,
+              tracks: [...cloudPl.tracks, ...localOnlyTracks],
+            };
+          });
+
           const cloudPlaylistIds = new Set(playlists.map((p) => p.id));
           const localOnlyPlaylists = s.playlists.filter((p) => !cloudPlaylistIds.has(p.id));
 
@@ -322,7 +344,7 @@ export const useUserProfile = create<UserProfileState>()(
             });
           }
 
-          const mergedPlaylists = [...playlists, ...localOnlyPlaylists];
+          const mergedPlaylists = [...mergedPlaylistsWithTracks, ...localOnlyPlaylists];
 
           // Avatar priority:
           // 1. Existing locally cached customAvatarUrl (this is what the user just set, completely bulletproof)
