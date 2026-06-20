@@ -72,14 +72,6 @@ export function Footer() {
             <span className="text-sm font-semibold tracking-wide text-white/60 hover:text-white transition-colors duration-300">
               Created by Sautrik Roy ©
             </span>
-            <div className="flex items-center gap-5 text-[11px]">
-              <a href="#" className="transition-colors hover:text-white/50">
-                Privacy
-              </a>
-              <a href="#" className="transition-colors hover:text-white/50">
-                Terms
-              </a>
-            </div>
           </div>
         </div>
       </div>
