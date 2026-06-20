@@ -177,10 +177,7 @@ export async function addTrackToPlaylistDB(
 ): Promise<void> {
   const { error } = await supabase
     .from("playlist_tracks")
-    .upsert(
-      { playlist_id: playlistId, track_id: track.id, track_data: track, position },
-      { onConflict: "playlist_id,track_id" },
-    );
+    .insert({ playlist_id: playlistId, track_id: track.id, track_data: track, position });
   if (error) console.error("[db] addTrackToPlaylist:", error.message);
   // bump updated_at
   await supabase

@@ -193,7 +193,10 @@ export const useUserProfile = create<UserProfileState>()(
           ...(coverArt ? { coverArt } : {}),
         };
         set((s) => ({ playlists: [playlist, ...s.playlists] }));
-        if (userId) createPlaylistDB(userId, playlist.id, name, coverArt).catch(console.error);
+        import("@/hooks/useAuth").then(({ useAuth }) => {
+          const uid = userId || useAuth.getState().user?.id;
+          if (uid) createPlaylistDB(uid, playlist.id, name, coverArt).catch(console.error);
+        });
         return playlist;
       },
 
@@ -209,12 +212,15 @@ export const useUserProfile = create<UserProfileState>()(
             return { ...p, tracks: [...p.tracks, track] };
           }),
         }));
-        if (userId) {
-          // Get the position AFTER the set (track is now in local state)
-          const updatedPl = get().playlists.find((p) => p.id === playlistId);
-          const position = (updatedPl?.tracks.length ?? 1) - 1;
-          addTrackToPlaylistDB(playlistId, track, position).catch(console.error);
-        }
+        import("@/hooks/useAuth").then(({ useAuth }) => {
+          const uid = userId || useAuth.getState().user?.id;
+          if (uid) {
+            // Get the position AFTER the set (track is now in local state)
+            const updatedPl = get().playlists.find((p) => p.id === playlistId);
+            const position = (updatedPl?.tracks.length ?? 1) - 1;
+            addTrackToPlaylistDB(playlistId, track, position).catch(console.error);
+          }
+        });
       },
 
       removeTrackFromPlaylist: (playlistId, trackId, userId) => {
@@ -223,7 +229,10 @@ export const useUserProfile = create<UserProfileState>()(
             p.id === playlistId ? { ...p, tracks: p.tracks.filter((t) => t.id !== trackId) } : p,
           ),
         }));
-        if (userId) removeTrackFromPlaylistDB(playlistId, trackId).catch(console.error);
+        import("@/hooks/useAuth").then(({ useAuth }) => {
+          const uid = userId || useAuth.getState().user?.id;
+          if (uid) removeTrackFromPlaylistDB(playlistId, trackId).catch(console.error);
+        });
       },
 
       renamePlaylist: (id, name, userId) => {
