@@ -400,7 +400,7 @@ export function PlayerBar({
           <div className="pt-[16px]">
             <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-4 py-2 md:px-5 md:py-3">
               {/* ════════════════ LEFT: Track info + quick actions ════════════════ */}
-              <div className="flex min-w-0 flex-1 md:w-[240px] md:flex-none shrink-0 items-center gap-3">
+              <div className="flex min-w-0 flex-1 md:w-[300px] md:flex-none shrink-0 items-center gap-3">
                 {/* Album art — opens full player on click */}
                 <button onClick={onExpand} className="relative shrink-0">
                   <div className="h-11 w-11 overflow-hidden rounded-xl bg-white/8">
