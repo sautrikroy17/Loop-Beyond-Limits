@@ -9,8 +9,12 @@ export function useDownloadTrack(track: Track) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    getOfflineTrack(track.id).then((t) => setIsDownloaded(!!t));
-  }, [track.id]);
+    if (!track || !track.id) {
+      setIsDownloaded(false);
+      return;
+    }
+    getOfflineTrack(track.id).then((t) => setIsDownloaded(!!t)).catch(() => setIsDownloaded(false));
+  }, [track?.id]);
 
   const toggleDownload = async () => {
     if (isDownloaded) {
