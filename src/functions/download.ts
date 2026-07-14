@@ -22,3 +22,19 @@ export const downloadAudioFn = createServerFn({ method: "GET" })
       throw new Error("Failed to download audio");
     }
   });
+
+export const getStreamUrlFn = createServerFn({ method: "GET" })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      const info = await ytdl.getInfo(`https://youtube.com/watch?v=${data.id}`);
+      const format = ytdl.chooseFormat(info.formats, {
+        filter: "audioonly",
+        quality: "highestaudio",
+      });
+      return format.url;
+    } catch (e: any) {
+      console.error("[Stream API] Error resolving URL:", e.message);
+      return null;
+    }
+  });
