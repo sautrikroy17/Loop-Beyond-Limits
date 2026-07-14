@@ -4,6 +4,19 @@ import { getPlaybackSourceFn } from "@/functions/search";
 import { getLyricsFn } from "@/functions/lyrics";
 import { getOfflineTrack } from "@/lib/offlineDB";
 
+// ── YouTube ID prefetch cache ─────────────────────────────────────
+// Maps track.id → resolved YouTube video ID
+// Populated while current track plays so next track starts instantly
+const ytIdCache = new Map<string, string>();
+
+async function prefetchYtId(trackId: string, trackName: string, artistName: string, existingYtId?: string) {
+  if (ytIdCache.has(trackId)) return;
+  const id = existingYtId ?? await getPlaybackSourceFn({
+    data: { trackName, artistName },
+  }).catch(() => null);
+  if (id) ytIdCache.set(trackId, id);
+}
+
 declare global {
   interface Window {
     YT: any;
@@ -20,6 +33,7 @@ export function AudioEngine() {
   const hasPlayedOnceRef = useRef(false);
   const silentAudioRef = useRef<HTMLAudioElement | null>(null);
   const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Offline playback refs
   const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -295,12 +309,15 @@ export function AudioEngine() {
       isPlayingOfflineRef.current = false;
       offlineAudioRef.current?.pause();
 
-      let ytId = currentTrack.youtubeId;
+      // ✅ Cache-first: if we prefetched this ID already, use it instantly (0ms wait)
+      let ytId = currentTrack.youtubeId ?? ytIdCache.get(currentTrack.id) ?? null;
       if (!ytId) {
         ytId = await getPlaybackSourceFn({
           data: { trackName: currentTrack.title, artistName: currentTrack.artist },
         }).catch(() => null);
       }
+      // Store in cache so future loads of same track are instant
+      if (ytId) ytIdCache.set(currentTrack.id, ytId);
 
       if (cancelled) return;
 
@@ -313,6 +330,17 @@ export function AudioEngine() {
           playerRef.current?.cueVideoById({ videoId: ytId, startSeconds: 0 });
         }
         playerRef.current?.setVolume(usePlayback.getState().volume);
+
+        // 🚀 Background prefetch next 3 tracks in queue while current plays
+        if (prefetchTimeoutRef.current) clearTimeout(prefetchTimeoutRef.current);
+        prefetchTimeoutRef.current = setTimeout(() => {
+          const queue = usePlayback.getState().queue.slice(0, 3);
+          queue.forEach((t) => {
+            if (!ytIdCache.has(t.id)) {
+              prefetchYtId(t.id, t.title, t.artist, t.youtubeId);
+            }
+          });
+        }, 3000); // Start prefetching 3 seconds into playback
       } else {
         isTransitioningRef.current = false;
         setLoadingTrack(false);
