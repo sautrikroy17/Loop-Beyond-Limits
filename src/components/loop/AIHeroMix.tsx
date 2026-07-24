@@ -30,7 +30,6 @@ export function AIHeroMix({ section }: AIHeroMixProps) {
     <Reveal delay={0.1}>
       <div
         className="group relative mt-12 mb-16 overflow-hidden rounded-3xl"
-        style={{ transformStyle: "preserve-3d", perspective: "1200px" }}
       >
         {/* Animated Background - Reduced blur on mobile for performance */}
         <div

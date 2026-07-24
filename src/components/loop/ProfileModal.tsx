@@ -31,6 +31,7 @@ import {
   Disc,
   Download,
   CheckCircle2,
+  WifiOff,
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useDownloadTrack } from "@/hooks/useDownloadTrack";
@@ -59,8 +60,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Link } from "@tanstack/react-router";
 
-import { getAllOfflineTracks, type OfflineTrack } from "@/lib/offlineDB";
-import { Download } from "lucide-react";
+import { getAllOfflineTracks, removeOfflineTrack as removeOfflineTrackDB, type OfflineTrack } from "@/lib/offlineDB";
+import { toast } from "sonner";
 
 type ProfileTab = "liked" | "recent" | "playlists" | "albums" | "stats" | "downloads";
 
@@ -127,7 +128,106 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
-// ── Track Row ────────────────────────────────────────────────────
+// ── Downloaded Track Row ─────────────────────────────────────────
+
+function formatOfflineBytes(bytes: number): string {
+  if (!bytes) return "";
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatOfflineDuration(ms?: number): string {
+  if (!ms) return "";
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+}
+
+function DownloadedTrackRow({
+  item,
+  index,
+  onPlay,
+  onRemove,
+}: {
+  item: OfflineTrack;
+  index: number;
+  onPlay: () => void;
+  onRemove: () => Promise<void>;
+}) {
+  const [removing, setRemoving] = useState(false);
+  const { currentTrack } = usePlayback();
+  const isActive = currentTrack?.id === item.id;
+
+  return (
+    <div
+      className={`group flex items-center gap-3 rounded-2xl px-2.5 py-2 transition-colors ${
+        isActive ? "bg-white/[0.07]" : "hover:bg-white/[0.04]"
+      }`}
+    >
+      {/* Album art */}
+      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white/[0.06]">
+        {item.trackData.albumArt ? (
+          <img src={item.trackData.albumArt} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Music2 className="h-4 w-4 text-white/20" />
+          </div>
+        )}
+        <div className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-[oklch(0.55_0.22_248)] flex items-center justify-center">
+          <WifiOff className="h-1.5 w-1.5 text-white" />
+        </div>
+      </div>
+
+      {/* Info */}
+      <button className="min-w-0 flex-1 text-left" onClick={onPlay}>
+        <div className={`truncate text-[13px] font-medium leading-tight ${isActive ? "text-white" : "text-white/85"}`}>
+          {item.trackData.title}
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="truncate text-[11px] text-white/40">{item.trackData.artist}</span>
+          {item.trackData.durationMs && (
+            <>
+              <span className="text-white/20 text-[10px]">·</span>
+              <span className="text-[11px] text-white/25">{formatOfflineDuration(item.trackData.durationMs)}</span>
+            </>
+          )}
+          {item.audioBlob?.size && (
+            <>
+              <span className="text-white/20 text-[10px]">·</span>
+              <span className="text-[11px] text-white/25">{formatOfflineBytes(item.audioBlob.size)}</span>
+            </>
+          )}
+        </div>
+      </button>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={onPlay}
+          className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+            isActive
+              ? "bg-[oklch(0.55_0.22_248)] text-white"
+              : "text-white/25 hover:bg-white/[0.08] hover:text-white/70"
+          }`}
+        >
+          <Play className="h-3 w-3 fill-current ml-0.5" />
+        </button>
+        <button
+          onClick={async () => {
+            setRemoving(true);
+            await onRemove();
+            setRemoving(false);
+          }}
+          disabled={removing}
+          className="flex h-7 w-7 items-center justify-center rounded-full text-white/20 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 transition-all disabled:opacity-40"
+        >
+          {removing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 
 export function TrackRow({
   track,
@@ -178,22 +278,20 @@ export function TrackRow({
         </div>
       )}
 
-      {/* ── 3-column info: [Title] [Artist centered] [Duration] ── */}
-      <div className="flex flex-1 min-w-0 items-center gap-2 cursor-pointer" onClick={onPlay}>
-        {/* Song title — left */}
-        <div className="flex-1 min-w-0 truncate text-[13px] font-medium text-white/90">
+      {/* ── Stacked title + artist (works on all screen widths) ── */}
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={onPlay}>
+        <div className="truncate text-[13px] font-medium leading-tight text-white/90">
           {track.title}
         </div>
-        {/* Artist — center */}
-        <div className="w-[28%] shrink-0 truncate text-center text-[11px] text-white/45">
-          {track.artist}
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="truncate text-[11px] text-white/45">{track.artist}</span>
+          {showDuration && track.durationMs && (
+            <>
+              <span className="text-white/20 text-[10px] shrink-0">·</span>
+              <span className="shrink-0 tabular-nums text-[11px] text-white/30">{fmtMs(track.durationMs)}</span>
+            </>
+          )}
         </div>
-        {/* Duration — right */}
-        {showDuration && (
-          <div className="w-10 shrink-0 text-right tabular-nums text-[11px] text-white/30">
-            {fmtMs(track.durationMs)}
-          </div>
-        )}
       </div>
 
       {/* Actions */}
@@ -203,13 +301,19 @@ export function TrackRow({
             e.stopPropagation();
             toggleDownload();
           }}
-          className="p-1.5 rounded-full text-white/20 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:bg-white/[0.06] transition-all"
+          className={`p-1.5 rounded-full transition-all hover:bg-white/[0.06] ${
+            isDownloaded
+              ? "text-green-500 opacity-100"
+              : isDownloading
+                ? "text-white/60 opacity-100"
+                : "text-white/25 md:opacity-0 md:group-hover:opacity-100 hover:text-white/60"
+          }`}
           title="Download for offline"
         >
           {isDownloading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : isDownloaded ? (
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+            <CheckCircle2 className="h-3.5 w-3.5" />
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
@@ -220,7 +324,7 @@ export function TrackRow({
               e.stopPropagation();
               setShowPicker((v) => !v);
             }}
-            className="p-1.5 rounded-full text-white/20 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:bg-white/[0.06] transition-all"
+            className="p-1.5 rounded-full text-white/25 md:opacity-0 md:group-hover:opacity-100 hover:text-white/60 hover:bg-white/[0.06] transition-all"
             title="Add to playlist"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -1411,6 +1515,43 @@ export function ProfileModal({
                               </div>
                             ))}
                           </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Downloads (Offline Library) */}
+                    {tab === "downloads" && (
+                      <div className="space-y-1">
+                        {offlineTracks.length === 0 ? (
+                          <EmptyState
+                            icon={<Download className="h-8 w-8" />}
+                            text="No songs downloaded yet — hit the ↓ icon on any track"
+                          />
+                        ) : (
+                          <>
+                            <div className="mb-3 flex items-center gap-2 rounded-2xl bg-[oklch(0.55_0.22_248)/0.08] border border-[oklch(0.55_0.22_248)/0.15] px-3 py-2.5">
+                              <WifiOff className="h-3.5 w-3.5 text-[oklch(0.72_0.22_248)] shrink-0" />
+                              <span className="text-[11px] text-[oklch(0.72_0.22_248)]">
+                                ✈️ {offlineTracks.length} songs available on airplane mode
+                              </span>
+                            </div>
+                            {offlineTracks.map((item, i) => (
+                              <DownloadedTrackRow
+                                key={item.id}
+                                item={item}
+                                index={i}
+                                onPlay={() => {
+                                  playTrack(item.trackData);
+                                  onClose();
+                                }}
+                                onRemove={async () => {
+                                  await removeOfflineTrackDB(item.id);
+                                  setOfflineTracks((prev) => prev.filter((t) => t.id !== item.id));
+                                  toast.info(`Removed "${item.trackData.title}" from Downloads`);
+                                }}
+                              />
+                            ))}
+                          </>
                         )}
                       </div>
                     )}

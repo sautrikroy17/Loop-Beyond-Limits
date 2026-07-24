@@ -173,6 +173,18 @@ function RootComponent() {
   }, []);
 
   // Register Service Worker for PWA (offline shell caching + Add to Home Screen)
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((reg) => {
+          console.log("[Loop SW] Registered:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[Loop SW] Registration failed:", err);
+        });
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

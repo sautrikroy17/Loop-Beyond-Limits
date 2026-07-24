@@ -28,7 +28,6 @@ export function TrendingNowHero({ section }: TrendingNowHeroProps) {
     <Reveal delay={0.2}>
       <div
         className="group relative mt-16 mb-16 overflow-hidden rounded-3xl border border-white/5 bg-black/20"
-        style={{ transformStyle: "preserve-3d", perspective: "1200px" }}
       >
         {/* Animated Background */}
         <div

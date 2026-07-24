@@ -53,6 +53,38 @@ function groupArtists(tracks: Track[]): ArtistResult[] {
   return [...map.values()].sort((a, b) => b.trackCount - a.trackCount);
 }
 
+// ─── Fast album art image with shimmer placeholder ─────────────────
+
+function AlbumImg({ src, className }: { src: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  // Downscale to 120px for search thumbnails — loads ~100x faster than 1200px
+  const thumbSrc = src
+    ? src.replace(/([=\-])w\d+-h\d+[^&"']*/g, "$1w120-h120")
+    : "";
+
+  return (
+    <div className={`relative h-full w-full bg-white/[0.06] ${className ?? ""}`}>
+      {/* Shimmer shown until image loads */}
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-white/[0.04] via-white/[0.09] to-white/[0.04] bg-[length:200%_100%]" />
+      )}
+      {thumbSrc && (
+        <img
+          src={thumbSrc}
+          alt=""
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          onLoad={() => setLoaded(true)}
+          className={`h-full w-full object-cover transition-opacity duration-150 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── Result row ───────────────────────────────────────────────────
 
 function TrackRow({
@@ -76,7 +108,7 @@ function TrackRow({
     >
       <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white/[0.06]">
         {track.albumArt ? (
-          <img src={track.albumArt} alt="" className="h-full w-full object-cover" />
+          <AlbumImg src={track.albumArt} />
         ) : (
           <Music2 className="m-auto h-5 w-5 text-white/20" />
         )}
@@ -93,19 +125,21 @@ function TrackRow({
         <div className="truncate text-[11px] text-white/40">{track.artist}</div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex shrink-0 items-center gap-0.5 md:opacity-0 transition-opacity md:group-hover:opacity-100">
         <button
           onClick={(e) => {
             e.stopPropagation();
             toggleDownload();
           }}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+          className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/[0.06] ${
+            isDownloaded ? "text-green-500" : isDownloading ? "text-white/60" : "text-white/30 hover:text-white/70"
+          }`}
           title="Download for offline"
         >
           {isDownloading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : isDownloaded ? (
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4" />
           ) : (
             <Download className="h-4 w-4" />
           )}
@@ -136,7 +170,7 @@ function ArtistCard({ artist, onSearch }: { artist: ArtistResult; onSearch: (q: 
     >
       <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white/[0.06] ring-1 ring-white/[0.08]">
         {artist.art ? (
-          <img src={artist.art} alt="" className="h-full w-full object-cover" />
+          <AlbumImg src={artist.art} />
         ) : (
           <User className="m-auto h-6 w-6 text-white/20" />
         )}
@@ -160,11 +194,7 @@ function AlbumRow({ album, onPlay }: { album: any; onPlay: () => void }) {
     >
       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-white/[0.06] shadow-md">
         {album.albumArt ? (
-          <img
-            src={album.albumArt}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          <AlbumImg src={album.albumArt} />
         ) : (
           <Music2 className="m-auto h-5 w-5 text-white/20" />
         )}
@@ -188,11 +218,7 @@ function PlaylistRow({ playlist, onPlay }: { playlist: any; onPlay: () => void }
     >
       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-white/[0.06] shadow-md">
         {playlist.albumArt ? (
-          <img
-            src={playlist.albumArt}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          <AlbumImg src={playlist.albumArt} />
         ) : (
           <Music2 className="m-auto h-5 w-5 text-white/20" />
         )}

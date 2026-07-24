@@ -37,12 +37,11 @@ function TrackCard({ track, index = 0 }: { track: Track; index?: number }) {
 
   return (
     <motion.div
-      initial={{ rotateX: -80, opacity: 0, y: -40, transformPerspective: 1200 }}
-      whileInView={{ rotateX: 0, opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-20px" }}
-      transition={{ duration: 0.8, type: "spring", bounce: 0.35, delay: index * 0.05 }}
+      transition={{ duration: 0.5, type: "spring", bounce: 0.3, delay: index * 0.05 }}
       className="group relative w-44 shrink-0 select-none"
-      style={{ transformStyle: "preserve-3d" }}
     >
       <div
         className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]"
@@ -151,12 +150,11 @@ function AlbumCard({
 }) {
   return (
     <motion.div
-      initial={{ rotateX: -80, opacity: 0, y: -40, transformPerspective: 1200 }}
-      whileInView={{ rotateX: 0, opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-20px" }}
-      transition={{ duration: 0.8, type: "spring", bounce: 0.35, delay: index * 0.05 }}
+      transition={{ duration: 0.5, type: "spring", bounce: 0.3, delay: index * 0.05 }}
       className="group relative w-48 shrink-0 select-none cursor-pointer"
-      style={{ transformStyle: "preserve-3d" }}
       onClick={onClick}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]">

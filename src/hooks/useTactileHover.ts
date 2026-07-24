@@ -21,8 +21,8 @@ export function useTactileHover({
 
   const hoverSpring = useSpring(hover, { stiffness, damping });
 
-  const rx = useSpring(useTransform(py, [0, 100], [maxTilt, -maxTilt]), { stiffness, damping });
-  const ry = useSpring(useTransform(px, [0, 100], [-maxTilt, maxTilt]), { stiffness, damping });
+  const rx = useMotionValue(0);
+  const ry = useMotionValue(0);
 
   const spotlightOpacity = useTransform(hoverSpring, [0, 1], [0, 1]);
 
@@ -49,9 +49,7 @@ export function useTactileHover({
   );
 
   const transformStyle = useMemo(
-    () => ({
-      transformPerspective: 1000,
-    }),
+    () => ({}),
     [],
   );
 
